@@ -7,7 +7,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(GameGroupPrePhysics))]
-[UpdateAfter(typeof(RotationSys))]
+[UpdateAfter(typeof(AngularVelocitySys))]
 public class VelocitySys : JobComponentSystem
 {
     [BurstCompile]

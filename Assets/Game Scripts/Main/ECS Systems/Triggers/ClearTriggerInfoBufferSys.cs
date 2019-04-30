@@ -1,7 +1,7 @@
 ﻿using Unity.Collections;
 using Unity.Entities;
 
-[UpdateInGroup(typeof(LateSimulationSystemGroup))]
+[UpdateInGroup(typeof(GameGroupLateSim))]
 public class ClearTriggerInfoBufferSys : ComponentSystem
 {
     private EntityQuery triggerInfoTagQuery;

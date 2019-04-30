@@ -5,8 +5,9 @@ using UnityEngine;
 [Serializable]
 public struct Heading : IComponentData
 {
-    public float Desired;
-    public float Actual;
+    // Note: Heading is stored in degrees.
+    public float CurrentHeading;
+    public float TargetHeading;
 }
 
 public class HeadingComp : MonoBehaviour, IConvertGameObjectToEntity

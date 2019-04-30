@@ -5,6 +5,7 @@ using Unity.Physics;
 using Unity.Physics.Systems;
 
 [UpdateInGroup(typeof(GameGroupPostPhysics))]
+[UpdateAfter(typeof(CombatTargetSys))]
 public class TriggerSys : ComponentSystem
 {
     private BuildPhysicsWorld buildPhysicsWorldSys;

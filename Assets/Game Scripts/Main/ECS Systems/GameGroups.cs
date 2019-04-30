@@ -6,8 +6,10 @@ public class GameGroupPrePhysics : ComponentSystemGroup
 {
     LifeTimeExpireSys LifeTimeExpireSys;
     ShipSpawnerSys ShipSpawnerSys;
-    RotationSys RotationSys;
+    HeadingSys HeadingSys;
+    AngularVelocitySys AngularVelocitySys;
     VelocitySys VelocitySys;
+    RotationSys RotationSys;
     MovementSys MovementSys;
 }
 
@@ -15,7 +17,15 @@ public class GameGroupPrePhysics : ComponentSystemGroup
 [UpdateAfter(typeof(ExportPhysicsWorld))]
 public class GameGroupPostPhysics : ComponentSystemGroup
 {
+    NearestEnemySys NearestEnemySys;
+    CombatTargetSys TargetSys;
     TriggerSys TriggerSys;
     DamageHealthOnTriggerSys DamageHealthOnTriggerSys;
     WeaponSys WeaponSys;
+}
+
+[UpdateInGroup(typeof(LateSimulationSystemGroup))]
+public class GameGroupLateSim : ComponentSystemGroup
+{
+    ClearTriggerInfoBufferSys ClearTriggerInfoBufferSys;
 }

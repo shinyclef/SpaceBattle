@@ -10,11 +10,14 @@ using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
 [UpdateInGroup(typeof(GameGroupPrePhysics))]
-[UpdateAfter(typeof(ShipSpawnerSys))]
+[UpdateAfter(typeof(VelocitySys))]
 public class RotationSys : JobComponentSystem
 {
+    /// <summary>
+    /// Sets rotation to match the current heading and tilt.
+    /// </summary>
     [BurstCompile]
-    private struct Job : IJobForEachWithEntity<Rotation, Velocity, SpawnTime>
+    private struct Job : IJobForEach<Heading, Rotation>
     {
         [NativeDisableParallelForRestriction]
         [DeallocateOnJobCompletion]
@@ -25,15 +28,9 @@ public class RotationSys : JobComponentSystem
         [NativeSetThreadIndex]
         private int threadIndex;
 
-        public void Execute(Entity entity, int index, ref Rotation rot, [ReadOnly] ref Velocity vel, [ReadOnly] ref SpawnTime st)
+        public void Execute([ReadOnly] ref Heading heading, ref Rotation rot)
         {
-            //Random rand = Rngs[threadIndex - 1];
-            //float sign = math.floor(rand.NextFloat() - 0.5f) * 2 + 1;
-            //float amplitude = rand.NextFloat();
-            //float waveLen = rand.NextFloat();
-            //float lifeTime = Time - st.Value;
-            //float rotationDegrees = math.cos(lifeTime) * sign * 0.5f * Dt;
-            //rot.Value = math.mul(math.normalize(rot.Value), quaternion.AxisAngle(new float3(0, 0, -1), rotationDegrees));
+            rot.Value = quaternion.AxisAngle(new float3(0, 0, -1), math.radians(heading.CurrentHeading));
         }
     }
 
