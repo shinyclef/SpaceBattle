@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 79f877434772c463192af154345455c9, type: 3}
-  m_Name: Standard Physics Mat
+  m_Name: Bullet Physics
   m_EditorClassIdentifier: 
   m_Value:
     m_SupportsTemplate: 0
@@ -30,10 +30,10 @@ MonoBehaviour:
         CombineMode: 2
     m_BelongsTo:
       m_Override: 1
-      m_Value: 0101010101010101010101010101010101010101010101010101010101010101
+      m_Value: 0000010000000000000000000000000000000000000000000000000000000000
     m_CollidesWith:
       m_Override: 1
-      m_Value: 0101010101010101010101010101010101010101010101010101010101010101
+      m_Value: 0001000000000000000000000000000000000000000000000000000000000000
     m_RaisesCollisionEvents:
       m_Override: 1
       m_Value: 0

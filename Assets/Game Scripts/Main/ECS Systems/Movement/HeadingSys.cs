@@ -24,10 +24,11 @@ public class HeadingSys : JobComponentSystem
 
             // target heading
             float2 relativeDir = math.normalize(dest.Value - tran.Value.xy);
-            float target = math.degrees(math.atan2(relativeDir.x, relativeDir.y));
+            float target = Heading.FromFloat2(relativeDir);
+            //float target = gmath.ToAngleRange360(math.degrees(math.atan2(relativeDir.x, relativeDir.y)));
 
             // we want to turn
-            float signedInnerAngle = gmath.SignedInnerAngle(target, current);
+            float signedInnerAngle = gmath.SignedInnerAngle(current, target);
 
             // lerp towards desired angular velocity
             // DO SOME MAGIC IN HERE
@@ -36,7 +37,7 @@ public class HeadingSys : JobComponentSystem
 
             // SHORTCUT: Set current velocity directly and instantly
             float sign = math.sign(signedInnerAngle);
-            float currentAVel = math.min(aVel.MaxSpeed, math.abs(signedInnerAngle)) * sign * Dt;
+            float currentAVel = math.min(aVel.MaxSpeed * Dt, math.abs(signedInnerAngle)) * sign;
             current = gmath.ToAngleRange360(current + currentAVel);
 
             // assign values
@@ -44,7 +45,7 @@ public class HeadingSys : JobComponentSystem
             heading.CurrentHeading = current;
             heading.TargetHeading = target;
 
-            //Logger.Log($"currentAVel: {currentAVel}, current: {current}, target: {target}");
+            //Logger.Log($"dest.Value: {dest.Value}, currentAVel: {currentAVel}, current: {current}, relativeDir: {relativeDir}, target: {target}, signedInnerAngle: {signedInnerAngle}");
         }
     }
 

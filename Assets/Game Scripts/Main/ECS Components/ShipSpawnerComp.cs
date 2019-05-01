@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Physics;
+using Unity.Physics.Authoring;
 using UnityEngine;
+using Collider = Unity.Physics.Collider;
 
 [Serializable]
 public struct ShipSpawner : IComponentData
@@ -27,8 +30,7 @@ public class ShipSpawnerComp : MonoBehaviour, IDeclareReferencedPrefabs, IConver
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
         Entity shipPrimaryEntity = conversionSystem.GetPrimaryEntity(ShipPrefab);
-        dstManager.AddSharedComponentData(shipPrimaryEntity, new ShipSpawnerOwnerSsShC(0, 0));
-
+        int faction = (int)ShipPrefab.GetComponent<FactionComp>().Value;
         var shipSpawner = new ShipSpawner
         {
             ShipPrefab = shipPrimaryEntity,
@@ -38,8 +40,19 @@ public class ShipSpawnerComp : MonoBehaviour, IDeclareReferencedPrefabs, IConver
             ActiveShipCount = 0,
             SpawnCountRemainder = 0
         };
-        
+
+        dstManager.AddSharedComponentData(shipPrimaryEntity, new ShipSpawnerOwnerSsShC(0, 0));
         dstManager.AddComponentData(entity, shipSpawner);
+        Scheduler.InvokeAfterOneFrame(() =>
+        {
+            unsafe
+            {
+                Collider* col = dstManager.GetComponentData<PhysicsCollider>(shipPrimaryEntity).ColliderPtr;
+                CollisionFilter filter = col->Filter;
+                filter.GroupIndex = -faction;
+                col->Filter = filter;
+            }
+        });
     }
 
     public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)

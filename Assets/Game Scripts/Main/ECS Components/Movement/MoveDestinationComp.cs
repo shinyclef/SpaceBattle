@@ -7,6 +7,11 @@ using UnityEngine;
 public struct MoveDestination : IComponentData
 {
     public float2 Value;
+
+    public MoveDestination(float2 value)
+    {
+        Value = value;
+    }
 }
 
 public class MoveDestinationComp : MonoBehaviour, IConvertGameObjectToEntity

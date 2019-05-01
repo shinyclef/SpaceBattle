@@ -6,6 +6,11 @@ using UnityEngine;
 public struct SpawnTime : IComponentData
 {
     public float Value;
+
+    public SpawnTime(float value)
+    {
+        Value = value;
+    }
 }
 
 public class SpawnTimeComp : MonoBehaviour, IConvertGameObjectToEntity

@@ -3,13 +3,13 @@ using Unity.Entities;
 using UnityEngine;
 
 [Serializable]
-public struct Faction : ISharedComponentData
+public struct Faction : IComponentData
 {
     public Factions Value;
 }
 
 [RequiresEntityConversion]
-public class FactionShComp : MonoBehaviour, IConvertGameObjectToEntity
+public class FactionComp : MonoBehaviour, IConvertGameObjectToEntity
 {
     public Factions Value;
 
@@ -20,6 +20,6 @@ public class FactionShComp : MonoBehaviour, IConvertGameObjectToEntity
             Value = Value
         };
 
-        dstManager.AddSharedComponentData(entity, faction);
+        dstManager.AddComponentData(entity, faction);
     }
 }

@@ -187,7 +187,7 @@ MonoBehaviour:
   m_CustomMesh: {fileID: 0}
   m_Material:
     m_SupportsTemplate: 1
-    m_Template: {fileID: 11400000, guid: 2b18dad5fea99fb449cd6af1947b82c0, type: 2}
+    m_Template: {fileID: 11400000, guid: e5b84f76fd2cae741ab714b96524bbbe, type: 2}
     m_IsTrigger:
       m_Override: 0
       m_Value: 1
@@ -203,10 +203,10 @@ MonoBehaviour:
         CombineMode: 2
     m_BelongsTo:
       m_Override: 0
-      m_Value: 0101010101010101010101010101010101010101010101010101010101010101
+      m_Value: 0100000000000000000000000000000000000000000000000000000000000000
     m_CollidesWith:
       m_Override: 0
-      m_Value: 0101010101010101010101010101010101010101010101010101010101010101
+      m_Value: 0001000000000000000000000000000000000000000000000000000000000000
     m_RaisesCollisionEvents:
       m_Override: 0
       m_Value: 0
@@ -257,8 +257,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0590ee48fce93864cbca98807a2b775a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Acceleration: 50
-  MaxTurnSpeed: 50
+  Acceleration: 200
+  MaxTurnSpeed: 200
 --- !u!114 &279122834050534173
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -358,7 +358,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb9347ec6ac30104c853aec769e3faec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  QueryRange: 50
+  QueryRange: 500
 --- !u!114 &5468421705742004189
 MonoBehaviour:
   m_ObjectHideFlags: 0

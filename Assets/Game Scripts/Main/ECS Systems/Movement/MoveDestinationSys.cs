@@ -10,15 +10,19 @@ using Unity.Transforms;
 public class MoveDestinationSys : JobComponentSystem
 {
     [BurstCompile]
-    private struct Job : IJobForEach<NearestEnemy, MoveDestination>
+    private struct Job : IJobForEach<NearestEnemy, Translation, Heading, MoveDestination>
     {
         [ReadOnly] public ComponentDataFromEntity<Translation> TranslationComps;
 
-        public void Execute([ReadOnly] ref NearestEnemy enemy, ref MoveDestination dest)
+        public void Execute([ReadOnly] ref NearestEnemy enemy, [ReadOnly] ref Translation tran, [ReadOnly] ref Heading heading, ref MoveDestination dest)
         {
-            if (TranslationComps.Exists(enemy.Entity))
+            if (enemy.Entity != Entity.Null && TranslationComps.Exists(enemy.Entity))
             {
                 dest.Value = TranslationComps[enemy.Entity].Value.xy;
+            }
+            else
+            {
+                dest.Value = tran.Value.xy + Heading.ToFloat2(heading.CurrentHeading);
             }
         }
     }

@@ -32,7 +32,7 @@ public class ShipSpawnerSys : JobComponentSystem
         public float Time;
         public float Dt;
 
-        public void Execute(Entity entity, int index, ref ShipSpawner spawner, [ReadOnly] ref LocalToWorld location, [ReadOnly] ref Translation tran, [ReadOnly] ref Rotation rotation)
+        public void Execute(Entity entity, int index, ref ShipSpawner spawner, [ReadOnly] ref LocalToWorld location, [ReadOnly] ref Translation tran, [ReadOnly] ref Rotation rot)
         {
             int maxToSpawn = spawner.MaxShips - spawner.ActiveShipCount;
             float desiredSpawnCount = spawner.SpawnRatePerSecond * Dt + spawner.SpawnCountRemainder;
@@ -42,6 +42,8 @@ public class ShipSpawnerSys : JobComponentSystem
             spawner.ActiveShipCount += spawnCount;
 
             float3 ss = spawner.SpawnSpread;
+            float heading = Heading.FromQuaternion(rot.Value);
+            float2 moveDest = tran.Value.xy + Heading.ToFloat2(heading);
             for (int i = 0; i < spawnCount; i++)
             {
                 float3 pos = math.transform(location.Value, new float3(Rand.NextFloat(-ss.x, ss.x),
@@ -50,9 +52,10 @@ public class ShipSpawnerSys : JobComponentSystem
 
                 Entity ship = CommandBuffer.Instantiate(spawner.ShipPrefab);
                 CommandBuffer.SetComponent(ship, new Translation { Value = pos });
-                CommandBuffer.SetComponent(ship, new Rotation { Value = rotation.Value });
-                CommandBuffer.SetComponent(ship, new SpawnTime { Value = Time });
-                CommandBuffer.AddSharedComponent(ship, new ShipSpawnerOwnerSsShC { EntityIndex = entity.Index, EntityVer = entity.Version });
+                CommandBuffer.SetComponent(ship, new Heading(heading));
+                CommandBuffer.SetComponent(ship, new MoveDestination(moveDest));
+                CommandBuffer.SetComponent(ship, new SpawnTime(Time));
+                CommandBuffer.AddSharedComponent(ship, new ShipSpawnerOwnerSsShC(entity.Index, entity.Version));
             }
         }
     }

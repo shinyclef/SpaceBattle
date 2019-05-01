@@ -26,7 +26,7 @@ public class WeaponSys : JobComponentSystem
         {
             if (wep.CooldownEnd == 0)
             {
-                wep.CooldownEnd = (Time * 10000 + index) % wep.FireInterval;
+                wep.CooldownEnd = Time + (Time * 10000 + index) % wep.FireInterval;
             }
             else if (Time >= wep.CooldownEnd)
             {

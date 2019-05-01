@@ -9,10 +9,10 @@ public static class gmath
     private static float3 right = new float3(1, 0, 0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float SignedInnerAngle(float angleA, float angleB)
+    public static float SignedInnerAngle(float from, float to)
     {
-        float res = angleA - angleB;
-        res = (res + 180) % 360 - 180;
+        float res = to - from;
+        res = (MathMod((res + 180f), 360f)) - 180f;
         return res;
     }
 
@@ -23,7 +23,7 @@ public static class gmath
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float NegCorrectMod(float x, float n)
+    public static float MathMod(float x, float n)
     {
         return x - floor(x / n) * n;
     }

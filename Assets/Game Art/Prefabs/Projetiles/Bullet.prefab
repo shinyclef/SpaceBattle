@@ -179,7 +179,7 @@ MonoBehaviour:
   m_CustomMesh: {fileID: 0}
   m_Material:
     m_SupportsTemplate: 1
-    m_Template: {fileID: 11400000, guid: 2b18dad5fea99fb449cd6af1947b82c0, type: 2}
+    m_Template: {fileID: 11400000, guid: a887194bacaab374b801908f5ca4ed4d, type: 2}
     m_IsTrigger:
       m_Override: 0
       m_Value: 0
@@ -195,10 +195,10 @@ MonoBehaviour:
         CombineMode: 2
     m_BelongsTo:
       m_Override: 0
-      m_Value: 0101010101010101010101010101010101010101010101010101010101010101
+      m_Value: 0001000000000000000000000000000000000000000000000000000000000000
     m_CollidesWith:
       m_Override: 0
-      m_Value: 0101010101010101010101010101010101010101010101010101010101010101
+      m_Value: 0100000000000000000000000000000000000000000000000000000000000000
     m_RaisesCollisionEvents:
       m_Override: 0
       m_Value: 0

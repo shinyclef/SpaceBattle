@@ -324,7 +324,7 @@ RectTransform:
   - {fileID: 1834713642}
   - {fileID: 2011835603}
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -582,11 +582,11 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -700}
+  m_LocalPosition: {x: 0, y: 0, z: -400}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &963194229
 MonoBehaviour:
@@ -680,6 +680,7 @@ GameObject:
   - component: {fileID: 1586150474}
   - component: {fileID: 1586150479}
   - component: {fileID: 1586150478}
+  - component: {fileID: 1586150480}
   m_Layer: 0
   m_Name: Game
   m_TagString: Untagged
@@ -832,6 +833,18 @@ MonoBehaviour:
   exitSlowMoSmoothing: 0.2
   changeSlowMoSmoothing: 0.2
   isInSlowMo: 0
+--- !u!114 &1586150480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1586150472}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55ede25e929d1b745aa05374a5d71e37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1741158128
 GameObject:
   m_ObjectHideFlags: 0
@@ -867,10 +880,10 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 2944533906311966927, guid: 19d1abca87912fc44b88ab83a16449aa,
     type: 3}
-  MaxShips: 1000
-  SpawnRatePerSecond: 200
+  MaxShips: 400
+  SpawnRatePerSecond: 50
   SpawnSpread:
-    x: 500
+    x: 800
     y: 0
     z: 0
 --- !u!114 &1741158130
@@ -894,7 +907,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1741158128}
   m_LocalRotation: {x: 0, y: 0, z: 1, w: 0}
-  m_LocalPosition: {x: 0, y: 250, z: 0}
+  m_LocalPosition: {x: 0, y: 200, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -948,10 +961,10 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 4903339397265122764, guid: d6ed2930c3712744caaf13322c21c6ff,
     type: 3}
-  MaxShips: 1000
-  SpawnRatePerSecond: 200
+  MaxShips: 400
+  SpawnRatePerSecond: 50
   SpawnSpread:
-    x: 500
+    x: 800
     y: 0
     z: 0
 --- !u!114 &1813004061
@@ -975,7 +988,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1813004059}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -250, z: 0}
+  m_LocalPosition: {x: 0, y: -200, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
