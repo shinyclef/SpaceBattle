@@ -15,7 +15,7 @@ public class DamageHealthOnTriggerSys : JobComponentSystem
     }
 
     [BurstCompile]
-    [RequireComponentTag(typeof(TriggerInfoTag))]
+    [RequireComponentTag(typeof(HasTriggerInfoTag))]
     private struct Job : IJobForEachWithEntity<Health>
     {
         public EntityCommandBuffer.Concurrent CommandBuffer;

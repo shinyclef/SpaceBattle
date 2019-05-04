@@ -5,7 +5,7 @@ using Unity.Physics;
 using Unity.Physics.Systems;
 
 [UpdateInGroup(typeof(GameGroupPostPhysics))]
-[UpdateAfter(typeof(CombatTargetSys))]
+[UpdateAfter(typeof(MoveDestinationSys))]
 public class TriggerSys : ComponentSystem
 {
     private BuildPhysicsWorld buildPhysicsWorldSys;
@@ -52,7 +52,7 @@ public class TriggerSys : ComponentSystem
                 continue;
             }
 
-            em.AddComponent(map.Key, typeof(TriggerInfoTag));
+            em.AddComponent(map.Key, typeof(HasTriggerInfoTag));
             DynamicBuffer<TriggerInfoBuf> buffer = em.GetBuffer<TriggerInfoBuf>(map.Key);
             foreach (TriggerInfo info in map.Value)
             {

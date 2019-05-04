@@ -53,7 +53,7 @@ public class ShipSpawnerSys : JobComponentSystem
                 Entity ship = CommandBuffer.Instantiate(spawner.ShipPrefab);
                 CommandBuffer.SetComponent(ship, new Translation { Value = pos });
                 CommandBuffer.SetComponent(ship, new Heading(heading));
-                CommandBuffer.SetComponent(ship, new MoveDestination(moveDest));
+                CommandBuffer.SetComponent(ship, new MoveDestination(moveDest, false));
                 CommandBuffer.SetComponent(ship, new SpawnTime(Time));
                 CommandBuffer.AddSharedComponent(ship, new ShipSpawnerOwnerSsShC(entity.Index, entity.Version));
             }
@@ -77,7 +77,6 @@ public class ShipSpawnerSys : JobComponentSystem
 
         // 2. Loop through summing up destroyed counts in a dictionary
         var destoryedShipCounts = new Dictionary<Entity, int>();
-
         using (NativeArray<ArchetypeChunk> chunks = destroyedShipsQuery.CreateArchetypeChunkArray(Allocator.TempJob))
         {
             foreach (ArchetypeChunk chunk in chunks)

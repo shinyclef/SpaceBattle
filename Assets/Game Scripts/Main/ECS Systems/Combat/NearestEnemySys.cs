@@ -5,10 +5,12 @@ using Unity.Jobs;
 using Unity.Physics;
 using Unity.Physics.Systems;
 using Unity.Transforms;
+using UnityEngine;
 
 [UpdateInGroup(typeof(GameGroupPostPhysics))]
 public class NearestEnemySys : JobComponentSystem
 {
+    private const float MinUpdateInterval = 0.2f;
     private BuildPhysicsWorld buildPhysicsWorldSys;
 
     protected override void OnCreate()
@@ -19,11 +21,17 @@ public class NearestEnemySys : JobComponentSystem
     [BurstCompile]
     private struct Job : IJobForEachWithEntity<Translation, Rotation, PhysicsCollider, NearestEnemy>
     {
+        public float Time;
         [ReadOnly] public PhysicsWorld PhysicsWorld;
         [ReadOnly] public CollisionWorld CollisionWorld;
 
         public void Execute(Entity entity, int index, [ReadOnly] ref Translation tran, [ReadOnly] ref Rotation rot, [ReadOnly] ref PhysicsCollider col, ref NearestEnemy nearestEnemy)
         {
+            if (Time - nearestEnemy.LastRefreshTime < MinUpdateInterval)
+            {
+                return;
+            }
+
             unsafe
             {
                 CollisionFilter filter = new CollisionFilter
@@ -53,6 +61,7 @@ public class NearestEnemySys : JobComponentSystem
                     nearestEnemy.Entity = PhysicsWorld.Bodies[hit.RigidBodyIndex].Entity;
                 }
 
+                nearestEnemy.LastRefreshTime = Time;
                 //Logger.Log($"{entity} found {nearestEnemy.Entity}.");
             }
         }
@@ -62,6 +71,7 @@ public class NearestEnemySys : JobComponentSystem
     {
         var job = new Job()
         {
+            Time = Time.time,
             PhysicsWorld = buildPhysicsWorldSys.PhysicsWorld,
             CollisionWorld = buildPhysicsWorldSys.PhysicsWorld.CollisionWorld
         };

@@ -18,7 +18,8 @@ public class GameGroupPrePhysics : ComponentSystemGroup
 public class GameGroupPostPhysics : ComponentSystemGroup
 {
     NearestEnemySys NearestEnemySys;
-    CombatTargetSys TargetSys;
+    CombatTargetSys CombatTargetSys;
+    MoveDestinationSys MoveDestinationSys;
     TriggerSys TriggerSys;
     DamageHealthOnTriggerSys DamageHealthOnTriggerSys;
     WeaponSys WeaponSys;

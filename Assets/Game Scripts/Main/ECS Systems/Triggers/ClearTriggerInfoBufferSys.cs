@@ -8,13 +8,13 @@ public class ClearTriggerInfoBufferSys : ComponentSystem
 
     protected override void OnCreate()
     {
-        triggerInfoTagQuery = GetEntityQuery(typeof(TriggerInfoTag));
+        triggerInfoTagQuery = GetEntityQuery(typeof(HasTriggerInfoTag));
     }
 
     protected override void OnUpdate()
     {
         EntityManager em = World.Active.EntityManager;
-        em.RemoveComponent(triggerInfoTagQuery, typeof(TriggerInfoTag));
+        em.RemoveComponent(triggerInfoTagQuery, typeof(HasTriggerInfoTag));
         NativeArray<Entity> entities = triggerInfoTagQuery.ToEntityArray(Allocator.TempJob);
         foreach (Entity e in entities)
         {

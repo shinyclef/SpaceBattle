@@ -17,18 +17,33 @@ public class WeaponSys : JobComponentSystem
     }
 
     //[BurstCompile]
-    private struct Job : IJobForEachWithEntity<Weapon, Translation, Rotation>
+    private struct Job : IJobForEachWithEntity<MoveDestination, Translation, Rotation, Velocity, CombatTarget, Weapon>
     {
         public EntityCommandBuffer.Concurrent CommandBuffer;
+        [ReadOnly] public ComponentDataFromEntity<Velocity> VelocityData;
         public float Time;
 
-        public void Execute(Entity entity, int index, ref Weapon wep, [ReadOnly] ref Translation tran, [ReadOnly] ref Rotation rot)
+        public void Execute(Entity entity, int index, 
+            [ReadOnly] ref MoveDestination moveDest, 
+            [ReadOnly] ref Translation tran, 
+            [ReadOnly] ref Rotation rot,
+            [ReadOnly] ref Velocity vel,
+            [ReadOnly] ref CombatTarget target,
+            ref Weapon wep)
         {
             if (wep.CooldownEnd == 0)
             {
                 wep.CooldownEnd = Time + (Time * 10000 + index) % wep.FireInterval;
+                return;
             }
-            else if (Time >= wep.CooldownEnd)
+
+            if (Time < wep.CooldownEnd || !moveDest.IsCombatTarget)
+            {
+                return;
+            }
+            
+            float2 projectedEnemyPos = moveDest.Value + VelocityData[target.Value].Value * wep.projectileLifeTime;
+            if (math.distance(tran.Value.xy, projectedEnemyPos) < wep.projectileRange)
             {
                 wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireInterval, Time);
                 float3 pos = tran.Value + wep.SpawnOffset.LocalToWorldPos(rot.Value);
@@ -45,6 +60,7 @@ public class WeaponSys : JobComponentSystem
         var job = new Job()
         {
             CommandBuffer = cmdBufferSystem.CreateCommandBuffer().ToConcurrent(),
+            VelocityData = GetComponentDataFromEntity<Velocity>(),
             Time = Time.time
         };
 

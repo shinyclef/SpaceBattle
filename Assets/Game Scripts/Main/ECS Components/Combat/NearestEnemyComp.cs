@@ -7,6 +7,7 @@ public struct NearestEnemy : IComponentData
 {
     public Entity Entity;
     public float QueryRange;
+    public float LastRefreshTime;
 }
 
 public class NearestEnemyComp : MonoBehaviour, IConvertGameObjectToEntity

@@ -36,9 +36,9 @@ public struct Heading : IComponentData
         float4 v = q.value;
 
         //// yaw (z-axis)
-        float siny_cosp = +2.0f * (v.w * v.z + v.x * v.y);
-        float cosy_cosp = +1.0f - 2.0f * (v.y * v.y + v.z * v.z);
-        return math.degrees(math.atan2(siny_cosp, cosy_cosp));
+        float siny_cosp = 2.0f * (v.w * v.z + v.x * v.y);
+        float cosy_cosp = 1.0f - 2.0f * (v.y * v.y + v.z * v.z);
+        return -math.degrees(math.atan2(siny_cosp, cosy_cosp));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

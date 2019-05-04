@@ -2,4 +2,4 @@
 using Unity.Entities;
 
 [Serializable]
-public struct TriggerInfoTag : IComponentData { }
+public struct HasTriggerInfoTag : IComponentData { }

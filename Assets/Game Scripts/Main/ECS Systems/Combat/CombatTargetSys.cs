@@ -2,38 +2,24 @@
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
-using Unity.Transforms;
 
 [UpdateInGroup(typeof(GameGroupPostPhysics))]
 [UpdateAfter(typeof(NearestEnemySys))]
 public class CombatTargetSys : JobComponentSystem
 {
-    private BeginInitializationEntityCommandBufferSystem cmdBufferSystem;
-
-    protected override void OnCreate()
-    {
-        cmdBufferSystem = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
-    }
-
     [BurstCompile]
-    private struct Job : IJobForEachWithEntity<Translation>
+    private struct Job : IJobForEach<NearestEnemy, CombatTarget>
     {
-        public EntityCommandBuffer.Concurrent CommandBuffer;
-
-        public void Execute(Entity entity, int index, [ReadOnly] ref Translation tran)
+        public void Execute([ReadOnly] ref NearestEnemy nearestEnemy, [ReadOnly] ref CombatTarget target)
         {
+            target.Value = nearestEnemy.Entity;
         }
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        var job = new Job()
-        {
-            CommandBuffer = cmdBufferSystem.CreateCommandBuffer().ToConcurrent(),
-        };
-
+        var job = new Job();
         JobHandle jh = job.Schedule(this, inputDeps);
-        cmdBufferSystem.AddJobHandleForProducer(jh);
         return jh;
     }
 }
