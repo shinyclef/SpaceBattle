@@ -9,8 +9,8 @@ using Unity.Transforms;
 using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
-[UpdateInGroup(typeof(GameGroupPrePhysics))]
-[UpdateAfter(typeof(VelocitySys))]
+[UpdateInGroup(typeof(GameGroupPostPhysics))]
+[UpdateAfter(typeof(HeadingSys))]
 public class RotationSys : JobComponentSystem
 {
     /// <summary>

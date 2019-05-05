@@ -2,31 +2,26 @@
 using Unity.Physics.Systems;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
-public class GameGroupPrePhysics : ComponentSystemGroup
-{
-    LifeTimeExpireSys LifeTimeExpireSys;
-    ShipSpawnerSys ShipSpawnerSys;
-    HeadingSys HeadingSys;
-    AngularVelocitySys AngularVelocitySys;
-    VelocitySys VelocitySys;
-    RotationSys RotationSys;
-    MovementSys MovementSys;
-}
-
-[UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(ExportPhysicsWorld))]
 public class GameGroupPostPhysics : ComponentSystemGroup
 {
+    TriggerSys TriggerSys;
+    LifeTimeExpireSys LifeTimeExpireSys;
+    ShipSpawnerSys ShipSpawnerSys;
+    HeadingSys HeadingSys;
+    //AngularVelocitySys AngularVelocitySys;
+    RotationSys RotationSys;
+    VelocitySys VelocitySys;
+    MovementSys MovementSys;
     NearestEnemySys NearestEnemySys;
     CombatTargetSys CombatTargetSys;
     MoveDestinationSys MoveDestinationSys;
-    TriggerSys TriggerSys;
     DamageHealthOnTriggerSys DamageHealthOnTriggerSys;
     WeaponSys WeaponSys;
+    ClearTriggerInfoBufferSys ClearTriggerInfoBufferSys;
 }
 
 [UpdateInGroup(typeof(LateSimulationSystemGroup))]
 public class GameGroupLateSim : ComponentSystemGroup
 {
-    ClearTriggerInfoBufferSys ClearTriggerInfoBufferSys;
 }

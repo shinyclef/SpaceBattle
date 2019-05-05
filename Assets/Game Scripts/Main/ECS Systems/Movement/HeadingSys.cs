@@ -6,8 +6,8 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateInGroup(typeof(GameGroupPrePhysics))]
-[UpdateAfter(typeof(ShipSpawnerSys))]
+[UpdateInGroup(typeof(GameGroupPostPhysics))]
+//[UpdateAfter(typeof(ShipSpawnerSys))]
 public class HeadingSys : JobComponentSystem
 {
     /// <summary>

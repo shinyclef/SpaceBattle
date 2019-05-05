@@ -6,8 +6,8 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateInGroup(typeof(GameGroupPrePhysics))]
-[UpdateAfter(typeof(AngularVelocitySys))]
+[UpdateInGroup(typeof(GameGroupPostPhysics))]
+[UpdateAfter(typeof(RotationSys))]
 public class VelocitySys : JobComponentSystem
 {
     [BurstCompile]

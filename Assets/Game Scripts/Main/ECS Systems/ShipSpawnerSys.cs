@@ -7,8 +7,8 @@ using Unity.Transforms;
 using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
-[UpdateInGroup(typeof(GameGroupPrePhysics))]
-[UpdateAfter(typeof(LifeTimeExpireSys))]
+[UpdateInGroup(typeof(GameGroupPostPhysics))]
+//[UpdateAfter(typeof(LifeTimeExpireSys))]
 public class ShipSpawnerSys : JobComponentSystem
 {
     private BeginInitializationEntityCommandBufferSystem cmdBufferSystem;

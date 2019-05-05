@@ -30,10 +30,8 @@ public class WeaponComp : MonoBehaviour, IDeclareReferencedPrefabs, IConvertGame
     {
         Entity projPrimaryEntity = conversionSystem.GetPrimaryEntity(ProjectilePrefab);
         int faction = (int)ProjectilePrefab.GetComponent<FactionComp>().Value;
-        float lifeTime = (int)ProjectilePrefab.GetComponent<LifeTimeComp>().Value;
-        float speed = (int)ProjectilePrefab.GetComponent<VelocityComp>().Speed;
-
-        Logger.Log($"Lifetime: {lifeTime}, Speed: {speed}");
+        float lifeTime = ProjectilePrefab.GetComponent<LifeTimeComp>().Value;
+        float speed = ProjectilePrefab.GetComponent<VelocityComp>().Speed;
 
         var weapon = new Weapon
         {

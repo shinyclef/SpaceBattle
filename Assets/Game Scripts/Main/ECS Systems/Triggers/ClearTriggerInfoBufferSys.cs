@@ -1,27 +1,40 @@
 ﻿using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 
 [UpdateInGroup(typeof(GameGroupLateSim))]
-public class ClearTriggerInfoBufferSys : ComponentSystem
+public class ClearTriggerInfoBufferSys : JobComponentSystem
 {
-    private EntityQuery triggerInfoTagQuery;
+    private EndSimulationEntityCommandBufferSystem endSimCB;
 
     protected override void OnCreate()
     {
-        triggerInfoTagQuery = GetEntityQuery(typeof(HasTriggerInfoTag));
+        endSimCB = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
     }
 
-    protected override void OnUpdate()
+    //[BurstCompile]
+    private struct Job : IJobForEachWithEntity<HasTriggerInfoTag>
     {
-        EntityManager em = World.Active.EntityManager;
-        em.RemoveComponent(triggerInfoTagQuery, typeof(HasTriggerInfoTag));
-        NativeArray<Entity> entities = triggerInfoTagQuery.ToEntityArray(Allocator.TempJob);
-        foreach (Entity e in entities)
-        {
-            DynamicBuffer<TriggerInfoBuf> buffer = em.GetBuffer<TriggerInfoBuf>(e);
-            buffer.Clear();
-        }
+        public EntityCommandBuffer.Concurrent EndSimCB;
+        [ReadOnly] public BufferFromEntity<TriggerInfoBuf> TriggerInfoBufs;
 
-        entities.Dispose();
+        public void Execute(Entity entity, int index, [ReadOnly] ref HasTriggerInfoTag tag)
+        {
+            EndSimCB.RemoveComponent<HasTriggerInfoTag>(index, entity);
+            TriggerInfoBufs[entity].Clear();
+        }
+    }
+
+    protected override JobHandle OnUpdate(JobHandle inputDeps)
+    {
+        var job = new Job
+        {
+            EndSimCB = endSimCB.CreateCommandBuffer().ToConcurrent(),
+            TriggerInfoBufs = GetBufferFromEntity<TriggerInfoBuf>()
+        };
+
+        var jh = job.Schedule(this, inputDeps);
+        endSimCB.AddJobHandleForProducer(jh);
+        return jh;
     }
 }

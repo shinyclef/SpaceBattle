@@ -8,6 +8,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(GameGroupPostPhysics))]
+[UpdateAfter(typeof(TriggerSys))]
 public class NearestEnemySys : JobComponentSystem
 {
     private const float MinUpdateInterval = 0.2f;
@@ -19,10 +20,10 @@ public class NearestEnemySys : JobComponentSystem
     }
 
     [BurstCompile]
-    private struct Job : IJobForEachWithEntity<Translation, Rotation, PhysicsCollider, NearestEnemy>
+    private struct NearestCastJob : IJobForEachWithEntity<Translation, Rotation, PhysicsCollider, NearestEnemy>
     {
         public float Time;
-        [ReadOnly] public PhysicsWorld PhysicsWorld;
+        //[ReadOnly] public PhysicsWorld PhysicsWorld;
         [ReadOnly] public CollisionWorld CollisionWorld;
 
         public void Execute(Entity entity, int index, [ReadOnly] ref Translation tran, [ReadOnly] ref Rotation rot, [ReadOnly] ref PhysicsCollider col, ref NearestEnemy nearestEnemy)
@@ -51,14 +52,14 @@ public class NearestEnemySys : JobComponentSystem
                 DistanceHit hit;
                 CollisionWorld.CalculateDistance(pointInput, out hit);
 
-                Entity hitEntity = PhysicsWorld.Bodies[hit.RigidBodyIndex].Entity;
+                Entity hitEntity = CollisionWorld.Bodies[hit.RigidBodyIndex].Entity;
                 if (hitEntity == entity)
                 {
                     nearestEnemy.Entity = Entity.Null;
                 }
                 else
                 {
-                    nearestEnemy.Entity = PhysicsWorld.Bodies[hit.RigidBodyIndex].Entity;
+                    nearestEnemy.Entity = CollisionWorld.Bodies[hit.RigidBodyIndex].Entity;
                 }
 
                 nearestEnemy.LastRefreshTime = Time;
@@ -69,14 +70,14 @@ public class NearestEnemySys : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        var job = new Job()
+        var job = new NearestCastJob()
         {
             Time = Time.time,
-            PhysicsWorld = buildPhysicsWorldSys.PhysicsWorld,
+            //PhysicsWorld = buildPhysicsWorldSys.PhysicsWorld,
             CollisionWorld = buildPhysicsWorldSys.PhysicsWorld.CollisionWorld
         };
 
-        JobHandle jh = job.ScheduleSingle(this, inputDeps);
+        JobHandle jh = job.Schedule(this, inputDeps);
         return jh;
     }
 }

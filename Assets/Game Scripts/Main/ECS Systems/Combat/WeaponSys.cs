@@ -6,20 +6,20 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(GameGroupPostPhysics))]
-[UpdateAfter(typeof(DamageHealthOnTriggerSys))]
+//[UpdateAfter(typeof(DamageHealthOnTriggerSys))]
 public class WeaponSys : JobComponentSystem
 {
-    private BeginInitializationEntityCommandBufferSystem cmdBufferSystem;
+    private BeginInitializationEntityCommandBufferSystem beingSimCB;
 
     protected override void OnCreate()
     {
-        cmdBufferSystem = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
+        beingSimCB = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
     }
 
     //[BurstCompile]
     private struct Job : IJobForEachWithEntity<MoveDestination, Translation, Rotation, Velocity, CombatTarget, Weapon>
     {
-        public EntityCommandBuffer.Concurrent CommandBuffer;
+        public EntityCommandBuffer.Concurrent BeginSimCB;
         [ReadOnly] public ComponentDataFromEntity<Velocity> VelocityData;
         public float Time;
 
@@ -45,12 +45,12 @@ public class WeaponSys : JobComponentSystem
             float2 projectedEnemyPos = moveDest.Value + VelocityData[target.Value].Value * wep.projectileLifeTime;
             if (math.distance(tran.Value.xy, projectedEnemyPos) < wep.projectileRange)
             {
-                wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireInterval, Time);
+                wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireInterval, Time + wep.FireInterval - 0.1f);
                 float3 pos = tran.Value + wep.SpawnOffset.LocalToWorldPos(rot.Value);
-                Entity proj = CommandBuffer.Instantiate(index, wep.ProjectilePrefab);
-                CommandBuffer.SetComponent(index, proj, new Translation { Value = pos });
-                CommandBuffer.SetComponent(index, proj, new Rotation { Value = rot.Value });
-                CommandBuffer.SetComponent(index, proj, new SpawnTime { Value = Time });
+                Entity proj = BeginSimCB.Instantiate(index, wep.ProjectilePrefab);
+                BeginSimCB.SetComponent(index, proj, new Translation { Value = pos });
+                BeginSimCB.SetComponent(index, proj, new Rotation { Value = rot.Value });
+                BeginSimCB.SetComponent(index, proj, new SpawnTime { Value = Time });
             }
         }
     }
@@ -59,13 +59,13 @@ public class WeaponSys : JobComponentSystem
     {
         var job = new Job()
         {
-            CommandBuffer = cmdBufferSystem.CreateCommandBuffer().ToConcurrent(),
+            BeginSimCB = beingSimCB.CreateCommandBuffer().ToConcurrent(),
             VelocityData = GetComponentDataFromEntity<Velocity>(),
             Time = Time.time
         };
 
         JobHandle jh = job.Schedule(this, inputDeps);
-        cmdBufferSystem.AddJobHandleForProducer(jh);
+        beingSimCB.AddJobHandleForProducer(jh);
         return jh;
     }
 }
