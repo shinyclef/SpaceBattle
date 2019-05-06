@@ -6,7 +6,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateInGroup(typeof(GameGroupPostPhysics))]
+[UpdateInGroup(typeof(MainGameGroup))]
 [UpdateAfter(typeof(RotationSys))]
 public class VelocitySys : JobComponentSystem
 {

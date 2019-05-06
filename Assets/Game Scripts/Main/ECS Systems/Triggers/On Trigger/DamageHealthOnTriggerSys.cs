@@ -3,22 +3,22 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 
-[UpdateInGroup(typeof(GameGroupPostPhysics))]
-[UpdateAfter(typeof(TriggerSys))]
+[UpdateInGroup(typeof(MainGameGroup))]
+[UpdateAfter(typeof(TriggerInfoPrepareSys))]
 public class DamageHealthOnTriggerSys : JobComponentSystem
 {
-    private BeginInitializationEntityCommandBufferSystem cmdBufferSystem;
+    private EndSimulationEntityCommandBufferSystem endSimCB;
 
     protected override void OnCreate()
     {
-        cmdBufferSystem = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
+        endSimCB = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
     }
 
     [BurstCompile]
     [RequireComponentTag(typeof(HasTriggerInfoTag))]
     private struct Job : IJobForEachWithEntity<Health>
     {
-        public EntityCommandBuffer.Concurrent CommandBuffer;
+        public EntityCommandBuffer.Concurrent EndSimCB;
 
         [ReadOnly] public ComponentDataFromEntity<DamageHealthOnTrigger> DamageHealthComps;
         [ReadOnly] public BufferFromEntity<TriggerInfoBuf> TriggerInfoBufs;
@@ -35,10 +35,10 @@ public class DamageHealthOnTriggerSys : JobComponentSystem
                     health.Value -= damageComp.Value;
                     if (health.Value <= 0)
                     {
-                        CommandBuffer.DestroyEntity(index, entity);
+                        EndSimCB.DestroyEntity(index, entity);
                     }
 
-                    CommandBuffer.DestroyEntity(index, info.OtherEntity);
+                    EndSimCB.DestroyEntity(index, info.OtherEntity);
                 }
             }
         }
@@ -51,12 +51,13 @@ public class DamageHealthOnTriggerSys : JobComponentSystem
 
         var job = new Job
         {
-            CommandBuffer = cmdBufferSystem.CreateCommandBuffer().ToConcurrent(),
+            EndSimCB = endSimCB.CreateCommandBuffer().ToConcurrent(),
             DamageHealthComps = GetComponentDataFromEntity<DamageHealthOnTrigger>(),
             TriggerInfoBufs = GetBufferFromEntity<TriggerInfoBuf>(true)
         };
 
         JobHandle jh = job.Schedule(this, inputDeps);
+        endSimCB.AddJobHandleForProducer(jh);
         return jh;
     }
 }

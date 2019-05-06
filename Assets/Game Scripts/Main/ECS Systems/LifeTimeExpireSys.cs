@@ -4,7 +4,7 @@ using Unity.Entities;
 using Unity.Jobs;
 using UnityEngine;
 
-[UpdateInGroup(typeof(GameGroupPostPhysics))]
+[UpdateInGroup(typeof(MainGameGroup))]
 public class LifeTimeExpireSys : JobComponentSystem
 {
     private BeginInitializationEntityCommandBufferSystem cmdBufferSystem;

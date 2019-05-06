@@ -27,6 +27,18 @@ public class ClearTriggerInfoBufferSys : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
+        EntityManager em = World.Active.EntityManager;
+        EntityQuery q = GetEntityQuery(typeof(HasTriggerInfoTag));
+        em.RemoveComponent(q, typeof(HasTriggerInfoTag));
+        NativeArray<Entity> entities = q.ToEntityArray(Allocator.TempJob);
+        for (int i = 0; i < entities.Length; i++)
+        {
+            em.GetBuffer<TriggerInfoBuf>(entities[i]).Clear();
+        }
+
+        entities.Dispose();
+        return inputDeps;
+
         var job = new Job
         {
             EndSimCB = endSimCB.CreateCommandBuffer().ToConcurrent(),

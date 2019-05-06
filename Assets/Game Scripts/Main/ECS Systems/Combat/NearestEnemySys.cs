@@ -7,8 +7,8 @@ using Unity.Physics.Systems;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateInGroup(typeof(GameGroupPostPhysics))]
-[UpdateAfter(typeof(TriggerSys))]
+[UpdateInGroup(typeof(MainGameGroup))]
+[UpdateAfter(typeof(TriggerInfoPrepareSys))]
 public class NearestEnemySys : JobComponentSystem
 {
     private const float MinUpdateInterval = 0.2f;
@@ -32,6 +32,8 @@ public class NearestEnemySys : JobComponentSystem
             {
                 return;
             }
+
+            
 
             unsafe
             {

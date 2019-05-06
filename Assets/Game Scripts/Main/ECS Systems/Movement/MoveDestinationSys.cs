@@ -5,7 +5,7 @@ using Unity.Jobs;
 using Unity.Transforms;
 
 // Applies velocity to current position.
-[UpdateInGroup(typeof(GameGroupPostPhysics))]
+[UpdateInGroup(typeof(MainGameGroup))]
 [UpdateAfter(typeof(CombatTargetSys))]
 public class MoveDestinationSys : JobComponentSystem
 {

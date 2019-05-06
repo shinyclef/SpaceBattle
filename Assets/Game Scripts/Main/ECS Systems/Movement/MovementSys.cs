@@ -7,7 +7,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 // Applies velocity to current position.
-[UpdateInGroup(typeof(GameGroupPostPhysics))]
+[UpdateInGroup(typeof(MainGameGroup))]
 [UpdateAfter(typeof(RotationSys))]
 public class MovementSys : JobComponentSystem
 {

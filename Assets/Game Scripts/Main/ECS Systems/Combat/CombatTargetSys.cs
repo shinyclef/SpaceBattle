@@ -3,7 +3,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 
-[UpdateInGroup(typeof(GameGroupPostPhysics))]
+[UpdateInGroup(typeof(MainGameGroup))]
 [UpdateAfter(typeof(NearestEnemySys))]
 public class CombatTargetSys : JobComponentSystem
 {
