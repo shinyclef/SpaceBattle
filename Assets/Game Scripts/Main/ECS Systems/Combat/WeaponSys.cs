@@ -5,7 +5,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateInGroup(typeof(MainGameGroup))]
+[UpdateInGroup(typeof(SpawnerGameGroup))]
 //[UpdateAfter(typeof(DamageHealthOnTriggerSys))]
 public class WeaponSys : JobComponentSystem
 {

@@ -461,7 +461,7 @@ MonoBehaviour:
   SpawnRatePerSecond: 400
   SpawnSpread:
     x: 200
-    y: 0
+    y: 50
     z: 0
 --- !u!114 &875533798
 MonoBehaviour:
@@ -884,7 +884,7 @@ MonoBehaviour:
   SpawnRatePerSecond: 400
   SpawnSpread:
     x: 200
-    y: 0
+    y: 50
     z: 0
 --- !u!114 &1741158130
 MonoBehaviour:
@@ -965,7 +965,7 @@ MonoBehaviour:
   SpawnRatePerSecond: 400
   SpawnSpread:
     x: 200
-    y: 0
+    y: 50
     z: 0
 --- !u!114 &1813004061
 MonoBehaviour:

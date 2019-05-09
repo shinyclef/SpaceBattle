@@ -8,7 +8,6 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(MainGameGroup))]
-[UpdateAfter(typeof(TriggerInfoPrepareSys))]
 public class NearestEnemySys : JobComponentSystem
 {
     private const float MinUpdateInterval = 0.2f;
@@ -20,20 +19,17 @@ public class NearestEnemySys : JobComponentSystem
     }
 
     [BurstCompile]
-    private struct NearestCastJob : IJobForEachWithEntity<Translation, Rotation, PhysicsCollider, NearestEnemy>
+    private struct NearestCastJob : IJobForEachWithEntity<Translation, PhysicsCollider, NearestEnemy>
     {
         public float Time;
-        //[ReadOnly] public PhysicsWorld PhysicsWorld;
         [ReadOnly] public CollisionWorld CollisionWorld;
 
-        public void Execute(Entity entity, int index, [ReadOnly] ref Translation tran, [ReadOnly] ref Rotation rot, [ReadOnly] ref PhysicsCollider col, ref NearestEnemy nearestEnemy)
+        public void Execute(Entity entity, int index, [ReadOnly] ref Translation tran, [ReadOnly] ref PhysicsCollider col, ref NearestEnemy nearestEnemy)
         {
             if (Time - nearestEnemy.LastRefreshTime < MinUpdateInterval)
             {
                 return;
             }
-
-            
 
             unsafe
             {
@@ -55,7 +51,8 @@ public class NearestEnemySys : JobComponentSystem
                 CollisionWorld.CalculateDistance(pointInput, out hit);
 
                 Entity hitEntity = CollisionWorld.Bodies[hit.RigidBodyIndex].Entity;
-                if (hitEntity == entity)
+                if (hitEntity == entity ||
+                    CollisionWorld.Bodies[hit.RigidBodyIndex].Collider->Filter.GroupIndex == col.ColliderPtr->Filter.GroupIndex) // TODO: REMOVE THIS TEMPORARY CASE WHEN THEY FIX THESE DETECTIONS!!!!
                 {
                     nearestEnemy.Entity = Entity.Null;
                 }
@@ -75,7 +72,6 @@ public class NearestEnemySys : JobComponentSystem
         var job = new NearestCastJob()
         {
             Time = Time.time,
-            //PhysicsWorld = buildPhysicsWorldSys.PhysicsWorld,
             CollisionWorld = buildPhysicsWorldSys.PhysicsWorld.CollisionWorld
         };
 

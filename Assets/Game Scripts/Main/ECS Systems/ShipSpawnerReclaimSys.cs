@@ -2,7 +2,7 @@
 using Unity.Collections;
 using Unity.Entities;
 
-[UpdateInGroup(typeof(MainGameGroup))]
+[UpdateInGroup(typeof(SpawnerGameGroup))]
 public class ShipSpawnerReclaimSys : ComponentSystem
 {
     private EntityQuery destroyedShipsQuery;

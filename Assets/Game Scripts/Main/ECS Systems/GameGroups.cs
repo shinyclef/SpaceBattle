@@ -15,10 +15,7 @@ public class TriggerGameGroup : ComponentSystemGroup
 public class MainGameGroup : ComponentSystemGroup
 {
     LifeTimeExpireSys LifeTimeExpireSys;
-    ShipSpawnerSpawnSys ShipSpawnerReclaimSys;
-    ShipSpawnerSpawnSys ShipSpawnerSpawnSys;
     HeadingSys HeadingSys;
-    //AngularVelocitySys AngularVelocitySys;
     RotationSys RotationSys;
     VelocitySys VelocitySys;
     MovementSys MovementSys;
@@ -27,6 +24,17 @@ public class MainGameGroup : ComponentSystemGroup
     MoveDestinationSys MoveDestinationSys;
     DamageHealthOnTriggerSys DamageHealthOnTriggerSys;
     WeaponSys WeaponSys;
+}
+
+/// <summary>
+/// Ship spawning should occur just before transform systems so the LocalToWorld component is updated before use.
+/// </summary>
+[UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateAfter(typeof(MainGameGroup))]
+public class SpawnerGameGroup : ComponentSystemGroup
+{
+    ShipSpawnerReclaimSys ShipSpawnerReclaimSys;
+    ShipSpawnerSpawnSys ShipSpawnerSpawnSys;
 }
 
 [UpdateInGroup(typeof(LateSimulationSystemGroup))]

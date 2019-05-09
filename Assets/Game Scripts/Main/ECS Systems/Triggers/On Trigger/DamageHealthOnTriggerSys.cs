@@ -4,7 +4,6 @@ using Unity.Entities;
 using Unity.Jobs;
 
 [UpdateInGroup(typeof(MainGameGroup))]
-[UpdateAfter(typeof(TriggerInfoPrepareSys))]
 public class DamageHealthOnTriggerSys : JobComponentSystem
 {
     private EndSimulationEntityCommandBufferSystem endSimCB;

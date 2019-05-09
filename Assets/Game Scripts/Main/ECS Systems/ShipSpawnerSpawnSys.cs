@@ -6,7 +6,7 @@ using Unity.Transforms;
 using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
-[UpdateInGroup(typeof(MainGameGroup))]
+[UpdateInGroup(typeof(SpawnerGameGroup))]
 public class ShipSpawnerSpawnSys : JobComponentSystem
 {
     private BeginInitializationEntityCommandBufferSystem cmdBufferSystem;
