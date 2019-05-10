@@ -19,6 +19,21 @@ public class TriggerInfoApplySys : JobComponentSystem
         triggerReceiversQuery = GetEntityQuery(typeof(HasTriggerInfoTag), typeof(HandleTriggersTag));
     }
 
+    protected override JobHandle OnUpdate(JobHandle inputDeps)
+    {
+        stepPhysicsWorldSys.FinalJobHandle.Complete();
+
+        var addComponentsJob = new AddTriggerComponentsJob
+        {
+            TriggerMap = triggerPrepSys.TriggerMap,
+            TriggerInfoBufs = GetBufferFromEntity<TriggerInfoBuf>()
+        };
+
+        JobHandle jh = addComponentsJob.Schedule(triggerReceiversQuery, inputDeps);
+        jh.Complete();
+        return jh;
+    }
+
     [BurstCompile]
     private struct AddTriggerComponentsJob : IJobForEachWithEntity<HandleTriggersTag>
     {
@@ -36,20 +51,5 @@ public class TriggerInfoApplySys : JobComponentSystem
 
             infoArr.Dispose();
         }
-    }
-
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        stepPhysicsWorldSys.FinalJobHandle.Complete();
-
-        var addComponentsJob = new AddTriggerComponentsJob
-        {
-            TriggerMap = triggerPrepSys.TriggerMap,
-            TriggerInfoBufs = GetBufferFromEntity<TriggerInfoBuf>()
-        };
-
-        JobHandle jh = addComponentsJob.Schedule(triggerReceiversQuery, inputDeps);
-        jh.Complete();
-        return jh;
     }
 }

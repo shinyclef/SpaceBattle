@@ -1,5 +1,17 @@
-﻿using Unity.Entities;
+﻿using System;
+using Unity.Entities;
 using UnityEngine;
+
+[Serializable]
+public struct TriggerInfo : IComponentData
+{
+    public Entity OtherEntity;
+
+    public TriggerInfo(Entity otherEntity)
+    {
+        OtherEntity = otherEntity;
+    }
+}
 
 [InternalBufferCapacity(1)]
 public struct TriggerInfoBuf : IBufferElementData

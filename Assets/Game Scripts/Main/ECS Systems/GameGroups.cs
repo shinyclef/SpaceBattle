@@ -21,7 +21,8 @@ public class MainGameGroup : ComponentSystemGroup
     MovementSys MovementSys;
     NearestEnemySys NearestEnemySys;
     CombatTargetSys CombatTargetSys;
-    MoveDestinationSys MoveDestinationSys;
+    CombatMovementAiSys CombatMovementAiSys;
+    //MoveDestinationSys MoveDestinationSys;
     DamageHealthOnTriggerSys DamageHealthOnTriggerSys;
     WeaponSys WeaponSys;
 }

@@ -1,6 +1,8 @@
-﻿using Unity.Mathematics;
+﻿using Unity.Entities;
+using Unity.Mathematics;
+using UnityEngine;
 
-public struct Consideration
+public struct Consideration : IComponentData
 {
     public FactType FactType;
     public GraphType GraphType;
@@ -13,6 +15,8 @@ public struct Consideration
     {
         switch (GraphType)
         {
+            case GraphType.Constant:
+                return YShift;
             case GraphType.Linear:
                 return Slope * input + YShift;
             case GraphType.Exponential:
@@ -22,6 +26,23 @@ public struct Consideration
                 return divisor == 0f ? YShift : Exp / divisor + YShift;
             default:
                 return 0;
-            }
+        }
+    }
+}
+
+[InternalBufferCapacity(5)]
+public struct ConsiderationBuf : IBufferElementData
+{
+    public static implicit operator Consideration(ConsiderationBuf e) { return e.Value; }
+    public static implicit operator ConsiderationBuf(Consideration e) { return new ConsiderationBuf { Value = e }; }
+
+    public Consideration Value;
+}
+
+public class ConsiderationBufComp : MonoBehaviour, IConvertGameObjectToEntity
+{
+    public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
+    {
+        dstManager.AddBuffer<ConsiderationBuf>(entity);
     }
 }

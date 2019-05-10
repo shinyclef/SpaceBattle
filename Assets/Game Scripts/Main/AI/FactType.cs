@@ -1,5 +1,6 @@
 ﻿public enum FactType
 {
+    Constant,
     Health,
     DistanceFromTarget,
     InnerAngleFromTarget,
