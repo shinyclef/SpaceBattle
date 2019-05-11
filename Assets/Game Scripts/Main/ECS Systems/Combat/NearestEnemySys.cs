@@ -10,12 +10,24 @@ using UnityEngine;
 [UpdateInGroup(typeof(MainGameGroup))]
 public class NearestEnemySys : JobComponentSystem
 {
-    private const float MinUpdateInterval = 0.2f;
+    private const float MinUpdateInterval = 0.5f;
     private BuildPhysicsWorld buildPhysicsWorldSys;
 
     protected override void OnCreate()
     {
         buildPhysicsWorldSys = World.GetOrCreateSystem<BuildPhysicsWorld>();
+    }
+
+    protected override JobHandle OnUpdate(JobHandle inputDeps)
+    {
+        var job = new NearestCastJob()
+        {
+            Time = Time.time,
+            CollisionWorld = buildPhysicsWorldSys.PhysicsWorld.CollisionWorld
+        };
+
+        JobHandle jh = job.Schedule(this, inputDeps);
+        return jh;
     }
 
     [BurstCompile]
@@ -65,17 +77,5 @@ public class NearestEnemySys : JobComponentSystem
                 //Logger.Log($"{entity} found {nearestEnemy.Entity}.");
             }
         }
-    }
-
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        var job = new NearestCastJob()
-        {
-            Time = Time.time,
-            CollisionWorld = buildPhysicsWorldSys.PhysicsWorld.CollisionWorld
-        };
-
-        JobHandle jh = job.Schedule(this, inputDeps);
-        return jh;
     }
 }

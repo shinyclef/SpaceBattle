@@ -13,6 +13,23 @@ public class DamageHealthOnTriggerSys : JobComponentSystem
         endSimCB = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
     }
 
+    protected override JobHandle OnUpdate(JobHandle inputDeps)
+    {
+        // ApplyDamageSystem is looking for Query: "TriggerInfo, HealthDamageTrigger".
+        // For each found entity, it uses 'ComponentDataFromEntity<TriggerInfo>' to check if each trigger partner has Health Comp.
+
+        var job = new Job
+        {
+            EndSimCB = endSimCB.CreateCommandBuffer().ToConcurrent(),
+            DamageHealthComps = GetComponentDataFromEntity<DamageHealthOnTrigger>(),
+            TriggerInfoBufs = GetBufferFromEntity<TriggerInfoBuf>(true)
+        };
+
+        JobHandle jh = job.Schedule(this, inputDeps);
+        endSimCB.AddJobHandleForProducer(jh);
+        return jh;
+    }
+
     [BurstCompile]
     [RequireComponentTag(typeof(HasTriggerInfoTag))]
     private struct Job : IJobForEachWithEntity<Health>
@@ -41,22 +58,5 @@ public class DamageHealthOnTriggerSys : JobComponentSystem
                 }
             }
         }
-    }
-
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        // ApplyDamageSystem is looking for Query: "TriggerInfo, HealthDamageTrigger".
-        // For each found entity, it uses 'ComponentDataFromEntity<TriggerInfo>' to check if each trigger partner has Health Comp.
-
-        var job = new Job
-        {
-            EndSimCB = endSimCB.CreateCommandBuffer().ToConcurrent(),
-            DamageHealthComps = GetComponentDataFromEntity<DamageHealthOnTrigger>(),
-            TriggerInfoBufs = GetBufferFromEntity<TriggerInfoBuf>(true)
-        };
-
-        JobHandle jh = job.Schedule(this, inputDeps);
-        endSimCB.AddJobHandleForProducer(jh);
-        return jh;
     }
 }

@@ -16,6 +16,20 @@ public class WeaponSys : JobComponentSystem
         beingSimCB = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
     }
 
+    protected override JobHandle OnUpdate(JobHandle inputDeps)
+    {
+        var job = new Job()
+        {
+            BeginSimCB = beingSimCB.CreateCommandBuffer().ToConcurrent(),
+            VelocityData = GetComponentDataFromEntity<Velocity>(),
+            Time = Time.time
+        };
+
+        JobHandle jh = job.Schedule(this, inputDeps);
+        beingSimCB.AddJobHandleForProducer(jh);
+        return jh;
+    }
+
     //[BurstCompile]
     private struct Job : IJobForEachWithEntity<MoveDestination, Translation, Rotation, Velocity, CombatTarget, Weapon>
     {
@@ -33,19 +47,51 @@ public class WeaponSys : JobComponentSystem
         {
             if (wep.CooldownEnd == 0)
             {
-                wep.CooldownEnd = Time + (Time * 10000 + index) % wep.FireInterval;
+                wep.CooldownEnd = Time + (Time * 10000 + index) % wep.FireMajorInterval;
+                wep.BurstShotCooldownEnd = Time + (Time * 10000 + index) % wep.FireMinorInterval;
                 return;
             }
 
-            if (Time < wep.CooldownEnd || !moveDest.IsCombatTarget)
+            if (!moveDest.IsCombatTarget)
+            {
+                wep.LastBurstShot = 0;
+                return;
+            }
+
+            bool isBursting = wep.LastBurstShot > 0 && Time < wep.CooldownEnd;
+            if (!isBursting)
+            {
+                if (Time < wep.CooldownEnd)
+                {
+                    return;
+                }
+            }
+            else if (Time < wep.BurstShotCooldownEnd)// in the middle of burst
             {
                 return;
             }
-            
-            float2 projectedEnemyPos = moveDest.Value + VelocityData[target.Value].Value * wep.projectileLifeTime;
-            if (math.distance(tran.Value.xy, projectedEnemyPos) < wep.projectileRange)
+
+            bool fire = false;
+            if (!isBursting)
             {
-                wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireInterval, Time + wep.FireInterval - 0.1f);
+                float2 projectedEnemyPos = moveDest.Value + VelocityData[target.Value].Value * wep.projectileLifeTime;
+                if (math.distance(tran.Value.xy, projectedEnemyPos) < wep.projectileRange)
+                {
+                    wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireMajorInterval, Time + wep.FireMajorInterval - 0.1f);
+                    wep.BurstShotCooldownEnd = math.max(wep.BurstShotCooldownEnd + wep.FireMinorInterval, Time + wep.FireMinorInterval - 0.01f);
+                    wep.LastBurstShot = 1;
+                    fire = true;
+                }
+            }
+            else
+            {
+                wep.BurstShotCooldownEnd = math.max(wep.BurstShotCooldownEnd + wep.FireMinorInterval, Time + wep.FireMinorInterval - 0.01f);
+                wep.LastBurstShot = (wep.LastBurstShot + 1) % wep.FireBurstCount;
+                fire = true;
+            }
+
+            if (fire)
+            {
                 float3 pos = tran.Value + wep.SpawnOffset.LocalToWorldPos(rot.Value);
                 Entity proj = BeginSimCB.Instantiate(index, wep.ProjectilePrefab);
                 BeginSimCB.SetComponent(index, proj, new Translation { Value = pos });
@@ -53,19 +99,5 @@ public class WeaponSys : JobComponentSystem
                 BeginSimCB.SetComponent(index, proj, new SpawnTime { Value = Time });
             }
         }
-    }
-
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        var job = new Job()
-        {
-            BeginSimCB = beingSimCB.CreateCommandBuffer().ToConcurrent(),
-            VelocityData = GetComponentDataFromEntity<Velocity>(),
-            Time = Time.time
-        };
-
-        JobHandle jh = job.Schedule(this, inputDeps);
-        beingSimCB.AddJobHandleForProducer(jh);
-        return jh;
     }
 }

@@ -6,6 +6,7 @@ using UnityEngine;
 public struct CombatTarget : IComponentData
 {
     public Entity Value;
+    public float AcquiredTime;
 }
 
 public class CombatTargetComp : MonoBehaviour, IConvertGameObjectToEntity

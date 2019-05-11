@@ -16,6 +16,26 @@ public class ShipSpawnerSpawnSys : JobComponentSystem
         cmdBufferSystem = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
     }
 
+    protected override JobHandle OnUpdate(JobHandle inputDeps)
+    {
+        if (Time.frameCount < 20f)
+        {
+            return inputDeps;
+        }
+        
+        var job = new SpawnJob
+        {
+            CommandBuffer = cmdBufferSystem.CreateCommandBuffer(),
+            Rand = new Random(Rand.New().NextUInt()),
+            Time = Time.time,
+            Dt = Time.deltaTime,
+        };
+
+        JobHandle jh = job.ScheduleSingle(this, inputDeps);
+        cmdBufferSystem.AddJobHandleForProducer(jh);
+        return jh;
+    }
+
     //[BurstCompile]
     private struct SpawnJob : IJobForEachWithEntity<ShipSpawner, LocalToWorld, Translation, Rotation>
     {
@@ -50,25 +70,5 @@ public class ShipSpawnerSpawnSys : JobComponentSystem
                 CommandBuffer.AddSharedComponent(ship, new ShipSpawnerOwnerSsShC(entity.Index, entity.Version));
             }
         }
-    }
-
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        if (Time.frameCount < 20f)
-        {
-            return inputDeps;
-        }
-        
-        var job = new SpawnJob
-        {
-            CommandBuffer = cmdBufferSystem.CreateCommandBuffer(),
-            Rand = new Random(Rand.New().NextUInt()),
-            Time = Time.time,
-            Dt = Time.deltaTime,
-        };
-
-        JobHandle jh = job.ScheduleSingle(this, inputDeps);
-        cmdBufferSystem.AddJobHandleForProducer(jh);
-        return jh;
     }
 }

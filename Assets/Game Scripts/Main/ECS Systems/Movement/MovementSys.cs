@@ -11,17 +11,6 @@ using UnityEngine;
 [UpdateAfter(typeof(RotationSys))]
 public class MovementSys : JobComponentSystem
 {
-    [BurstCompile]
-    private struct Job : IJobForEach<Translation, Velocity>
-    {
-        public float dt;
-
-        public void Execute(ref Translation translation, [ReadOnly] ref Velocity vel)
-        {
-            translation.Value += new float3(vel.Value, 0) * dt;
-        }
-    }
-
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
         var job = new Job()
@@ -31,5 +20,16 @@ public class MovementSys : JobComponentSystem
 
         JobHandle jh = job.Schedule(this, inputDeps);
         return jh;
+    }
+
+    [BurstCompile]
+    private struct Job : IJobForEach<Translation, Velocity>
+    {
+        public float dt;
+
+        public void Execute(ref Translation translation, [ReadOnly] ref Velocity vel)
+        {
+            translation.Value += new float3(vel.Value, 0) * dt;
+        }
     }
 }

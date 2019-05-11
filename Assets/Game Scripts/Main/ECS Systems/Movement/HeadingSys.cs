@@ -10,6 +10,17 @@ using UnityEngine;
 //[UpdateAfter(typeof(ShipSpawnerSys))]
 public class HeadingSys : JobComponentSystem
 {
+    protected override JobHandle OnUpdate(JobHandle inputDeps)
+    {
+        var job = new Job()
+        {
+            Dt = Time.deltaTime
+        };
+
+        JobHandle jh = job.ScheduleSingle(this, inputDeps);
+        return jh;
+    }
+
     /// <summary>
     /// Uses current pos and rot to set the target heading. Lerps current angular velocity and current heading towards target values in order to set a heading to reach target.
     /// </summary>
@@ -47,16 +58,5 @@ public class HeadingSys : JobComponentSystem
 
             //Logger.Log($"dest.Value: {dest.Value}, currentAVel: {currentAVel}, current: {current}, relativeDir: {relativeDir}, target: {target}, signedInnerAngle: {signedInnerAngle}");
         }
-    }
-
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        var job = new Job()
-        {
-            Dt = Time.deltaTime
-        };
-
-        JobHandle jh = job.ScheduleSingle(this, inputDeps);
-        return jh;
     }
 }

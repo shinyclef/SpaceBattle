@@ -13,6 +13,25 @@ using Random = Unity.Mathematics.Random;
 [UpdateAfter(typeof(HeadingSys))]
 public class RotationSys : JobComponentSystem
 {
+    protected override JobHandle OnUpdate(JobHandle inputDeps)
+    {
+        NativeArray<Random> rngs = new NativeArray<Random>(Environment.ProcessorCount, Allocator.TempJob);
+        for (int i = 0; i < rngs.Length; i++)
+        {
+            rngs[i] = new Random(Rand.New().NextUInt());
+        }
+
+        var job = new Job()
+        {
+            Rngs = rngs,
+            Dt = Time.deltaTime,
+            Time = Time.time
+        };
+
+        JobHandle jh = job.Schedule(this, inputDeps);
+        return jh;
+    }
+
     /// <summary>
     /// Sets rotation to match the current heading and tilt.
     /// </summary>
@@ -32,24 +51,5 @@ public class RotationSys : JobComponentSystem
         {
             rot.Value = quaternion.AxisAngle(new float3(0, 0, -1), math.radians(heading.CurrentHeading));
         }
-    }
-
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        NativeArray<Random> rngs = new NativeArray<Random>(Environment.ProcessorCount, Allocator.TempJob);
-        for (int i = 0; i < rngs.Length; i++)
-        {
-            rngs[i] = new Random(Rand.New().NextUInt());
-        }
-
-        var job = new Job()
-        {
-            Rngs = rngs,
-            Dt = Time.deltaTime,
-            Time = Time.time
-        };
-
-        JobHandle jh = job.Schedule(this, inputDeps);
-        return jh;
     }
 }

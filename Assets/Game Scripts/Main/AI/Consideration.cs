@@ -8,8 +8,8 @@ public struct Consideration : IComponentData
     public GraphType GraphType;
     public float Slope;
     public float Exp;
-    public float XShift;
-    public float YShift;
+    public half XShift;
+    public half YShift;
 
     public float Evaluate(float input)
     {

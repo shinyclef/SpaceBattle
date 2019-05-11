@@ -26,13 +26,12 @@ public struct Heading : IComponentData
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float2 ToFloat2(float heading)
     {
-        return math.forward(quaternion.RotateZ(heading)).xy;
+        return quaternion.EulerXYZ(0f, 0f, heading).Up().xy;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float FromQuaternion(quaternion q)
     {
-        //return FromFloat2(math.forward(q).xy);
         float4 v = q.value;
 
         //// yaw (z-axis)

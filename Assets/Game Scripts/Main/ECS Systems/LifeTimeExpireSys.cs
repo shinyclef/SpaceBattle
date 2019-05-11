@@ -14,6 +14,19 @@ public class LifeTimeExpireSys : JobComponentSystem
         cmdBufferSystem = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
     }
 
+    protected override JobHandle OnUpdate(JobHandle inputDeps)
+    {
+        var job = new Job()
+        {
+            CommandBuffer = cmdBufferSystem.CreateCommandBuffer().ToConcurrent(),
+            Time = Time.time
+        };
+
+        JobHandle jh = job.Schedule(this, inputDeps);
+        cmdBufferSystem.AddJobHandleForProducer(jh);
+        return jh;
+    }
+
     [BurstCompile]
     private struct Job : IJobForEachWithEntity<SpawnTime, LifeTime>
     {
@@ -28,18 +41,5 @@ public class LifeTimeExpireSys : JobComponentSystem
                 CommandBuffer.DestroyEntity(index, entity);
             }
         }
-    }
-
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        var job = new Job()
-        {
-            CommandBuffer = cmdBufferSystem.CreateCommandBuffer().ToConcurrent(),
-            Time = Time.time
-        };
-
-        JobHandle jh = job.Schedule(this, inputDeps);
-        cmdBufferSystem.AddJobHandleForProducer(jh);
-        return jh;
     }
 }

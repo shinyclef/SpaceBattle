@@ -42,14 +42,15 @@ public class TriggerInfoApplySys : JobComponentSystem
 
         public void Execute(Entity entity, int index, [ReadOnly] ref HandleTriggersTag dummy)
         {
-            NativeArray<TriggerInfo> infoArr = TriggerMap.GetValueArray(Allocator.Temp);
             DynamicBuffer<TriggerInfoBuf> buffer = TriggerInfoBufs[entity];
-            for (int j = 0; j < infoArr.Length; j++)
+            if (TriggerMap.TryGetFirstValue(entity, out TriggerInfo info, out NativeMultiHashMapIterator<Entity> iterator))
             {
-                buffer.Add(infoArr[j]);
+                do
+                {
+                    buffer.Add(info);
+                }
+                while (TriggerMap.TryGetNextValue(out info, ref iterator));
             }
-
-            infoArr.Dispose();
         }
     }
 }
