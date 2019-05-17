@@ -1,6 +1,7 @@
 ﻿public enum FactType
 {
-    Constant,
-    TimeSinceLastDecision,
-    DistanceFromTarget
+    Constant = 0,
+    DistanceFromTarget = 1,
+    AngleFromTarget = 2,
+    TimeSinceLastDecision = 3
 }

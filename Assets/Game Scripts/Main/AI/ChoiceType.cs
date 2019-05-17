@@ -1,6 +1,6 @@
 ﻿public enum ChoiceType
 {
     None,
-    FlyTowardsEnemy,
+    FlyTowardEnemy,
     FlyAwayFromEnemy
 }

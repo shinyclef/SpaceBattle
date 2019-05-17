@@ -10,6 +10,8 @@ public struct Consideration : IComponentData
     public float Exp;
     public half XShift;
     public half YShift;
+    public float InputMin;
+    public float InputMax;
 
     public float Evaluate(float input)
     {

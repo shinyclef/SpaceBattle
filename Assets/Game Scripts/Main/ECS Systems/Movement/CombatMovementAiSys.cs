@@ -21,10 +21,16 @@ public class CombatMovementAiSys : JobComponentSystem
     protected override void OnCreate()
     {
         rngs = new NativeArray<Random>(JobsUtility.MaxJobThreadCount, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
-        PrepareData();
+        var dto = GetTestDto();
+        PrepareData(dto, true);
     }
 
-    private void PrepareData()
+    public void UpdateAi(UtilityAiDto aiDto)
+    {
+        PrepareData(aiDto, false);
+    }
+
+    private void PrepareDataOld()
     {
         choices = new NativeArray<Choice>(2, Allocator.Persistent);
         considerationReferences = new NativeArray<int>(4, Allocator.Persistent);
@@ -68,7 +74,7 @@ public class CombatMovementAiSys : JobComponentSystem
         considerationReferences[1] = 2;
         choices[0] = new Choice
         {
-            ChoiceType = ChoiceType.FlyTowardsEnemy,
+            ChoiceType = ChoiceType.FlyTowardEnemy,
             ConsiderationIndexStart = 0,
             Weight = 1
         };
@@ -82,6 +88,70 @@ public class CombatMovementAiSys : JobComponentSystem
             ConsiderationIndexStart = 2,
             Weight = 1
         };
+    }
+
+    private void PrepareData(UtilityAiDto dto, bool firstTime)
+    {
+        if (!firstTime)
+        {
+            choices.Dispose();
+            considerationReferences.Dispose();
+            considerations.Dispose();
+        }
+
+        int considerationReferenceCount = 0;
+        int nextStartIndex = 0;
+        for (int i = 0; i < dto.Choices.Length; i++)
+        {
+            // find out how many consideration references there are
+            ChoiceDto cd = dto.Choices[i];
+            considerationReferenceCount += cd.ConsiderationIndecies.Length;
+        }
+
+        int choiceCount = dto.Choices.Length;
+        choices = new NativeArray<Choice>(choiceCount, Allocator.Persistent);
+        considerationReferences = new NativeArray<int>(considerationReferenceCount, Allocator.Persistent);
+        for (int i = 0; i < dto.Choices.Length; i++)
+        {
+            // populate choices and consideration references
+            ChoiceDto cd = dto.Choices[i];
+            
+            // populate choices
+            choices[i] = new Choice
+            {
+                ChoiceType = cd.ChoiceType,
+                ConsiderationIndexStart = nextStartIndex,
+                Weight = cd.Weight,
+                MomentumFactor = cd.Momentum
+            };
+
+            // populate consideration references (I Need the count first!)
+            for (int j = 0; j < cd.ConsiderationIndecies.Length; j++)
+            {
+                considerationReferences[j] = cd.ConsiderationIndecies[j];
+            }
+
+            // increment start index
+            nextStartIndex += cd.ConsiderationIndecies.Length;
+        }
+
+        int considerationCount = dto.Considerations.Length;
+        considerations = new NativeArray<Consideration>(considerationCount, Allocator.Persistent);
+        for (int i = 0; i < dto.Considerations.Length; i++)
+        {
+            ConsiderationDto cd = dto.Considerations[i];
+            considerations[i] = new Consideration
+            {
+                FactType = cd.FactType,
+                GraphType = cd.GraphType,
+                Slope = cd.Slope,
+                Exp = cd.Exp,
+                XShift = new half(cd.XShift),
+                YShift = new half(cd.YShift),
+                InputMin = cd.InputMin,
+                InputMax = cd.InputMax
+            };
+        }
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
@@ -118,11 +188,12 @@ public class CombatMovementAiSys : JobComponentSystem
 
         public float Time;
 
+        #pragma warning disable 0649
         [NativeSetThreadIndex] private int threadId;
+        #pragma warning restore 0649
         [NativeDisableParallelForRestriction] private DynamicBuffer<UtilityScoreBuf> utilityScores;
         private float2 targetPos;
         private float distanceFromTarget;
-        private bool changedMind;
 
         //private int eId;
 
@@ -156,7 +227,7 @@ public class CombatMovementAiSys : JobComponentSystem
 
                 switch (selectedChoice)
                 {
-                    case ChoiceType.FlyTowardsEnemy:
+                    case ChoiceType.FlyTowardEnemy:
                         dest.Value = targetPos;
                         dest.IsCombatTarget = true;
                         break;
@@ -238,6 +309,11 @@ public class CombatMovementAiSys : JobComponentSystem
                         case FactType.DistanceFromTarget:
                             factValue = distanceFromTarget;
                             break;
+
+                        case FactType.AngleFromTarget:
+                            factValue = 0f;
+                            break;
+
                         case FactType.TimeSinceLastDecision:
                             //Logger.LogIf(eId == 9, $"LastChoice: {Time - cm.LastChoiceTime}");
                             factValue = choice.ChoiceType == cm.LastChoice ? float.MaxValue : Time - cm.LastChoiceTime;
@@ -263,5 +339,86 @@ public class CombatMovementAiSys : JobComponentSystem
 
             return grandTotalScore;
         }
+    }
+
+    private UtilityAiDto GetTestDto()
+    {
+        var dto = new UtilityAiDto
+        {
+            Choices = new ChoiceDto[]
+            {
+                new ChoiceDto
+                {
+                    ChoiceType = ChoiceType.FlyTowardEnemy,
+                    Weight = 1f,
+                    Momentum = 1f,
+                    ConsiderationIndecies = new int[]
+                    {
+                        0,
+                        1
+                    }
+                },
+                new ChoiceDto
+                {
+                    ChoiceType = ChoiceType.FlyAwayFromEnemy,
+                    Weight = 1f,
+                    Momentum = 1f,
+                    ConsiderationIndecies = new int[]
+                    {
+                        2,
+                        3
+                    }
+                }
+            },
+            Considerations = new ConsiderationDto[]
+            {
+                new ConsiderationDto
+                {
+                    FactType = FactType.DistanceFromTarget,
+                    GraphType = GraphType.Exponential,
+                    Slope = -0.6f,
+                    Exp = 6f,
+                    XShift = 1f,
+                    YShift = 0.8f,
+                    InputMin = 0f,
+                    InputMax = 20f
+                },
+                new ConsiderationDto
+                {
+                    FactType = FactType.AngleFromTarget,
+                    GraphType = GraphType.Exponential,
+                    Slope = 0.6f,
+                    Exp = 6f,
+                    XShift = 1f,
+                    YShift = 0.2f,
+                    InputMin = 0f,
+                    InputMax = 180f
+                },
+                new ConsiderationDto
+                {
+                    FactType = FactType.DistanceFromTarget,
+                    GraphType = GraphType.Exponential,
+                    Slope = 0.6f,
+                    Exp = 6f,
+                    XShift = 1f,
+                    YShift = 0.2f,
+                    InputMin = 0f,
+                    InputMax = 20f
+                },
+                new ConsiderationDto
+                {
+                    FactType = FactType.AngleFromTarget,
+                    GraphType = GraphType.Exponential,
+                    Slope = -0.6f,
+                    Exp = 6f,
+                    XShift = 1f,
+                    YShift = 0.8f,
+                    InputMin = 0f,
+                    InputMax = 180f
+                }
+            }
+        };
+
+        return dto;
     }
 }
