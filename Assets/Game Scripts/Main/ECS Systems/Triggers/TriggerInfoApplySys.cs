@@ -47,6 +47,12 @@ public class TriggerInfoApplySys : JobComponentSystem
             {
                 do
                 {
+                    // TODO Remove this size increase when unity does it on their side (preview 32?)
+                    //if (buffer.Length == buffer.Capacity)
+                    //{
+                    //    buffer.ResizeUninitialized(buffer.Capacity + 2);
+                    //}
+
                     buffer.Add(info);
                 }
                 while (TriggerMap.TryGetNextValue(out info, ref iterator));
