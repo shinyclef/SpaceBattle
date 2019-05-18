@@ -440,7 +440,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &875533797
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -681,6 +681,7 @@ GameObject:
   - component: {fileID: 1586150479}
   - component: {fileID: 1586150478}
   - component: {fileID: 1586150480}
+  - component: {fileID: 1586150482}
   m_Layer: 0
   m_Name: Game
   m_TagString: Untagged
@@ -761,6 +762,10 @@ MonoBehaviour:
     DisableWithGameControls: 0
   - Cmd: 10
     Key: 45
+    Modifier: 0
+    DisableWithGameControls: 0
+  - Cmd: 11
+    Key: 289
     Modifier: 0
     DisableWithGameControls: 0
 --- !u!114 &1586150475
@@ -845,6 +850,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55ede25e929d1b745aa05374a5d71e37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1586150482
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1586150472}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 713cc05f358d2714ba359fc253c61ea6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DevelopmentBuild: 0
 --- !u!1 &1741158128
 GameObject:
   m_ObjectHideFlags: 0
@@ -880,7 +898,7 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 2944533906311966927, guid: 19d1abca87912fc44b88ab83a16449aa,
     type: 3}
-  MaxShips: 200
+  MaxShips: 1
   SpawnRatePerSecond: 300
   SpawnSpread:
     x: 100
@@ -961,7 +979,7 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 4903339397265122764, guid: d6ed2930c3712744caaf13322c21c6ff,
     type: 3}
-  MaxShips: 200
+  MaxShips: 1
   SpawnRatePerSecond: 300
   SpawnSpread:
     x: 100

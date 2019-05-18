@@ -3,8 +3,16 @@
 [Serializable]
 public class UtilityAiDto
 {
-    public ChoiceDto[] Choices;
+    public DecisionDto[] Decisions;
     public ConsiderationDto[] Considerations;
+}
+
+[Serializable]
+public class DecisionDto
+{
+    public DecisionType DecisionType;
+    public float MinimumRequiredOfBest;
+    public ChoiceDto[] Choices;
 }
 
 [Serializable]
@@ -13,7 +21,7 @@ public class ChoiceDto
     public ChoiceType ChoiceType;
     public float Weight;
     public float Momentum;
-    public int[] ConsiderationIndecies;
+    public short[] ConsiderationIndecies;
 }
 
 [Serializable]

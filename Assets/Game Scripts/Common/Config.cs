@@ -7,6 +7,8 @@ public class Config : MonoBehaviour
     public static string RootPath { get; private set; }
     public static string ScreenshotsPath { get; private set; }
     public static string ScreenshotsPathRelative { get; private set; }
+    public static string AiPath { get; private set; }
+    public static string AiPathRelative { get; private set; }
 
     public static bool IsDev { get; private set; }
 
@@ -27,8 +29,12 @@ public class Config : MonoBehaviour
     {
         // setup the paths
         RootPath = Directory.GetParent(Application.dataPath).FullName + @"\";
+
         ScreenshotsPathRelative = @"Screenshots\";
         ScreenshotsPath = RootPath + ScreenshotsPathRelative;
+
+        AiPathRelative = @"AI.json";
+        AiPath = RootPath + AiPathRelative;
 
         // create the folders if they don't exist
         if (!Directory.Exists(ScreenshotsPath))

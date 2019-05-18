@@ -1,6 +1,5 @@
 ﻿using Unity.Entities;
 using Unity.Mathematics;
-using UnityEngine;
 
 public struct Consideration : IComponentData
 {
@@ -12,6 +11,11 @@ public struct Consideration : IComponentData
     public half YShift;
     public float InputMin;
     public float InputMax;
+
+    public float GetNormalizedInput(float input)
+    {
+        return math.clamp((input - InputMin) / (InputMax - InputMin), 0f, 1f);
+    }
 
     public float Evaluate(float input)
     {
@@ -29,22 +33,5 @@ public struct Consideration : IComponentData
             default:
                 return 0;
         }
-    }
-}
-
-[InternalBufferCapacity(5)]
-public struct ConsiderationBuf : IBufferElementData
-{
-    public static implicit operator Consideration(ConsiderationBuf e) { return e.Value; }
-    public static implicit operator ConsiderationBuf(Consideration e) { return new ConsiderationBuf { Value = e }; }
-
-    public Consideration Value;
-}
-
-public class ConsiderationBufComp : MonoBehaviour, IConvertGameObjectToEntity
-{
-    public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
-    {
-        dstManager.AddBuffer<ConsiderationBuf>(entity);
     }
 }

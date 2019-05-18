@@ -10,5 +10,6 @@
     Boost = 7,
     Pause = 8,
     SpeedTime = 9,
-    SlowTime = 10
+    SlowTime = 10,
+    ReloadAi = 11
 }

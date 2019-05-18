@@ -1,6 +1,12 @@
 ﻿using Unity.Entities;
 using Unity.Physics.Systems;
 
+[UpdateInGroup(typeof(InitializationSystemGroup))]
+public class InitializationGameGroup : ComponentSystemGroup
+{
+    AiLoadSys AiLoadSys;
+}
+
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(ExportPhysicsWorld))]
 public class TriggerGameGroup : ComponentSystemGroup

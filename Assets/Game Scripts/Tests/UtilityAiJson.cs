@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace Tests
 {
@@ -13,28 +10,36 @@ namespace Tests
         {
             var dto = new UtilityAiDto
             {
-                Choices = new ChoiceDto[]
+                Decisions = new DecisionDto[]
                 {
-                    new ChoiceDto
+                    new DecisionDto
                     {
-                        ChoiceType = ChoiceType.FlyTowardEnemy,
-                        Weight = 1f,
-                        Momentum = 1f,
-                        ConsiderationIndecies = new int[]
+                        DecisionType = DecisionType.CombatMovement,
+                        MinimumRequiredOfBest = 0.1f,
+                        Choices = new ChoiceDto[]
                         {
-                            0,
-                            1
-                        }
-                    },
-                    new ChoiceDto
-                    {
-                        ChoiceType = ChoiceType.FlyAwayFromEnemy,
-                        Weight = 1f,
-                        Momentum = 1f,
-                        ConsiderationIndecies = new int[]
-                        {
-                            2,
-                            3
+                            new ChoiceDto
+                            {
+                                ChoiceType = ChoiceType.FlyTowardEnemy,
+                                Weight = 1f,
+                                Momentum = 1f,
+                                ConsiderationIndecies = new short[]
+                                {
+                                    0,
+                                    1
+                                }
+                            },
+                            new ChoiceDto
+                            {
+                                ChoiceType = ChoiceType.FlyAwayFromEnemy,
+                                Weight = 1f,
+                                Momentum = 1f,
+                                ConsiderationIndecies = new short[]
+                                {
+                                    2,
+                                    3
+                                }
+                            }
                         }
                     }
                 },
