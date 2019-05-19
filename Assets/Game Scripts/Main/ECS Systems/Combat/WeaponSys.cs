@@ -5,7 +5,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateInGroup(typeof(SpawnerGameGroup))]
+[UpdateInGroup(typeof(MainGameGroup))]
 //[UpdateAfter(typeof(DamageHealthOnTriggerSys))]
 public class WeaponSys : JobComponentSystem
 {
@@ -52,7 +52,7 @@ public class WeaponSys : JobComponentSystem
                 return;
             }
 
-            if (!moveDest.IsCombatTarget)
+            if (target.Entity == Entity.Null || !VelocityData.Exists(target.Entity))
             {
                 wep.LastBurstShot = 0;
                 return;
@@ -74,7 +74,7 @@ public class WeaponSys : JobComponentSystem
             bool fire = false;
             if (!isBursting)
             {
-                float2 projectedEnemyPos = moveDest.Value + VelocityData[target.Value].Value * wep.projectileLifeTime;
+                float2 projectedEnemyPos = moveDest.Value + VelocityData[target.Entity].Value * wep.projectileLifeTime;
                 if (math.distance(tran.Value.xy, projectedEnemyPos) < wep.projectileRange)
                 {
                     wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireMajorInterval, Time + wep.FireMajorInterval - 0.1f);

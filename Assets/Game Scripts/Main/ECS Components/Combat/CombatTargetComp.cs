@@ -5,7 +5,10 @@ using UnityEngine;
 [Serializable]
 public struct CombatTarget : IComponentData
 {
-    public Entity Value;
+    // Note: Check if Entity is Entity.Null before trying to use the other properties.
+    public Entity Entity;
+    public Vector2 Pos;
+    public float Heading;
     public float AcquiredTime;
 }
 

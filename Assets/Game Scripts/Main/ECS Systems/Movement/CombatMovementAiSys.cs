@@ -31,13 +31,15 @@ public class CombatMovementAiSys : JobComponentSystem
         {
             Rngs = rngs,
             UtilityScoreBufs = GetBufferFromEntity<UtilityScoreBuf>(),
-            TranslationComps = GetComponentDataFromEntity<Translation>(),
             Decisions = AiLoadSys.Data.Decisions,
             Choices = AiLoadSys.Data.Choices,
             ConsiderationIndecies = AiLoadSys.Data.ConsiderationIndecies,
             Considerations = AiLoadSys.Data.Considerations,
             Time = Time.time
         };
+
+        //job.Run(this, inputDeps);
+        //return inputDeps;
 
         JobHandle jh = job.Schedule(this, inputDeps);
         return jh;
@@ -48,7 +50,6 @@ public class CombatMovementAiSys : JobComponentSystem
     {
         [NativeDisableContainerSafetyRestriction] public NativeArray<Random> Rngs;
         [NativeDisableParallelForRestriction] public BufferFromEntity<UtilityScoreBuf> UtilityScoreBufs;
-        [ReadOnly] public ComponentDataFromEntity<Translation> TranslationComps;
         [ReadOnly] public NativeArray<Decision> Decisions;
         [ReadOnly] public NativeArray<Choice> Choices;
         [ReadOnly] public NativeArray<ushort> ConsiderationIndecies;
@@ -60,9 +61,8 @@ public class CombatMovementAiSys : JobComponentSystem
         [NativeSetThreadIndex] private int threadId;
         #pragma warning restore 0649
         [NativeDisableParallelForRestriction] private DynamicBuffer<UtilityScoreBuf> utilityScores;
-        private float2 targetPos;
 
-        private int eId;
+        //private int eId;
 
         public void Execute(Entity entity, int index,
             [ReadOnly] ref CombatTarget enemy,
@@ -71,24 +71,34 @@ public class CombatMovementAiSys : JobComponentSystem
             ref CombatMovement cm,
             ref Heading heading)
         {
-            if (enemy.Value != Entity.Null && TranslationComps.Exists(enemy.Value))
-            {
-                eId = entity.Index;
-                targetPos = TranslationComps[enemy.Value].Value.xy;
-                
+            //eId = entity.Index;
 
+            //var times = new NativeArray<double>(4, Allocator.Temp);
+            //var sw = new System.Diagnostics.Stopwatch();
+            //sw.Start();
+
+            if (enemy.Entity != Entity.Null)
+            {
+                //eId = entity.Index;
+                float2 targetPos = enemy.Pos;
                 Random rand = Rngs[threadId];
                 ChoiceType selectedChoice;
-                if (Time - cm.LastChoiceTime < 0.1f)
+                if (Time - cm.LastEvalTime < 0.3f)
                 {
                     selectedChoice = cm.LastChoice;
                 }
                 else
                 {
+                    cm.LastEvalTime = Time;
+
+                    float distance = 0f;
+                    bool hasDistance = false;
+                    float angle = 0f;
+                    bool hasAngle = false;
+
                     // make decision
                     utilityScores = UtilityScoreBufs[entity];
-
-                    DecisionMaker dm = new DecisionMaker(Decisions, Choices, ConsiderationIndecies, Considerations, utilityScores);
+                    DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref ConsiderationIndecies, ref Considerations, ref utilityScores);
                     dm.PrepareDecision(DecisionType.CombatMovement, ref rand);
                     bool hasNext;
                     do
@@ -99,11 +109,23 @@ public class CombatMovementAiSys : JobComponentSystem
                         switch (requiredFact)
                         {
                             case FactType.DistanceFromTarget:
-                                factValue = math.distance(l2w.Position.xy, targetPos);
+                                if (!hasDistance)
+                                {
+                                    hasDistance = true;
+                                    distance = math.distance(l2w.Position.xy, targetPos);
+                                }
+
+                                factValue = distance;
                                 break;
 
                             case FactType.AngleFromTarget:
-                                factValue = math.abs(gmath.SignedInnerAngle(heading.CurrentHeading, heading.TargetHeading));
+                                if (!hasAngle)
+                                {
+                                    hasAngle = true;
+                                    angle = math.abs(gmath.SignedInnerAngle(heading.CurrentHeading, heading.TargetHeading));
+                                }
+
+                                factValue = angle;
                                 break;
 
                             default:

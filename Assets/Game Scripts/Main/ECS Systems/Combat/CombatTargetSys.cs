@@ -13,7 +13,7 @@ public class CombatTargetSys : JobComponentSystem
     {
         var job = new Job
         {
-            Entities = GetComponentDataFromEntity<LocalToWorld>(),
+            L2WComps = GetComponentDataFromEntity<LocalToWorld>(true),
             Time = Time.time
         };
 
@@ -24,22 +24,25 @@ public class CombatTargetSys : JobComponentSystem
     [BurstCompile]
     private struct Job : IJobForEachWithEntity<NearestEnemy, CombatTarget>
     {
-        [ReadOnly] public ComponentDataFromEntity<LocalToWorld> Entities;
+        [ReadOnly] public ComponentDataFromEntity<LocalToWorld> L2WComps;
         public float Time;
 
         public void Execute(Entity entity, int index, [ReadOnly] ref NearestEnemy nearestEnemy, ref CombatTarget target)
         {
-            if (target.Value == nearestEnemy.Entity)
+            // switch to nearest enemy if existing target is gone, or enough time has passed
+            bool targetExists = target.Entity != Entity.Null && L2WComps.Exists(target.Entity);
+            if (target.Entity != nearestEnemy.Entity && (!targetExists || Time - target.AcquiredTime > 5f))
             {
-                return;
+                target.Entity = nearestEnemy.Entity;
+                target.AcquiredTime = Time;
             }
 
-            // switch to nearest enemy if existing target is gone, or enough time has passed
-            if (!Entities.Exists(target.Value) || Time - target.AcquiredTime > 5f)
+            targetExists = target.Entity != Entity.Null && L2WComps.Exists(target.Entity);
+            if (targetExists)
             {
-                target.Value = nearestEnemy.Entity;
-                target.AcquiredTime = Time;
-                return;
+                LocalToWorld targetL2W = L2WComps[target.Entity];
+                target.Pos = targetL2W.Position.xy;
+                target.Heading = Heading.FromFloat2(targetL2W.Up.xy);
             }
         }
     }

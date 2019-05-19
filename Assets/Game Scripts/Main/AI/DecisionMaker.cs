@@ -27,8 +27,8 @@ public struct DecisionMaker
     private ushort considerationIndexTo;
     private ushort considerationIndex;
 
-    public DecisionMaker(NativeArray<Decision> decisions, NativeArray<Choice> choices, NativeArray<ushort> considerationIndecies, 
-        NativeArray<Consideration> considerations, DynamicBuffer<UtilityScoreBuf> utilityScores) : this()
+    public DecisionMaker(ref NativeArray<Decision> decisions, ref NativeArray<Choice> choices, ref NativeArray<ushort> considerationIndecies,
+        ref NativeArray<Consideration> considerations, ref DynamicBuffer<UtilityScoreBuf> utilityScores) : this()
     {
         Decisions = decisions;
         Choices = choices;
@@ -83,12 +83,11 @@ public struct DecisionMaker
         {
             bestChoiceScore = math.max(currentChoiceScore, bestChoiceScore);
             minRequiredChoiceScore = bestChoiceScore * decision.MinimumRequiredOfBest;
-            
 
             // we've completed this consideration, let's score it and look at the next choice
             if (!MoveToNextChoice())
             {
-                SelectChoice();
+                SelectChoiceHighestScore();
                 return false;
             }
         }
@@ -123,24 +122,7 @@ public struct DecisionMaker
         return true;
     }
 
-    //private void SelectChoice()
-    //{
-    //    float max = 0;
-    //    for (int i = 0; i < UtilityScores.Length; i++)
-    //    {
-    //        max += UtilityScores[i].Value / grandTotalScore;
-    //        if (rand.NextFloat() < max)
-    //        {
-    //            SelectedChoice = Choices[choiceIndexFrom + i].ChoiceType;
-    //            return;
-    //        }
-    //    }
-
-    //    Logger.Log($"Heads up, I'm selecting default choice! Max was {max}.");
-    //    SelectedChoice = ChoiceType.None;
-    //}
-
-    private void SelectChoice()
+    private void SelectChoiceHighestScore()
     {
         float max = 0;
         for (int i = 0; i < UtilityScores.Length; i++)
@@ -157,5 +139,22 @@ public struct DecisionMaker
             //Logger.Log($"Heads up, I'm selecting default choice! Max was {max}.");
             SelectedChoice = ChoiceType.None;
         }
+    }
+
+    private void SelectChoiceWeightedRandom()
+    {
+        float max = 0;
+        for (int i = 0; i < UtilityScores.Length; i++)
+        {
+            max += UtilityScores[i].Value / grandTotalScore;
+            if (rand.NextFloat() < max)
+            {
+                SelectedChoice = Choices[choiceIndexFrom + i].ChoiceType;
+                return;
+            }
+        }
+
+        //Logger.Log($"Heads up, I'm selecting default choice! Max was {max}.");
+        SelectedChoice = ChoiceType.None;
     }
 }

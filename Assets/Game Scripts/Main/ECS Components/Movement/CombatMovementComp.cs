@@ -7,6 +7,7 @@ public struct CombatMovement : IComponentData
 {
     public ChoiceType LastChoice;
     public float LastChoiceTime;
+    public float LastEvalTime;
     public float LastHeading;
 }
 
