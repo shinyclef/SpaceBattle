@@ -99,8 +99,8 @@ public class GInput : MonoBehaviour
         I = this;
         allExceptIgnoreRaycast = ~(1 << LayerMask.NameToLayer("Ignore Raycast"));
         ScreenshotUtil.I.ScreenshotPath = Config.ScreenshotsPath;
+        Cursor.lockState = CursorLockMode.None;
     }
-
 
     /* ------- */
     /* General */
@@ -569,10 +569,10 @@ public class GInput : MonoBehaviour
         {
             HitObjUiTop = raycastResultList[0].gameObject;
 
-            //Logger.LogVerbose("----------- Hits -----------");
+            //Debug.Log("----------- Hits -----------");
             //foreach (var obj in raycastResultList)
             //{
-            //    Logger.LogVerbose(obj.gameObject.name);
+            //    Debug.Log(obj.gameObject.name);
             //}
         }
         else
