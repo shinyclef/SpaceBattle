@@ -56,6 +56,11 @@ public class TimeManager : MonoBehaviour
 
     private void Update()
     {
+        if (!GInput.AnyKeyActivity)
+        {
+            return;
+        }
+
         if (GInput.GetButtonDown(Cmd.Pause))
         {
             if (holdToPause)

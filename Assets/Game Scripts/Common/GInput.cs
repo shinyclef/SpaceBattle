@@ -149,7 +149,7 @@ public class GInput : MonoBehaviour
 
     public static bool GetButton(Cmd cmd)
     {
-        if (!KeyCodes.ContainsKey(cmd) ||
+        if (!AnyKeyActivity || !KeyCodes.ContainsKey(cmd) ||
             (GameControlsInactive && KeyCodes[cmd].DisableWithGameControls))
         {
             return false;
@@ -161,7 +161,7 @@ public class GInput : MonoBehaviour
 
     public static bool GetButtonDown(Cmd cmd)
     {
-        if (!KeyCodes.ContainsKey(cmd) ||
+        if (!AnyKeyActivity || !KeyCodes.ContainsKey(cmd) ||
             (GameControlsInactive && KeyCodes[cmd].DisableWithGameControls))
         {
             return false;
@@ -173,7 +173,7 @@ public class GInput : MonoBehaviour
 
     public static bool GetButtonUp(Cmd cmd)
     {
-        if (!KeyCodes.ContainsKey(cmd) ||
+        if (!AnyKeyActivity || !KeyCodes.ContainsKey(cmd) ||
             (GameControlsInactive && KeyCodes[cmd].DisableWithGameControls))
         {
             return false;
@@ -185,19 +185,19 @@ public class GInput : MonoBehaviour
 
     public static bool GetButtonRaw(Cmd cmd)
     {
-        return KeyCodes.ContainsKey(cmd) && Input.GetKey(KeyCodes[cmd].Key) &&
+        return AnyKeyActivity && KeyCodes.ContainsKey(cmd) && Input.GetKey(KeyCodes[cmd].Key) &&
             (KeyCodes[cmd].Modifier == KeyCode.None || Input.GetKey(KeyCodes[cmd].Modifier));
     }
 
     public static bool GetButtonDownRaw(Cmd cmd)
     {
-        return KeyCodes.ContainsKey(cmd) && Input.GetKeyDown(KeyCodes[cmd].Key) &&
+        return AnyKeyActivity && KeyCodes.ContainsKey(cmd) && Input.GetKeyDown(KeyCodes[cmd].Key) &&
             (KeyCodes[cmd].Modifier == KeyCode.None || Input.GetKey(KeyCodes[cmd].Modifier));
     }
 
     public static bool GetButtonUpRaw(Cmd cmd)
     {
-        return KeyCodes.ContainsKey(cmd) && Input.GetKeyUp(KeyCodes[cmd].Key) &&
+        return AnyKeyActivity && KeyCodes.ContainsKey(cmd) && Input.GetKeyUp(KeyCodes[cmd].Key) &&
             (KeyCodes[cmd].Modifier == KeyCode.None || Input.GetKey(KeyCodes[cmd].Modifier));
     }
 

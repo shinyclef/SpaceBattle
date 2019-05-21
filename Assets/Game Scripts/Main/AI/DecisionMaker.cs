@@ -6,7 +6,6 @@ public struct DecisionMaker
 {
     public NativeArray<Decision> Decisions;
     public NativeArray<Choice> Choices;
-    public NativeArray<ushort> ConsiderationIndecies;
     public NativeArray<Consideration> Considerations;
     public DynamicBuffer<UtilityScoreBuf> UtilityScores;
 
@@ -27,12 +26,11 @@ public struct DecisionMaker
     private ushort considerationIndexTo;
     private ushort considerationIndex;
 
-    public DecisionMaker(ref NativeArray<Decision> decisions, ref NativeArray<Choice> choices, ref NativeArray<ushort> considerationIndecies,
+    public DecisionMaker(ref NativeArray<Decision> decisions, ref NativeArray<Choice> choices,
         ref NativeArray<Consideration> considerations, ref DynamicBuffer<UtilityScoreBuf> utilityScores) : this()
     {
         Decisions = decisions;
         Choices = choices;
-        ConsiderationIndecies = considerationIndecies;
         Considerations = considerations;
         UtilityScores = utilityScores;
     }
@@ -54,13 +52,13 @@ public struct DecisionMaker
 
         this.rand = rand;
         PrepareChoiceVariables();
-        NextRequiredFactType = Considerations[ConsiderationIndecies[considerationIndex]].FactType;
+        NextRequiredFactType = Considerations[considerationIndex].FactType;
     }
 
     public bool EvaluateNextConsideration(float factValueRaw)
     {
         // evluate the considertion and multiply the result with the factValue
-        Consideration consideration = Considerations[ConsiderationIndecies[considerationIndex]];
+        Consideration consideration = Considerations[considerationIndex];
 
         // normalize input
         float factValue = consideration.GetNormalizedInput(factValueRaw);
@@ -92,7 +90,7 @@ public struct DecisionMaker
             }
         }
 
-        NextRequiredFactType = Considerations[ConsiderationIndecies[considerationIndex]].FactType;
+        NextRequiredFactType = Considerations[considerationIndex].FactType;
         return true;
     }
 
@@ -100,7 +98,7 @@ public struct DecisionMaker
     {
         choice = Choices[choiceIndex];
         considerationIndexFrom = choice.ConsiderationIndexStart;
-        considerationIndexTo = choiceIndex < Choices.Length - 1 ? Choices[choiceIndex + 1].ConsiderationIndexStart : (ushort)ConsiderationIndecies.Length;
+        considerationIndexTo = choiceIndex < Choices.Length - 1 ? Choices[choiceIndex + 1].ConsiderationIndexStart : (ushort)Considerations.Length;
         considerationIndex = considerationIndexFrom;
         modificationFactor = 1f - (1f / (considerationIndexTo - considerationIndexFrom));
         currentChoiceScore = choice.Weight + choice.MomentumFactor;

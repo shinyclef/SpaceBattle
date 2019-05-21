@@ -59,7 +59,7 @@
         /// <returns>The position.</returns>
         public static float3 GetPosition(this float4x4 matrix) => matrix.c3.xyz;
 
-        // TODO this only works when scale = 1, need better solution
+        // -TODO this only works when scale = 1, need better solution
         /// <summary>
         /// Gets the rotation from a transform matrix.
         /// </summary>

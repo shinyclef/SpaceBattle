@@ -4,7 +4,6 @@
 public class UtilityAiDto
 {
     public DecisionDto[] Decisions;
-    public ConsiderationDto[] Considerations;
 }
 
 [Serializable]
@@ -19,9 +18,10 @@ public class DecisionDto
 public class ChoiceDto
 {
     public ChoiceType ChoiceType;
+    public string ChoiceName;
     public float Weight;
     public float Momentum;
-    public short[] ConsiderationIndecies;
+    public ConsiderationDto[] Considerations;
 }
 
 [Serializable]

@@ -23,6 +23,12 @@ public class TriggerInfoApplySys : JobComponentSystem
     {
         stepPhysicsWorldSys.FinalJobHandle.Complete();
 
+        // prefer to do this after stepPhysicsWorldSys.FinalJobHandle.Complete(); for consistent frame time
+        if (!triggerPrepSys.DisposeRequired) 
+        {
+            return inputDeps;
+        }
+
         var addComponentsJob = new AddTriggerComponentsJob
         {
             TriggerMap = triggerPrepSys.TriggerMap,

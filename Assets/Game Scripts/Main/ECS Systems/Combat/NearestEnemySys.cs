@@ -64,7 +64,7 @@ public class NearestEnemySys : JobComponentSystem
 
                 Entity hitEntity = CollisionWorld.Bodies[hit.RigidBodyIndex].Entity;
                 if (hitEntity == entity ||
-                    CollisionWorld.Bodies[hit.RigidBodyIndex].Collider->Filter.GroupIndex == col.ColliderPtr->Filter.GroupIndex) // TODO: REMOVE THIS TEMPORARY CASE WHEN THEY FIX THESE DETECTIONS!!!!
+                    CollisionWorld.Bodies[hit.RigidBodyIndex].Collider->Filter.GroupIndex == col.ColliderPtr->Filter.GroupIndex) // TODO: Remove this temporary case when collider groups are working
                 {
                     nearestEnemy.Entity = Entity.Null;
                 }

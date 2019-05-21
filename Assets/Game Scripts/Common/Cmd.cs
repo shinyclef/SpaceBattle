@@ -11,5 +11,6 @@
     Pause = 8,
     SpeedTime = 9,
     SlowTime = 10,
-    ReloadAi = 11
+    ReloadAi = 11,
+    ToggleAiInspector = 12
 }

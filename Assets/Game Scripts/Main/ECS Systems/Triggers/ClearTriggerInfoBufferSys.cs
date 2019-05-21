@@ -26,27 +26,28 @@ public class ClearTriggerInfoBufferSys : JobComponentSystem
         entities.Dispose();
         return inputDeps;
 
-        var job = new Job
-        {
-            EndSimCB = endSimCB.CreateCommandBuffer().ToConcurrent(),
-            TriggerInfoBufs = GetBufferFromEntity<TriggerInfoBuf>()
-        };
+        // TODO: Clean this up if commiting to not using the job
+        //var job = new Job
+        //{
+        //    EndSimCB = endSimCB.CreateCommandBuffer().ToConcurrent(),
+        //    TriggerInfoBufs = GetBufferFromEntity<TriggerInfoBuf>()
+        //};
 
-        var jh = job.Schedule(this, inputDeps);
-        endSimCB.AddJobHandleForProducer(jh);
-        return jh;
+        //var jh = job.Schedule(this, inputDeps);
+        //endSimCB.AddJobHandleForProducer(jh);
+        //return jh;
     }
 
     //[BurstCompile]
-    private struct Job : IJobForEachWithEntity<HasTriggerInfoTag>
-    {
-        public EntityCommandBuffer.Concurrent EndSimCB;
-        [ReadOnly] public BufferFromEntity<TriggerInfoBuf> TriggerInfoBufs;
+    //private struct Job : IJobForEachWithEntity<HasTriggerInfoTag>
+    //{
+    //    public EntityCommandBuffer.Concurrent EndSimCB;
+    //    [ReadOnly] public BufferFromEntity<TriggerInfoBuf> TriggerInfoBufs;
 
-        public void Execute(Entity entity, int index, [ReadOnly] ref HasTriggerInfoTag tag)
-        {
-            EndSimCB.RemoveComponent<HasTriggerInfoTag>(index, entity);
-            TriggerInfoBufs[entity].Clear();
-        }
-    }
+    //    public void Execute(Entity entity, int index, [ReadOnly] ref HasTriggerInfoTag tag)
+    //    {
+    //        EndSimCB.RemoveComponent<HasTriggerInfoTag>(index, entity);
+    //        TriggerInfoBufs[entity].Clear();
+    //    }
+    //}
 }

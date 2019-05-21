@@ -11,6 +11,7 @@ public class TriggerInfoPrepareSys : ComponentSystem
     private StepPhysicsWorld stepPhysicsWorldSys;
     private HashSet<Entity> foundEntities;
 
+    public bool DisposeRequired { get; private set; }
     public NativeMultiHashMap<Entity, TriggerInfo> TriggerMap { get; private set; }
     public NativeArray<Entity> TriggerKeys { get; private set; }
 
@@ -39,6 +40,12 @@ public class TriggerInfoPrepareSys : ComponentSystem
             foundEntities.Add(b);
         }
 
+        if (foundEntities.Count == 0)
+        {
+            DisposeRequired = false;
+            return;
+        }
+
         TriggerMap = new NativeMultiHashMap<Entity, TriggerInfo>(foundEntities.Count, Allocator.TempJob);
         foreach (TriggerEvent trigger in triggerEvents)
         {
@@ -59,7 +66,9 @@ public class TriggerInfoPrepareSys : ComponentSystem
         }
 
         foundEntities.Clear();
+
         TriggerKeys = TriggerMap.GetKeyArray(Allocator.TempJob);
         em.AddComponent(TriggerKeys, typeof(HasTriggerInfoTag));
+        DisposeRequired = true;
     }
 }

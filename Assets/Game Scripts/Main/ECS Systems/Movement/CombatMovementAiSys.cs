@@ -31,10 +31,9 @@ public class CombatMovementAiSys : JobComponentSystem
         {
             Rngs = rngs,
             UtilityScoreBufs = GetBufferFromEntity<UtilityScoreBuf>(),
-            Decisions = AiLoadSys.Data.Decisions,
-            Choices = AiLoadSys.Data.Choices,
-            ConsiderationIndecies = AiLoadSys.Data.ConsiderationIndecies,
-            Considerations = AiLoadSys.Data.Considerations,
+            Decisions = AiLoadSys.NativeData.Decisions,
+            Choices = AiLoadSys.NativeData.Choices,
+            Considerations = AiLoadSys.NativeData.Considerations,
             Time = Time.time
         };
 
@@ -52,7 +51,6 @@ public class CombatMovementAiSys : JobComponentSystem
         [NativeDisableParallelForRestriction] public BufferFromEntity<UtilityScoreBuf> UtilityScoreBufs;
         [ReadOnly] public NativeArray<Decision> Decisions;
         [ReadOnly] public NativeArray<Choice> Choices;
-        [ReadOnly] public NativeArray<ushort> ConsiderationIndecies;
         [ReadOnly] public NativeArray<Consideration> Considerations;
 
         public float Time;
@@ -98,7 +96,7 @@ public class CombatMovementAiSys : JobComponentSystem
 
                     // make decision
                     utilityScores = UtilityScoreBufs[entity];
-                    DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref ConsiderationIndecies, ref Considerations, ref utilityScores);
+                    DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores);
                     dm.PrepareDecision(DecisionType.CombatMovement, ref rand);
                     bool hasNext;
                     do

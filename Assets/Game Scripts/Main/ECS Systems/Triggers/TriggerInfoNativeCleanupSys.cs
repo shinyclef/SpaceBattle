@@ -13,7 +13,10 @@ public class TriggerInfoNativeCleanupSys : ComponentSystem
 
     protected override void OnUpdate()
     {
-        triggerPrepSys.TriggerMap.Dispose();
-        triggerPrepSys.TriggerKeys.Dispose();
+        if (triggerPrepSys.DisposeRequired)
+        {
+            triggerPrepSys.TriggerMap.Dispose();
+            triggerPrepSys.TriggerKeys.Dispose();
+        }
     }
 }

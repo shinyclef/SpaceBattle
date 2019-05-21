@@ -23,10 +23,30 @@ namespace Tests
                                 ChoiceType = ChoiceType.FlyTowardEnemy,
                                 Weight = 1f,
                                 Momentum = 1f,
-                                ConsiderationIndecies = new short[]
+                                Considerations = new ConsiderationDto[]
                                 {
-                                    0,
-                                    1
+                                    new ConsiderationDto
+                                    {
+                                        FactType = FactType.DistanceFromTarget,
+                                        GraphType = GraphType.Exponential,
+                                        Slope = -0.6f,
+                                        Exp = 6f,
+                                        XShift = 1f,
+                                        YShift = 0.8f,
+                                        InputMin = 0f,
+                                        InputMax = 20f
+                                    },
+                                    new ConsiderationDto
+                                    {
+                                        FactType = FactType.AngleFromTarget,
+                                        GraphType = GraphType.Exponential,
+                                        Slope = 0.6f,
+                                        Exp = 6f,
+                                        XShift = 1f,
+                                        YShift = 0.2f,
+                                        InputMin = 0f,
+                                        InputMax = 180f
+                                    }
                                 }
                             },
                             new ChoiceDto
@@ -34,60 +54,33 @@ namespace Tests
                                 ChoiceType = ChoiceType.FlyAwayFromEnemy,
                                 Weight = 1f,
                                 Momentum = 1f,
-                                ConsiderationIndecies = new short[]
+                                Considerations = new ConsiderationDto[]
                                 {
-                                    2,
-                                    3
+                                    new ConsiderationDto
+                                    {
+                                        FactType = FactType.DistanceFromTarget,
+                                        GraphType = GraphType.Exponential,
+                                        Slope = 0.6f,
+                                        Exp = 6f,
+                                        XShift = 1f,
+                                        YShift = 0.2f,
+                                        InputMin = 5f,
+                                        InputMax = 20f
+                                    },
+                                    new ConsiderationDto
+                                    {
+                                        FactType = FactType.AngleFromTarget,
+                                        GraphType = GraphType.Exponential,
+                                        Slope = -0.6f,
+                                        Exp = 6f,
+                                        XShift = 1f,
+                                        YShift = 0.8f,
+                                        InputMin = 0f,
+                                        InputMax = 180f
+                                    }
                                 }
                             }
                         }
-                    }
-                },
-                Considerations = new ConsiderationDto[]
-                {
-                    new ConsiderationDto
-                    {
-                        FactType = FactType.DistanceFromTarget,
-                        GraphType = GraphType.Exponential,
-                        Slope = -0.6f,
-                        Exp = 6f,
-                        XShift = 1f,
-                        YShift = 0.8f,
-                        InputMin = 0f,
-                        InputMax = 20f
-                    },
-                    new ConsiderationDto
-                    {
-                        FactType = FactType.AngleFromTarget,
-                        GraphType = GraphType.Exponential,
-                        Slope = 0.6f,
-                        Exp = 6f,
-                        XShift = 1f,
-                        YShift = 0.2f,
-                        InputMin = 0f,
-                        InputMax = 180f
-                    },
-                    new ConsiderationDto
-                    {
-                        FactType = FactType.DistanceFromTarget,
-                        GraphType = GraphType.Exponential,
-                        Slope = 0.6f,
-                        Exp = 6f,
-                        XShift = 1f,
-                        YShift = 0.2f,
-                        InputMin = 0f,
-                        InputMax = 20f
-                    },
-                    new ConsiderationDto
-                    {
-                        FactType = FactType.AngleFromTarget,
-                        GraphType = GraphType.Exponential,
-                        Slope = -0.6f,
-                        Exp = 6f,
-                        XShift = 1f,
-                        YShift = 0.8f,
-                        InputMin = 0f,
-                        InputMax = 180f
                     }
                 }
             };
