@@ -27,7 +27,6 @@ public class AiInspector : MonoBehaviour
 
     public void OnDecisionSelectionChanged()
     {
-        Logger.Log($"Decision changed to {decisionDropdown.value}");
         PopulateChoices();
     }
 

@@ -4,18 +4,24 @@ using UnityEngine;
 
 public class ChoiceUi : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI label = default;
+    [SerializeField] private TextMeshProUGUI choiceLabel = default;
+    [SerializeField] private TextMeshProUGUI totalScoreLabel = default;
+    [SerializeField] private TMP_InputField weightInput = default;
+    [SerializeField] private TMP_InputField momentumInput = default;
     [SerializeField] private Transform considerationList = default;
-    [SerializeField] private TextMeshProUGUI totalScore = default;
     [SerializeField] private GameObject considerationPrefab = default;
 
     private List<ConsiderationUi> Considerations;
 
     public void Setup(ChoiceDto dto)
     {
-        label.text = dto.ChoiceType.ToString();
+        choiceLabel.text = dto.ChoiceType.ToString();
+        totalScoreLabel.text = ".000";
+
         PopulateConsiderations(dto);
     }
+
+    
 
     private void ClearConsiderations()
     {
