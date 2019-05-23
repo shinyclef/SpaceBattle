@@ -6,7 +6,7 @@ using Unity.Mathematics;
 using UnityEngine;
 
 [UpdateInGroup(typeof(InitializationGameGroup))]
-public class AiLoadSys : ComponentSystem
+public class AiDataSys : ComponentSystem
 {
     private UtilityAiDto data;
     private AiData nativeData;
@@ -71,6 +71,7 @@ public class AiLoadSys : ComponentSystem
             nativeData.Decisions.Dispose();
             nativeData.Choices.Dispose();
             nativeData.Considerations.Dispose();
+            nativeData.RecordedScores.Dispose();
         }
 
         isLoaded = true;
@@ -96,6 +97,8 @@ public class AiLoadSys : ComponentSystem
         // create the decisions
         ushort nextChoiceStartIndex = 0;
         ushort nextConsiderationStartIndex = 0;
+        int maxScoresToRecord = 0;
+        int scoresToRecord = 0;
         for (int i = 0; i < data.Decisions.Length; i++)
         {
             DecisionDto d = data.Decisions[i];
@@ -109,6 +112,7 @@ public class AiLoadSys : ComponentSystem
             // add the choices from this decision to the choices array
             for (int j = 0; j < d.Choices.Length; j++)
             {
+                scoresToRecord++;
                 ChoiceDto cd = d.Choices[j];
 
                 // populate choices
@@ -123,6 +127,7 @@ public class AiLoadSys : ComponentSystem
                 // add the considerations for this choice to the considerations array
                 for (int k = 0; k < cd.Considerations.Length; k++)
                 {
+                    scoresToRecord++;
                     ConsiderationDto con = cd.Considerations[k];
                     nativeData.Considerations[nextConsiderationStartIndex + k] = new Consideration
                     {
@@ -141,8 +146,10 @@ public class AiLoadSys : ComponentSystem
             }
 
             nextChoiceStartIndex += (ushort)d.Choices.Length;
+            maxScoresToRecord = math.max(scoresToRecord, maxScoresToRecord);
         }
 
+        nativeData.RecordedScores = new NativeArray<float>(maxScoresToRecord, Allocator.Persistent);
         Data = data;
         NativeData = nativeData;
         Messenger.Global.Post(Msg.AiLoaded);

@@ -4,7 +4,7 @@ using Unity.Physics.Systems;
 [UpdateInGroup(typeof(InitializationSystemGroup))]
 public class InitializationGameGroup : ComponentSystemGroup
 {
-    AiLoadSys AiLoadSys;
+    AiDataSys AiLoadSys;
 }
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]

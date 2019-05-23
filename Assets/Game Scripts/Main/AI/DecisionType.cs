@@ -1,4 +1,5 @@
 ﻿public enum DecisionType
 {
-    CombatMovement
+    CombatMovement,
+    None = 999
 }

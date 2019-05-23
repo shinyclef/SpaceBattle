@@ -31,14 +31,13 @@ public class CombatMovementAiSys : JobComponentSystem
         {
             Rngs = rngs,
             UtilityScoreBufs = GetBufferFromEntity<UtilityScoreBuf>(),
-            Decisions = AiLoadSys.NativeData.Decisions,
-            Choices = AiLoadSys.NativeData.Choices,
-            Considerations = AiLoadSys.NativeData.Considerations,
+            Decisions = AiDataSys.NativeData.Decisions,
+            Choices = AiDataSys.NativeData.Choices,
+            Considerations = AiDataSys.NativeData.Considerations,
+            RecordedScores = AiDataSys.NativeData.RecordedScores,
+            RecordedDecision = AiInspector.RecordedDecision,
             Time = Time.time
         };
-
-        //job.Run(this, inputDeps);
-        //return inputDeps;
 
         JobHandle jh = job.Schedule(this, inputDeps);
         return jh;
@@ -52,6 +51,8 @@ public class CombatMovementAiSys : JobComponentSystem
         [ReadOnly] public NativeArray<Decision> Decisions;
         [ReadOnly] public NativeArray<Choice> Choices;
         [ReadOnly] public NativeArray<Consideration> Considerations;
+        [NativeDisableParallelForRestriction] [WriteOnly] public NativeArray<float> RecordedScores;
+        public DecisionType RecordedDecision;
 
         public float Time;
 
@@ -60,7 +61,7 @@ public class CombatMovementAiSys : JobComponentSystem
         #pragma warning restore 0649
         [NativeDisableParallelForRestriction] private DynamicBuffer<UtilityScoreBuf> utilityScores;
 
-        //private int eId;
+        private int eId;
 
         public void Execute(Entity entity, int index,
             [ReadOnly] ref CombatTarget enemy,
@@ -69,12 +70,7 @@ public class CombatMovementAiSys : JobComponentSystem
             ref CombatMovement cm,
             ref Heading heading)
         {
-            //eId = entity.Index;
-
-            //var times = new NativeArray<double>(4, Allocator.Temp);
-            //var sw = new System.Diagnostics.Stopwatch();
-            //sw.Start();
-
+            eId = entity.Index;
             if (enemy.Entity != Entity.Null)
             {
                 //eId = entity.Index;
@@ -96,7 +92,8 @@ public class CombatMovementAiSys : JobComponentSystem
 
                     // make decision
                     utilityScores = UtilityScoreBufs[entity];
-                    DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores);
+                    DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores, 
+                        ref RecordedScores, RecordedDecision, entity.Index == 9);
                     dm.PrepareDecision(DecisionType.CombatMovement, ref rand);
                     bool hasNext;
                     do

@@ -8,6 +8,9 @@ public struct DecisionMaker
     public NativeArray<Choice> Choices;
     public NativeArray<Consideration> Considerations;
     public DynamicBuffer<UtilityScoreBuf> UtilityScores;
+    public NativeArray<float> RecordedScores;
+    public DecisionType RecordedDecision;
+    private bool RecordedEntity;
 
     private Random rand;
     private float minRequiredChoiceScore;
@@ -26,13 +29,19 @@ public struct DecisionMaker
     private ushort considerationIndexTo;
     private ushort considerationIndex;
 
-    public DecisionMaker(ref NativeArray<Decision> decisions, ref NativeArray<Choice> choices,
-        ref NativeArray<Consideration> considerations, ref DynamicBuffer<UtilityScoreBuf> utilityScores) : this()
+    private bool record;
+    private int recordIndex;
+
+    public DecisionMaker(ref NativeArray<Decision> decisions, ref NativeArray<Choice> choices, ref NativeArray<Consideration> considerations, 
+        ref DynamicBuffer<UtilityScoreBuf> utilityScores, ref NativeArray<float> recordedScores, DecisionType recordedDecision, bool recordedEntity) : this()
     {
         Decisions = decisions;
         Choices = choices;
         Considerations = considerations;
         UtilityScores = utilityScores;
+        RecordedScores = recordedScores;
+        RecordedDecision = recordedDecision;
+        RecordedEntity = recordedEntity;
     }
 
     public FactType NextRequiredFactType { get; private set; }
@@ -53,6 +62,9 @@ public struct DecisionMaker
         this.rand = rand;
         PrepareChoiceVariables();
         NextRequiredFactType = Considerations[considerationIndex].FactType;
+
+        record = RecordedEntity && decisionType == RecordedDecision;
+        recordIndex = 0;
     }
 
     public bool EvaluateNextConsideration(float factValueRaw)
@@ -63,6 +75,12 @@ public struct DecisionMaker
         // normalize input
         float factValue = consideration.GetNormalizedInput(factValueRaw);
         float score = math.clamp(consideration.Evaluate(factValue), 0f, 1f);
+        if (record)
+        {
+            RecordedScores[recordIndex] = score;
+            recordIndex++;
+        }
+
         float makeUpValue = (1 - score) * modificationFactor;
         //Logger.Log($"factValue: {factValue} ({factValueRaw}), score: {score}, makeUpValue: {makeUpValue}");
         score += makeUpValue * score;
@@ -71,14 +89,29 @@ public struct DecisionMaker
         // if this is the last last consideration of the choice, or we're below minRequiredChoiceScore, move on the next choice.
         if (currentChoiceScore < minRequiredChoiceScore)
         {
+            if (record)
+            {
+                RecordedScores[recordIndex] = currentChoiceScore;
+                recordIndex++;
+            }
+            else
+            {
+                considerationIndex = considerationIndexTo; // move to the next choice by saying we just finished the final choice
+            }
+            
             //Logger.Log($"Score cutooff. currentChoiceScore: {currentChoiceScore}, minRequiredChoiceScore: {minRequiredChoiceScore}");
             currentChoiceScore = 0f;
-            considerationIndex = considerationIndexTo; // move to the next choice by saying we just finished the final choice
         }
 
         considerationIndex++;
         if (considerationIndex == considerationIndexTo)
         {
+            if (record && currentChoiceScore >= minRequiredChoiceScore)
+            {
+                RecordedScores[recordIndex] = currentChoiceScore;
+                recordIndex++;
+            }
+
             bestChoiceScore = math.max(currentChoiceScore, bestChoiceScore);
             minRequiredChoiceScore = bestChoiceScore * decision.MinimumRequiredOfBest;
 

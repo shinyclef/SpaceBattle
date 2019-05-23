@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ChoiceUi : MonoBehaviour
 {
@@ -8,42 +9,85 @@ public class ChoiceUi : MonoBehaviour
     [SerializeField] private TextMeshProUGUI totalScoreLabel = default;
     [SerializeField] private TMP_InputField weightInput = default;
     [SerializeField] private TMP_InputField momentumInput = default;
-    [SerializeField] private Transform considerationList = default;
+    [SerializeField] private RectTransform considerationList = default;
     [SerializeField] private GameObject considerationPrefab = default;
+    [SerializeField] private RectTransform choiceInfoPanel = default;
+    [SerializeField] private RectTransform inputsPanel = default;
+    [SerializeField] private float choiceInfoExpandedHeight = default;
 
-    private List<ConsiderationUi> Considerations;
+    private List<ConsiderationUi> considerations;
+    private LayoutElement layoutElement;
+    private float considerationCollapsedHeight;
+    private float choiceInfoCollapsedHeight;
+    private bool choiceInfoExpanded;
+    private int recordedDataIndex;
 
-    public void Setup(ChoiceDto dto)
+    private float ChoiceInfoPanelHeight { get { return choiceInfoExpanded ? choiceInfoExpandedHeight : choiceInfoCollapsedHeight; } }
+
+    private void Awake()
     {
-        choiceLabel.text = dto.ChoiceType.ToString();
-        totalScoreLabel.text = ".000";
+        considerations = new List<ConsiderationUi>();
+        layoutElement = GetComponent<LayoutElement>();
+        considerationCollapsedHeight = considerationPrefab.GetComponent<LayoutElement>().preferredHeight;
+        choiceInfoCollapsedHeight = choiceInfoPanel.sizeDelta.y;
+        choiceInfoExpanded = false;
 
+    }
+    public void Setup(ChoiceDto dto, int recordedDataIndex)
+    {
+        this.recordedDataIndex = recordedDataIndex;
+        choiceLabel.text = dto.ChoiceType.ToString();
+        totalScoreLabel.text = ".0";
+        weightInput.SetTextWithoutNotify(dto.Weight.ToString(AiInspector.ScoreFormat));
+        momentumInput.SetTextWithoutNotify(dto.Momentum.ToString(AiInspector.ScoreFormat));
         PopulateConsiderations(dto);
     }
 
-    
-
-    private void ClearConsiderations()
+    private void Update()
     {
-        Considerations.Clear();
-        for (int i = considerationList.childCount - 1; i >= 0; i--)
+        totalScoreLabel.text = AiDataSys.NativeData.RecordedScores[recordedDataIndex].ToString(AiInspector.ScoreFormat);
+        if (!GInput.AnyKeyActivity)
         {
-            Destroy(considerationList.GetChild(i).gameObject);
+            return;
+        }
+
+        if (GInput.GetMouseButtonUpQuick(0) && GInput.HitObjUiTop == choiceLabel.gameObject)
+        {
+            choiceInfoExpanded = !choiceInfoExpanded;
+            inputsPanel.gameObject.SetActive(choiceInfoExpanded);
+
+            Vector2 size = choiceInfoPanel.sizeDelta;
+            size.y = ChoiceInfoPanelHeight;
+            choiceInfoPanel.sizeDelta = size;
+
+            Vector2 anchoredPos = considerationList.anchoredPosition;
+            anchoredPos.y = -ChoiceInfoPanelHeight;
+            considerationList.anchoredPosition = anchoredPos;
+
+            ChangeHeight((choiceInfoExpandedHeight - choiceInfoCollapsedHeight) * (choiceInfoExpanded ? 1f : -1f));
         }
     }
 
+    public void ChangeHeight(float delta)
+    {
+        layoutElement.preferredHeight += delta;
+    }
+
+    private void SetHeight(float height)
+    {
+        layoutElement.preferredHeight = height;
+    }
 
     private void PopulateConsiderations(ChoiceDto dto)
     {
+        considerations.Clear();
         for (int i = 0; i < dto.Considerations.Length; i++)
         {
             ConsiderationUi con = Instantiate(considerationPrefab, considerationList).GetComponent<ConsiderationUi>();
-            con.Setup(dto.Considerations[i]);
+            con.Setup(dto.Considerations[i], this, recordedDataIndex - dto.Considerations.Length + i);
+            considerations.Add(con);
         }
-    }
 
-    private void AddConsideration()
-    {
-
+        SetHeight(-considerationList.anchoredPosition.y + considerationCollapsedHeight * considerations.Count);
     }
 }
