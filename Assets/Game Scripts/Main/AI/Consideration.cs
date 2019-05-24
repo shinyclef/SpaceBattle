@@ -22,14 +22,14 @@ public struct Consideration : IComponentData
         switch (GraphType)
         {
             case GraphType.Constant:
-                return YShift;
+                return math.clamp(YShift, 0f, 1f);
             case GraphType.Linear:
-                return Slope * input + YShift;
+                return math.clamp(Slope * input + YShift, 0f, 1f);
             case GraphType.Exponential:
-                return Slope * math.pow(input - XShift, Exp) + YShift;
+                return math.clamp(Slope * math.pow(input - XShift, Exp) + YShift, 0f, 1f);
             case GraphType.Sigmoid:
                 float divisor = (1 + math.pow(2.718f, XShift + Slope * input));
-                return divisor == 0f ? YShift : Exp / divisor + YShift;
+                return math.clamp(divisor == 0f ? YShift : Exp / divisor + YShift, 0f, 1f);
             default:
                 return 0;
         }

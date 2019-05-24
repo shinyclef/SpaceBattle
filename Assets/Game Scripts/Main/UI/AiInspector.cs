@@ -7,6 +7,7 @@ using UnityEngine;
 public class AiInspector : MonoBehaviour
 {
     public const string ScoreFormat = "#.000";
+    public const string InputFormat = "#.###";
 
     [SerializeField] private TMP_Dropdown decisionDropdown = default;
     [SerializeField] private Transform choicesList = default;
@@ -98,7 +99,7 @@ public class AiInspector : MonoBehaviour
         for (int i = 0; i < dec.Choices.Length; i++)
         {
             ChoiceUi c = Instantiate(choicePrefab, choicesList).GetComponent<ChoiceUi>();
-            recordedDataIndex = recordedDataIndex + 1 + dec.Choices[i].Considerations.Length;
+            recordedDataIndex = recordedDataIndex + 1 + (dec.Choices[i].Considerations.Length * 2);
             c.Setup(dec.Choices[i], recordedDataIndex);
         }
     }

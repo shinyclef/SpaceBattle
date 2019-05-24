@@ -74,11 +74,12 @@ public struct DecisionMaker
 
         // normalize input
         float factValue = consideration.GetNormalizedInput(factValueRaw);
-        float score = math.clamp(consideration.Evaluate(factValue), 0f, 1f);
+        float score = consideration.Evaluate(factValue);
         if (record)
         {
             RecordedScores[recordIndex] = score;
-            recordIndex++;
+            RecordedScores[recordIndex + 1] = factValue;
+            recordIndex += 2;
         }
 
         float makeUpValue = (1 - score) * modificationFactor;

@@ -102,12 +102,7 @@ public class AiDataSys : ComponentSystem
         for (int i = 0; i < data.Decisions.Length; i++)
         {
             DecisionDto d = data.Decisions[i];
-            nativeData.Decisions[i] = new Decision()
-            {
-                DecisionType = d.DecisionType,
-                ChoiceIndexStart = nextChoiceStartIndex,
-                MinimumRequiredOfBest = new half(d.MinimumRequiredOfBest)
-            };
+            nativeData.Decisions[i] = d.ToDecision(nextChoiceStartIndex);
 
             // add the choices from this decision to the choices array
             for (int j = 0; j < d.Choices.Length; j++)
@@ -116,30 +111,14 @@ public class AiDataSys : ComponentSystem
                 ChoiceDto cd = d.Choices[j];
 
                 // populate choices
-                nativeData.Choices[nextChoiceStartIndex + j] = new Choice
-                {
-                    ChoiceType = cd.ChoiceType,
-                    ConsiderationIndexStart = nextConsiderationStartIndex,
-                    Weight = cd.Weight,
-                    MomentumFactor = cd.Momentum
-                };
+                nativeData.Choices[nextChoiceStartIndex + j] = cd.ToChoice(nextConsiderationStartIndex);
 
                 // add the considerations for this choice to the considerations array
                 for (int k = 0; k < cd.Considerations.Length; k++)
                 {
-                    scoresToRecord++;
+                    scoresToRecord += 2; // one for the score, one for the input value
                     ConsiderationDto con = cd.Considerations[k];
-                    nativeData.Considerations[nextConsiderationStartIndex + k] = new Consideration
-                    {
-                        FactType = con.FactType,
-                        GraphType = con.GraphType,
-                        Slope = con.Slope,
-                        Exp = con.Exp,
-                        XShift = new half(con.XShift),
-                        YShift = new half(con.YShift),
-                        InputMin = con.InputMin,
-                        InputMax = con.InputMax
-                    };
+                    nativeData.Considerations[nextConsiderationStartIndex + k] = con.ToConsideration();
                 }
 
                 nextConsiderationStartIndex += (ushort)cd.Considerations.Length;

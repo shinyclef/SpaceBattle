@@ -93,7 +93,7 @@ public class CombatMovementAiSys : JobComponentSystem
                     // make decision
                     utilityScores = UtilityScoreBufs[entity];
                     DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores, 
-                        ref RecordedScores, RecordedDecision, entity.Index == 9);
+                        ref RecordedScores, RecordedDecision, entity.Index == 8);
                     dm.PrepareDecision(DecisionType.CombatMovement, ref rand);
                     bool hasNext;
                     do
