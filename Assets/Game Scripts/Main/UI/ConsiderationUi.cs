@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Collections.Generic;
+using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,6 +21,7 @@ public class ConsiderationUi : MonoBehaviour
     [SerializeField] private float layoutElementExpandedHeight = default;
     [SerializeField] private GameObject graphBallPrefab = default;
 
+    private ConsiderationDto dto;
     private Image graphBall;
     private ChoiceUi choice;
     private LayoutElement layoutElement;
@@ -29,7 +31,76 @@ public class ConsiderationUi : MonoBehaviour
     private int recordedDataIndex;
     private float factInputValue;
     private float scoreValue;
-    private Consideration consideration;
+
+    #region Events
+
+    public void OnFactFromInputChanged(NumberInputField numberField)
+    {
+        if (numberField.IsValid)
+        {
+            dto.InputMin = numberField.GetValue();
+            RedrawGraphLine();
+        }
+
+        AiInspector.I.OnConfigurationChanged(numberField);
+    }
+
+    public void OnFactToInputChanged(NumberInputField numberField)
+    {
+        if (numberField.IsValid)
+        {
+            dto.InputMax = numberField.GetValue();
+            RedrawGraphLine();
+        }
+
+        AiInspector.I.OnConfigurationChanged(numberField);
+    }
+
+    public void OnSlopeInputChanged(NumberInputField numberField)
+    {
+        if (numberField.IsValid)
+        {
+            dto.Slope = numberField.GetValue();
+            RedrawGraphLine();
+        }
+
+        AiInspector.I.OnConfigurationChanged(numberField);
+    }
+
+    public void OnExpInputChanged(NumberInputField numberField)
+    {
+        if (numberField.IsValid)
+        {
+            dto.Exp = numberField.GetValue();
+            RedrawGraphLine();
+        }
+
+        AiInspector.I.OnConfigurationChanged(numberField);
+    }
+
+    public void OnXShiftInputChanged(NumberInputField numberField)
+    {
+        if (numberField.IsValid)
+        {
+            dto.XShift = numberField.GetValue();
+            RedrawGraphLine();
+        }
+
+        AiInspector.I.OnConfigurationChanged(numberField);
+    }
+
+    public void OnYShiftInputChanged(NumberInputField numberField)
+    {
+        if (numberField.IsValid)
+        {
+            dto.YShift = numberField.GetValue();
+            RedrawGraphLine();
+        }
+
+        AiInspector.I.OnConfigurationChanged(numberField);
+    }
+
+    #endregion
 
     private void Awake()
     {
@@ -39,6 +110,7 @@ public class ConsiderationUi : MonoBehaviour
 
     public void Setup(ConsiderationDto dto, ChoiceUi choice, Color color, int recordedDataIndex, RectTransform graph, UILineRenderer graphLine)
     {
+        this.dto = dto;
         this.choice = choice;
         this.recordedDataIndex = recordedDataIndex;
         this.graph = graph;
@@ -52,13 +124,22 @@ public class ConsiderationUi : MonoBehaviour
 
         label.text = dto.FactType.ToString();
         score.text = ".0";
-        factFromInput.SetTextWithoutNotify(dto.InputMin.ToString(AiInspector.InputFormat));
-        factToInput.SetTextWithoutNotify(dto.InputMax.ToString(AiInspector.InputFormat));
-        slopeInput.SetTextWithoutNotify(dto.Slope.ToString(AiInspector.InputFormat));
-        expInput.SetTextWithoutNotify(dto.Exp.ToString(AiInspector.InputFormat));
-        xInput.SetTextWithoutNotify(dto.XShift.ToString(AiInspector.InputFormat));
-        yInput.SetTextWithoutNotify(dto.YShift.ToString(AiInspector.InputFormat));
-        consideration = dto.ToConsideration();
+
+        // force awake to be called
+        inputsPanel.gameObject.SetActive(true);
+        inputsPanel.gameObject.SetActive(false);
+
+        UpdateValuesFromDto();
+    }
+
+    public void UpdateValuesFromDto()
+    {
+        factFromInput.text = dto.InputMin == 0 ? "0" : dto.InputMin.ToString(AiInspector.InputFormat);
+        factToInput.text = dto.InputMax == 0 ? "0" : dto.InputMax.ToString(AiInspector.InputFormat);
+        slopeInput.text = dto.Slope == 0 ? "0" : dto.Slope.ToString(AiInspector.InputFormat);
+        expInput.text = dto.Exp == 0 ? "0" :  dto.Exp.ToString(AiInspector.InputFormat);
+        xInput.text = dto.XShift == 0 ? "0" : dto.XShift.ToString(AiInspector.InputFormat);
+        yInput.text = dto.YShift == 0 ? "0" : dto.YShift.ToString(AiInspector.InputFormat);
     }
 
     public void OnToggle()
@@ -102,6 +183,7 @@ public class ConsiderationUi : MonoBehaviour
     private void RedrawGraphLine()
     {
         const int pointCount = 51;
+        var consideration = dto.ToConsideration();
 
         float w = math.max(graph.rect.width, 0f);
         float h = math.max(graph.rect.height, 0f);

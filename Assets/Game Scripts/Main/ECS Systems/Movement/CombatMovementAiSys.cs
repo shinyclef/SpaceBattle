@@ -43,7 +43,7 @@ public class CombatMovementAiSys : JobComponentSystem
         return jh;
     }
 
-    [BurstCompile]
+    //[BurstCompile]
     private struct Job : IJobForEachWithEntity<CombatTarget, LocalToWorld, MoveDestination, CombatMovement, Heading>
     {
         [NativeDisableContainerSafetyRestriction] public NativeArray<Random> Rngs;
@@ -77,7 +77,7 @@ public class CombatMovementAiSys : JobComponentSystem
                 float2 targetPos = enemy.Pos;
                 Random rand = Rngs[threadId];
                 ChoiceType selectedChoice;
-                if (Time - cm.LastEvalTime < 0.3f)
+                if (Time - cm.LastEvalTime < 0.00f)
                 {
                     selectedChoice = cm.LastChoice;
                 }
@@ -117,7 +117,8 @@ public class CombatMovementAiSys : JobComponentSystem
                                 if (!hasAngle)
                                 {
                                     hasAngle = true;
-                                    angle = math.abs(gmath.SignedInnerAngle(heading.CurrentHeading, heading.TargetHeading));
+                                    float headingToEnemy = Heading.FromFloat2(math.normalize(targetPos - l2w.Position.xy));
+                                    angle = math.abs(gmath.SignedInnerAngle(heading.CurrentHeading, headingToEnemy));
                                 }
 
                                 factValue = angle;

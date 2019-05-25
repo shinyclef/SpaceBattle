@@ -1,0 +1,64 @@
+{
+    "Decisions": [
+        {
+            "DecisionType": 0,
+            "MinimumRequiredOfBest": 0.1,
+            "Choices": [
+                {
+                    "ChoiceType": 1,
+                    "Weight": 1,
+                    "Momentum": 1,
+                    "Considerations": [
+                        {
+                            "FactType": 1,
+                            "GraphType": 2,
+                            "Slope": -0.6,
+                            "Exp": 6,
+                            "XShift": 1,
+                            "YShift": 0.8,
+                            "InputMin": 5,
+                            "InputMax": 20
+                        },
+                        {
+                            "FactType": 2,
+                            "GraphType": 2,
+                            "Slope": 0.6,
+                            "Exp": 6,
+                            "XShift": 1,
+                            "YShift": 0.2,
+                            "InputMin": 0,
+                            "InputMax": 180
+                        }
+                    ]
+                },
+                {
+                    "ChoiceType": 2,
+                    "Weight": 1,
+                    "Momentum": 1,
+                    "Considerations": [
+                        {
+                            "FactType": 1,
+                            "GraphType": 2,
+                            "Slope": 0.6,
+                            "Exp": 6,
+                            "XShift": 1,
+                            "YShift": 0.2,
+                            "InputMin": 5,
+                            "InputMax": 20
+                        },
+                        {
+                            "FactType": 2,
+                            "GraphType": 2,
+                            "Slope": -0.6,
+                            "Exp": 6,
+                            "XShift": 1,
+                            "YShift": 0.8,
+                            "InputMin": 0,
+                            "InputMax": 180
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

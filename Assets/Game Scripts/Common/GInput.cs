@@ -9,6 +9,8 @@ public class GInput : MonoBehaviour
     private const float RayDistance = 200f;
     private const float MouseHeldTriggerTime = 0.25f;
 
+
+    //public static Vector2 MousePos => Input.mousePosition;
     private static Dictionary<Cmd, Bindings.Control> KeyCodes { get { return Bindings.KeyCodes; } }
 
 
@@ -58,17 +60,7 @@ public class GInput : MonoBehaviour
 
     public static RaycastHit HitInfoUi { get; private set; }
     public static GameObject HitObjUiTop { get; private set; }
-
-    /// <summary>
-    /// Gets the screen position of the mouse in pixels. If Cursor.lockState == CursorLockMode.Locked, returns true center.
-    /// </summary>
-    public static Vector2 MousePos
-    {
-        get
-        {
-            return Cursor.lockState == CursorLockMode.Locked ? Game.MainCam.pixelRect.center : (Vector2)Input.mousePosition;
-        }
-    }
+    public static Vector2 MousePos => Input.mousePosition;
 
 
     /* ----- */

@@ -18,6 +18,7 @@ public class ChoiceUi : MonoBehaviour
     [SerializeField] private GameObject considerationPrefab = default;
     [SerializeField] private GameObject graphLinePrefab = default;
 
+    private ChoiceDto dto;
     private List<ConsiderationUi> considerations;
     private LayoutElement layoutElement;
     private float considerationCollapsedHeight;
@@ -27,6 +28,30 @@ public class ChoiceUi : MonoBehaviour
     private bool heightChangeEventScheduled;
 
     private float ChoiceInfoPanelHeight { get { return choiceInfoExpanded ? choiceInfoExpandedHeight : choiceInfoCollapsedHeight; } }
+
+    #region Events
+
+    public void OnWeightInputChanged(NumberInputField numberField)
+    {
+        if (numberField.IsValid)
+        {
+            dto.Weight = numberField.GetValue();
+        }
+        
+        AiInspector.I.OnConfigurationChanged(numberField);
+    }
+
+    public void OnMomentumInputChanged(NumberInputField numberField)
+    {
+        if (numberField.IsValid)
+        {
+            dto.Momentum = numberField.GetValue();
+        }
+
+        AiInspector.I.OnConfigurationChanged(numberField);
+    }
+
+    #endregion
 
     private void Awake()
     {
@@ -40,12 +65,26 @@ public class ChoiceUi : MonoBehaviour
 
     public void Setup(ChoiceDto dto, int recordedDataIndex)
     {
+        this.dto = dto;
         this.recordedDataIndex = recordedDataIndex;
         choiceLabel.text = dto.ChoiceType.ToString();
         totalScoreLabel.text = ".0";
-        weightInput.SetTextWithoutNotify(dto.Weight.ToString(AiInspector.InputFormat));
-        momentumInput.SetTextWithoutNotify(dto.Momentum.ToString(AiInspector.InputFormat));
-        PopulateConsiderations(dto);
+
+        inputsPanel.gameObject.SetActive(true); // force awake to be called
+        inputsPanel.gameObject.SetActive(false);
+
+        UpdateValuesFromDto();
+        PopulateConsiderations();
+    }
+
+    public void UpdateValuesFromDto()
+    {
+        weightInput.text = dto.Weight == 0 ? "0" : dto.Weight.ToString(AiInspector.InputFormat);
+        momentumInput.text = dto.Momentum == 0 ? "0" : dto.Momentum.ToString(AiInspector.InputFormat);
+        for (int i = 0; i < considerations.Count; i++)
+        {
+            considerations[i].UpdateValuesFromDto();
+        }
     }
 
     private void Update()
@@ -104,7 +143,7 @@ public class ChoiceUi : MonoBehaviour
         });
     }
 
-    private void PopulateConsiderations(ChoiceDto dto)
+    private void PopulateConsiderations()
     {
         considerations.Clear();
         for (int i = 0; i < dto.Considerations.Length; i++)

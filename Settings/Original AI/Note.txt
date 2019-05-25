@@ -1,0 +1,2 @@
+This is the original AI that ships with the game.
+It is included in case you need to restore the AI, or parts of it.

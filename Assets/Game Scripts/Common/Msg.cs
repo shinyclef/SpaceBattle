@@ -24,7 +24,8 @@ public enum Msg
     ObjectTargetedRightMouseDown,   // GameObject, RaycastHit   Global. Right mouse down on an object.
     ObjectTargetedRightMouseUp,     // GameObject, RaycastHit   Global. Right mouse up on an object.
 
-    AiLoaded,                       //                          Global. The Utility AI has been loaded or reloaded.
+    AiLoadedFromDisk,               //                          Global. The Utility AI has been loaded or reloaded.
+    AiRevertedUnsavedChanges,       //                          Global. The Utility AI has reverted unsaved changes.
 
     TotalTypes // used as a count
 };

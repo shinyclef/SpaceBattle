@@ -97,7 +97,7 @@ public struct DecisionMaker
             }
             else
             {
-                considerationIndex = considerationIndexTo; // move to the next choice by saying we just finished the final choice
+                considerationIndex = (ushort)(considerationIndexTo - 1); // move to the next choice by saying we just finished the final choice
             }
             
             //Logger.Log($"Score cutooff. currentChoiceScore: {currentChoiceScore}, minRequiredChoiceScore: {minRequiredChoiceScore}");
