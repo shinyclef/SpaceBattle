@@ -24,6 +24,11 @@ public class Config : MonoBehaviour
         LoadPlayerSettings();
     }
 
+    private void Start()
+    {
+        Messenger.Global.AddListener(Msg.ExitGame, OnExitGame);
+    }
+
     /// <summary>
     /// Setup the constructs and resources paths, and create the directories if they don't exist. 
     /// </summary>
@@ -59,29 +64,38 @@ public class Config : MonoBehaviour
 
     public static void LoadPlayerSettings()
     {
-        string path = PlayerSettingsPath;
         string json;
         bool successfullyLoaded = false;
-        if (File.Exists(path))
+        if (File.Exists(PlayerSettingsPath))
         {
             try
             {
-                json = File.ReadAllText(path);
+                json = File.ReadAllText(PlayerSettingsPath);
                 PlayerSettings = JsonUtility.FromJson<PlayerSettingsDto>(json);
                 successfullyLoaded = true;
             }
             catch (Exception)
             {
-                File.Move(path, path + " (Unloadable Backup)");
+                File.Move(PlayerSettingsPath, PlayerSettingsPath + " (Unloadable Backup)");
             }
         }
 
         if (!successfullyLoaded)
         {
             PlayerSettings = new PlayerSettingsDto();
-            json = JsonUtility.ToJson(PlayerSettings, true);
-            File.WriteAllText(path, json);
-            Logger.LogWarning(string.Format(Localizer.Strings.Error.PlayerSettingsNotLoaded, path));
+            SavePlayerSettings();
+            Logger.LogWarning(string.Format(Localizer.Strings.Error.PlayerSettingsNotLoaded, PlayerSettingsPath));
         }
+    }
+
+    public static void SavePlayerSettings()
+    {
+        string json = JsonUtility.ToJson(PlayerSettings, true);
+        File.WriteAllText(PlayerSettingsPath, json);
+    }
+
+    private static void OnExitGame()
+    {
+        SavePlayerSettings();
     }
 }

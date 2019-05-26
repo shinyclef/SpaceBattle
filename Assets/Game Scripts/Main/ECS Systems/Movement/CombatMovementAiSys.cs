@@ -43,7 +43,7 @@ public class CombatMovementAiSys : JobComponentSystem
         return jh;
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     private struct Job : IJobForEachWithEntity<CombatTarget, LocalToWorld, MoveDestination, CombatMovement, Heading>
     {
         [NativeDisableContainerSafetyRestriction] public NativeArray<Random> Rngs;
@@ -77,9 +77,9 @@ public class CombatMovementAiSys : JobComponentSystem
                 float2 targetPos = enemy.Pos;
                 Random rand = Rngs[threadId];
                 ChoiceType selectedChoice;
-                if (Time - cm.LastEvalTime < 0.00f)
+                if (Time - cm.LastEvalTime < 0.0f)
                 {
-                    selectedChoice = cm.LastChoice;
+                    selectedChoice = cm.CurrentChoice;
                 }
                 else
                 {
@@ -93,7 +93,7 @@ public class CombatMovementAiSys : JobComponentSystem
                     // make decision
                     utilityScores = UtilityScoreBufs[entity];
                     DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores, 
-                        ref RecordedScores, RecordedDecision, entity.Index == 8);
+                        cm.CurrentChoice, ref RecordedScores, RecordedDecision, entity.Index == 8);
                     dm.PrepareDecision(DecisionType.CombatMovement, ref rand);
                     bool hasNext;
                     do
@@ -147,7 +147,7 @@ public class CombatMovementAiSys : JobComponentSystem
                         break;
 
                     case ChoiceType.FlyAwayFromEnemy:
-                        if (cm.LastChoice != ChoiceType.FlyAwayFromEnemy)
+                        if (cm.CurrentChoice != ChoiceType.FlyAwayFromEnemy)
                         {
                             float2 offset = rand.NextBool() ? l2w.Right.xy : -l2w.Right.xy;
                             targetPos += offset;
@@ -172,10 +172,10 @@ public class CombatMovementAiSys : JobComponentSystem
                 }
 
                 dest.IsCombatTarget = true;
-                if (cm.LastChoice != selectedChoice)
+                if (cm.CurrentChoice != selectedChoice)
                 {
                     //Logger.LogIf(entity.Index == 9, $"New Choice was: {selectedChoice}");
-                    cm.LastChoice = selectedChoice;
+                    cm.CurrentChoice = selectedChoice;
                     cm.LastChoiceTime = Time;
                 }
 

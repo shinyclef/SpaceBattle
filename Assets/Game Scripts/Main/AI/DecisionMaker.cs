@@ -8,6 +8,7 @@ public struct DecisionMaker
     public NativeArray<Choice> Choices;
     public NativeArray<Consideration> Considerations;
     public DynamicBuffer<UtilityScoreBuf> UtilityScores;
+    public ChoiceType CurrentChoice;
     public NativeArray<float> RecordedScores;
     public DecisionType RecordedDecision;
     private bool RecordedEntity;
@@ -33,12 +34,13 @@ public struct DecisionMaker
     private int recordIndex;
 
     public DecisionMaker(ref NativeArray<Decision> decisions, ref NativeArray<Choice> choices, ref NativeArray<Consideration> considerations, 
-        ref DynamicBuffer<UtilityScoreBuf> utilityScores, ref NativeArray<float> recordedScores, DecisionType recordedDecision, bool recordedEntity) : this()
+        ref DynamicBuffer<UtilityScoreBuf> utilityScores, ChoiceType currentChoice, ref NativeArray<float> recordedScores, DecisionType recordedDecision, bool recordedEntity) : this()
     {
         Decisions = decisions;
         Choices = choices;
         Considerations = considerations;
         UtilityScores = utilityScores;
+        CurrentChoice = currentChoice;
         RecordedScores = recordedScores;
         RecordedDecision = recordedDecision;
         RecordedEntity = recordedEntity;
@@ -92,8 +94,11 @@ public struct DecisionMaker
         {
             if (record)
             {
-                RecordedScores[recordIndex] = currentChoiceScore;
-                recordIndex++;
+                if (considerationIndex == considerationIndexTo - 1)
+                {
+                    RecordedScores[recordIndex] = currentChoiceScore;
+                    recordIndex++;
+                }
             }
             else
             {
@@ -135,7 +140,7 @@ public struct DecisionMaker
         considerationIndexTo = choiceIndex < Choices.Length - 1 ? Choices[choiceIndex + 1].ConsiderationIndexStart : (ushort)Considerations.Length;
         considerationIndex = considerationIndexFrom;
         modificationFactor = 1f - (1f / (considerationIndexTo - considerationIndexFrom));
-        currentChoiceScore = choice.Weight + choice.MomentumFactor;
+        currentChoiceScore = choice.Weight + math.select(0f, choice.MomentumFactor, choice.ChoiceType == CurrentChoice);
     }
 
     private bool MoveToNextChoice()

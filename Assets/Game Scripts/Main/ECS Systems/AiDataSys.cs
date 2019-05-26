@@ -13,7 +13,6 @@ public class AiDataSys : ComponentSystem
     private bool isLoaded;
 
     private bool reloadFromDiskRequired;
-    private bool saveRequired;
     private bool revertRequired;
     private bool updateRequired;
 
@@ -24,7 +23,22 @@ public class AiDataSys : ComponentSystem
 
     public void SaveAiData()
     {
-        saveRequired = true;
+        if (!DataIsDirty)
+        {
+            return;
+        }
+
+        try
+        {
+            savedData.CopyValuesFrom(Data);
+            string json = JsonUtility.ToJson(savedData, true);
+            File.WriteAllText(Config.AiPath, json);
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(string.Format(Localizer.Strings.Error.AiErrorSaving, Config.AiPath, e.Message));
+            return;
+        }
     }
 
     public void RevertAiData()
@@ -64,7 +78,6 @@ public class AiDataSys : ComponentSystem
         }
         else if (revertRequired)
         {
-            saveRequired = false;
             updateRequired = false;
             RevertAi();
         }
@@ -72,12 +85,7 @@ public class AiDataSys : ComponentSystem
         {
             GenerateNativeArraysFromDto();
         }
-        else if (saveRequired)
-        {
-            SaveAi();
-        }
 
-        saveRequired = false;
         updateRequired = false;
         revertRequired = false;
         reloadFromDiskRequired = false;
@@ -85,36 +93,11 @@ public class AiDataSys : ComponentSystem
 
     private void RevertAi()
     {
-        if (savedData != null)
+        if (savedData != null && Data != null)
         {
             Data.CopyValuesFrom(savedData);
             GenerateNativeArraysFromDto();
             Messenger.Global.Post(Msg.AiRevertedUnsavedChanges);
-        }
-    }
-
-    private void SaveAi()
-    {
-        if (!File.Exists(Config.AiPath))
-        {
-            Logger.LogError(string.Format(Localizer.Strings.Error.AiFileNotExists, Config.AiPath));
-            return;
-        }
-
-        if (!DataIsDirty)
-        {
-            return;
-        }
-
-        try
-        {
-            string json = JsonUtility.ToJson(Data, true);
-            File.WriteAllText(Config.AiPath, json);
-        }
-        catch (Exception e)
-        {
-            Logger.LogError(string.Format(Localizer.Strings.Error.AiErrorSaving, Config.AiPath, e.Message));
-            return;
         }
     }
 

@@ -13,7 +13,7 @@ public class Scheduler : MonoBehaviour
 
     public static void InvokeAtEndOfFrame(Action action)
     {
-        if (I.gameObject.activeInHierarchy)
+        if (!Game.IsQuitting)
         {
             I.StartCoroutine(WaitForEndOfFrameThenRun(action));
         }
@@ -21,7 +21,7 @@ public class Scheduler : MonoBehaviour
 
     public static void InvokeAfterOneFrame(Action action)
     {
-        if (I.gameObject.activeInHierarchy)
+        if (!Game.IsQuitting)
         {
             I.StartCoroutine(WaitForFramesThenRun(action, 1));
         }
@@ -29,7 +29,7 @@ public class Scheduler : MonoBehaviour
 
     public static void InvokeAfterFrames(Action action, int frames)
     {
-        if (I.gameObject.activeInHierarchy)
+        if (!Game.IsQuitting)
         {
             I.StartCoroutine(WaitForFramesThenRun(action, frames));
         }
@@ -37,7 +37,7 @@ public class Scheduler : MonoBehaviour
 
     public static void InvokeAfterSeconds(Action action, float seconds, bool realtime)
     {
-        if (I.gameObject.activeInHierarchy)
+        if (!Game.IsQuitting)
         {
             I.StartCoroutine(WaitForSecondsThenRun(action, seconds, realtime));
         }
@@ -45,7 +45,10 @@ public class Scheduler : MonoBehaviour
 
     public static void CallWhenTrue(Func<bool> condition, Action callback)
     {
-        I.StartCoroutine(CallActionWhenTrueCoroutine(condition, callback));
+        if (!Game.IsQuitting)
+        {
+            I.StartCoroutine(CallActionWhenTrueCoroutine(condition, callback));
+        }
     }
 
     private static IEnumerator WaitForEndOfFrameThenRun(Action action)

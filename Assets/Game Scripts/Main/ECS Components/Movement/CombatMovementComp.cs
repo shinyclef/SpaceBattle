@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public struct CombatMovement : IComponentData
 {
-    public ChoiceType LastChoice;
+    public ChoiceType CurrentChoice;
     public float LastChoiceTime;
     public float LastEvalTime;
     public float LastHeading;

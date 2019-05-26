@@ -9,6 +9,7 @@ public class AiInspector : MonoBehaviour
     public const string ScoreFormat = "#.000";
     public const string InputFormat = "#.###";
 
+    
     [SerializeField] private TextMeshProUGUI headingLabel = default;
     [SerializeField] private TextMeshProUGUI decisionLabel = default;
     [SerializeField] private TMP_Dropdown decisionDropdown = default;
@@ -19,6 +20,7 @@ public class AiInspector : MonoBehaviour
 
     private static DecisionType recordedDecision;
 
+    private PopupMenu popupMenu;
     private List<ChoiceUi> choices;
     private int invalidFieldsCount;
     private List<string> options;
@@ -44,12 +46,31 @@ public class AiInspector : MonoBehaviour
             invalidFieldsCount += numberField.IsValid ? -1 : 1;
         }
 
-        if (!populating && invalidFieldsCount == 0)
+        if (!populating)
         {
-            AiDataSys.I.UpdateAiData();
+            SetDirtyState(false);
+            if (invalidFieldsCount == 0)
+            {
+                SetDirtyState(AiDataSys.I.DataIsDirty);
+                AiDataSys.I.UpdateAiData();
+            }
+            else
+            {
+                SetDirtyState(true);
+            }
         }
+    }
 
-        SetDirtyState(AiDataSys.I.DataIsDirty);
+    public void OnMenuButtonPressed()
+    {
+        if (popupMenu.PopupObject.gameObject.activeSelf)
+        {
+            popupMenu.Deactivate();
+        }
+        else
+        {
+            popupMenu.Activate(3);
+        }
     }
 
     public void OnCloseButtonPressed()
@@ -60,6 +81,7 @@ public class AiInspector : MonoBehaviour
     public void OnSaveButtonPressed()
     {
         AiDataSys.I.SaveAiData();
+        SetDirtyState(AiDataSys.I.DataIsDirty);
     }
 
     public void OnRevertButtonPressed()
@@ -82,6 +104,7 @@ public class AiInspector : MonoBehaviour
     private void Awake()
     {
         I = this;
+        popupMenu = GetComponent<PopupMenu>();
         populating = false;
         choices = new List<ChoiceUi>();
         Localize();
@@ -92,6 +115,32 @@ public class AiInspector : MonoBehaviour
         Messenger.Global.AddListener(Msg.AiLoadedFromDisk, OnAiLoaded);
         Messenger.Global.AddListener(Msg.AiRevertedUnsavedChanges, UpdateValuesFromDto);
         OnAiLoaded();
+    }
+
+    private void OnEnable()
+    {
+        popupMenu.Deactivate();
+    }
+
+    private void Update()
+    {
+        if (choices.Count == 0)
+        {
+            return;
+        }
+
+        float max = choices[0].Score;
+        ChoiceUi bestChoice = choices[0];
+        for (int i = 1; i < choices.Count; i++)
+        {
+            if (choices[i].Score > max)
+            {
+                max = choices[i].Score;
+                bestChoice = choices[i];
+            }
+        }
+
+        bestChoice.SetIsSelected(true);
     }
 
     public void UpdateValuesFromDto()
@@ -177,5 +226,6 @@ public class AiInspector : MonoBehaviour
         }
 
         populating = false;
+        SetDirtyState(AiDataSys.I.DataIsDirty);
     }
 }

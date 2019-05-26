@@ -8,6 +8,7 @@ public class ChoiceUi : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI choiceLabel = default;
     [SerializeField] private TextMeshProUGUI totalScoreLabel = default;
+    [SerializeField] private Image selectedIcon = default;
     [SerializeField] private TMP_InputField weightInput = default;
     [SerializeField] private TMP_InputField momentumInput = default;
     [SerializeField] private RectTransform considerationList = default;
@@ -26,6 +27,8 @@ public class ChoiceUi : MonoBehaviour
     private bool choiceInfoExpanded;
     private int recordedDataIndex;
     private bool heightChangeEventScheduled;
+
+    public float Score { get; private set; }
 
     private float ChoiceInfoPanelHeight { get { return choiceInfoExpanded ? choiceInfoExpandedHeight : choiceInfoCollapsedHeight; } }
 
@@ -77,19 +80,11 @@ public class ChoiceUi : MonoBehaviour
         PopulateConsiderations();
     }
 
-    public void UpdateValuesFromDto()
-    {
-        weightInput.text = dto.Weight == 0 ? "0" : dto.Weight.ToString(AiInspector.InputFormat);
-        momentumInput.text = dto.Momentum == 0 ? "0" : dto.Momentum.ToString(AiInspector.InputFormat);
-        for (int i = 0; i < considerations.Count; i++)
-        {
-            considerations[i].UpdateValuesFromDto();
-        }
-    }
-
     private void Update()
     {
-        totalScoreLabel.text = AiDataSys.NativeData.RecordedScores[recordedDataIndex].ToString(AiInspector.ScoreFormat);
+        SetIsSelected(false); // AiInspector will reselect if this is still the best choice
+        Score = AiDataSys.NativeData.RecordedScores[recordedDataIndex];
+        totalScoreLabel.text = Score.ToString(AiInspector.ScoreFormat);
         if (!GInput.AnyKeyActivity)
         {
             return;
@@ -109,6 +104,21 @@ public class ChoiceUi : MonoBehaviour
             considerationList.anchoredPosition = anchoredPos;
 
             ChangeHeight((choiceInfoExpandedHeight - choiceInfoCollapsedHeight) * (choiceInfoExpanded ? 1f : -1f));
+        }
+    }
+
+    public void SetIsSelected(bool selected)
+    {
+        selectedIcon.enabled = selected;
+    }
+
+    public void UpdateValuesFromDto()
+    {
+        weightInput.text = dto.Weight == 0 ? "0" : dto.Weight.ToString(AiInspector.InputFormat);
+        momentumInput.text = dto.Momentum == 0 ? "0" : dto.Momentum.ToString(AiInspector.InputFormat);
+        for (int i = 0; i < considerations.Count; i++)
+        {
+            considerations[i].UpdateValuesFromDto();
         }
     }
 

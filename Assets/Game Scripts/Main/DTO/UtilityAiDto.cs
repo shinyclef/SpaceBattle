@@ -16,7 +16,7 @@ public class UtilityAiDto : IEquatable<UtilityAiDto>
 
         for (int i = 0; i < Decisions.Length; i++)
         {
-            if (Decisions[i] != other.Decisions[i])
+            if (!Decisions[i].Equals(other.Decisions[i]))
             {
                 return false;
             }
@@ -72,7 +72,7 @@ public class DecisionDto : IEquatable<DecisionDto>
 
         for (int i = 0; i < Choices.Length; i++)
         {
-            if (Choices[i] != other.Choices[i])
+            if (!Choices[i].Equals(other.Choices[i]))
             {
                 return false;
             }
@@ -146,7 +146,7 @@ public class ChoiceDto : IEquatable<ChoiceDto>
 
         for (int i = 0; i <Considerations.Length; i++)
         {
-            if (Considerations[i] != other.Considerations[i])
+            if (!Considerations[i].Equals(other.Considerations[i]))
             {
                 return false;
             }

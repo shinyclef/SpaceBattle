@@ -2,17 +2,20 @@
 
 public class PopupMenu : MonoBehaviour
 {
-    public Camera cam;
-
     [SerializeField] private RectTransform bounds = default;
     [SerializeField] private RectTransform popupObject = default;
     [SerializeField] private Vector3 positionOffset = default;
 
     private GameObject[] menuItems;
+    private bool listenersRegistered = false;
+    private int toggledFrame;
+
+    public RectTransform PopupObject { get { return popupObject; } }
 
     private void Awake()
     {
         menuItems = new GameObject[popupObject.childCount];
+        toggledFrame = -1;
         for (int i = 0; i < popupObject.childCount; i++)
         {
             menuItems[i] = popupObject.GetChild(i).gameObject;
@@ -21,21 +24,59 @@ public class PopupMenu : MonoBehaviour
 
     public void Activate(int menuDisplayMask)
     {
-        if (popupObject.gameObject.activeSelf)
+        if (toggledFrame == Time.frameCount)
         {
             return;
         }
 
+        RegisterListeners();
         SetActiveElements(menuDisplayMask);
         Vector3 pos = DeterminePosition();
         popupObject.gameObject.SetActive(true);
         popupObject.position = pos;
         popupObject.ForceUpdateRectTransforms();
+        toggledFrame = Time.frameCount;
     }
 
     public void Deactivate()
     {
+        if (toggledFrame == Time.frameCount)
+        {
+            return;
+        }
+
+        Scheduler.InvokeAtEndOfFrame(() => UnregisterListeners());
         popupObject.gameObject.SetActive(false);
+        toggledFrame = Time.frameCount;
+    }
+
+    private void RegisterListeners()
+    {
+        if (listenersRegistered)
+        {
+            return;
+        }
+
+        listenersRegistered = true;
+        Messenger.Global.AddListener<int>(Msg.MouseUpQuick, OnMouseUp);
+        Messenger.Global.AddListener<int>(Msg.MouseUpLong, OnMouseUp);
+    }
+
+    private void UnregisterListeners()
+    {
+        if (!listenersRegistered)
+        {
+            return;
+        }
+
+        listenersRegistered = false;
+        Messenger.Global.RemoveListener<int>(Msg.MouseUpQuick, OnMouseUp);
+        Messenger.Global.RemoveListener<int>(Msg.MouseUpLong, OnMouseUp);
+    }
+
+    private void OnMouseUp(int mouseButton)
+    {
+        Deactivate();
     }
 
     private Vector3 DeterminePosition()
@@ -51,7 +92,7 @@ public class PopupMenu : MonoBehaviour
         bounds.GetWorldCorners(corners);
         for (int i = 0; i < corners.Length; i++)
         {
-            corners[i] = RectTransformUtility.WorldToScreenPoint(cam, corners[i]);
+            corners[i] = RectTransformUtility.WorldToScreenPoint(Game.MainCam, corners[i]);
         }
 
         // adjustment for the popup object
