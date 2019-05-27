@@ -21,9 +21,8 @@ public class ConsiderationUi : MonoBehaviour
     [SerializeField] private float layoutElementExpandedHeight = default;
     [SerializeField] private GameObject graphBallPrefab = default;
 
-    private ConsiderationDto dto;
-    private Image graphBall;
     private ChoiceUi choice;
+    private Image graphBall;
     private LayoutElement layoutElement;
     private RectTransform graph;
     private UILineRenderer graphLine;
@@ -32,13 +31,23 @@ public class ConsiderationUi : MonoBehaviour
     private float factInputValue;
     private float scoreValue;
 
+    public ConsiderationDto Dto { get; private set; }
+
     #region Events
+
+    public void OnRemoveButtonPressed()
+    {
+        bool isExpanded = inputsPanel.gameObject.activeSelf;
+        choice.ChangeHeight(isExpanded ? -layoutElementExpandedHeight : -layoutElementCollapsedHeight);
+        choice.RemoveConsideration(this);
+        Destroy(gameObject);
+    }
 
     public void OnFactFromInputChanged(NumberInputField numberField)
     {
         if (numberField.IsValid)
         {
-            dto.InputMin = numberField.GetValue();
+            Dto.InputMin = numberField.GetValue();
             RedrawGraphLine();
         }
 
@@ -49,7 +58,7 @@ public class ConsiderationUi : MonoBehaviour
     {
         if (numberField.IsValid)
         {
-            dto.InputMax = numberField.GetValue();
+            Dto.InputMax = numberField.GetValue();
             RedrawGraphLine();
         }
 
@@ -60,7 +69,7 @@ public class ConsiderationUi : MonoBehaviour
     {
         if (numberField.IsValid)
         {
-            dto.Slope = numberField.GetValue();
+            Dto.Slope = numberField.GetValue();
             RedrawGraphLine();
         }
 
@@ -71,7 +80,7 @@ public class ConsiderationUi : MonoBehaviour
     {
         if (numberField.IsValid)
         {
-            dto.Exp = numberField.GetValue();
+            Dto.Exp = numberField.GetValue();
             RedrawGraphLine();
         }
 
@@ -82,7 +91,7 @@ public class ConsiderationUi : MonoBehaviour
     {
         if (numberField.IsValid)
         {
-            dto.XShift = numberField.GetValue();
+            Dto.XShift = numberField.GetValue();
             RedrawGraphLine();
         }
 
@@ -93,11 +102,23 @@ public class ConsiderationUi : MonoBehaviour
     {
         if (numberField.IsValid)
         {
-            dto.YShift = numberField.GetValue();
+            Dto.YShift = numberField.GetValue();
             RedrawGraphLine();
         }
 
         AiInspector.I.OnConfigurationChanged(numberField);
+    }
+
+    public void OnToggle()
+    {
+        graphLine.enabled = toggle.isOn;
+        graphBall.enabled = toggle.isOn;
+    }
+
+    public void OnChoiceHeightChanged()
+    {
+        RedrawGraphLine();
+        UpdateGraphBallPosition();
     }
 
     #endregion
@@ -108,11 +129,10 @@ public class ConsiderationUi : MonoBehaviour
         layoutElementCollapsedHeight = layoutElement.preferredHeight;
     }
 
-    public void Setup(ConsiderationDto dto, ChoiceUi choice, Color color, int recordedDataIndex, RectTransform graph, UILineRenderer graphLine)
+    public void Setup(ConsiderationDto dto, ChoiceUi choice, Color color, RectTransform graph, UILineRenderer graphLine)
     {
-        this.dto = dto;
+        this.Dto = dto;
         this.choice = choice;
-        this.recordedDataIndex = recordedDataIndex;
         this.graph = graph;
         this.graphLine = graphLine;
 
@@ -132,35 +152,31 @@ public class ConsiderationUi : MonoBehaviour
         UpdateValuesFromDto();
     }
 
+    public void SetRecordedDataIndecies(int recordedDataIndex)
+    {
+        this.recordedDataIndex = recordedDataIndex;
+    }
+
     public void UpdateValuesFromDto()
     {
-        factFromInput.text = dto.InputMin == 0 ? "0" : dto.InputMin.ToString(AiInspector.InputFormat);
-        factToInput.text = dto.InputMax == 0 ? "0" : dto.InputMax.ToString(AiInspector.InputFormat);
-        slopeInput.text = dto.Slope == 0 ? "0" : dto.Slope.ToString(AiInspector.InputFormat);
-        expInput.text = dto.Exp == 0 ? "0" :  dto.Exp.ToString(AiInspector.InputFormat);
-        xInput.text = dto.XShift == 0 ? "0" : dto.XShift.ToString(AiInspector.InputFormat);
-        yInput.text = dto.YShift == 0 ? "0" : dto.YShift.ToString(AiInspector.InputFormat);
-    }
-
-    public void OnToggle()
-    {
-        graphLine.enabled = toggle.isOn;
-        graphBall.enabled = toggle.isOn;
-    }
-
-    public void OnChoiceHeightChanged()
-    {
-        RedrawGraphLine();
-        UpdateGraphBallPosition();
+        factFromInput.text = Dto.InputMin == 0 ? "0" : Dto.InputMin.ToString(AiInspector.InputFormat);
+        factToInput.text = Dto.InputMax == 0 ? "0" : Dto.InputMax.ToString(AiInspector.InputFormat);
+        slopeInput.text = Dto.Slope == 0 ? "0" : Dto.Slope.ToString(AiInspector.InputFormat);
+        expInput.text = Dto.Exp == 0 ? "0" :  Dto.Exp.ToString(AiInspector.InputFormat);
+        xInput.text = Dto.XShift == 0 ? "0" : Dto.XShift.ToString(AiInspector.InputFormat);
+        yInput.text = Dto.YShift == 0 ? "0" : Dto.YShift.ToString(AiInspector.InputFormat);
     }
 
     private void Update()
     {
-        scoreValue = AiDataSys.NativeData.RecordedScores[recordedDataIndex];
-        score.text = scoreValue.ToString(AiInspector.ScoreFormat);
-        factInputValue = AiDataSys.NativeData.RecordedScores[recordedDataIndex + 1];
+        if (!AiInspector.RecordingPaused)
+        {
+            scoreValue = AiDataSys.NativeData.RecordedScores[recordedDataIndex];
+            score.text = scoreValue.ToString(AiInspector.ScoreFormat);
+            factInputValue = AiDataSys.NativeData.RecordedScores[recordedDataIndex + 1];
+        }
+        
         UpdateGraphBallPosition();
-
         if (!GInput.AnyKeyActivity)
         {
             return;
@@ -183,7 +199,7 @@ public class ConsiderationUi : MonoBehaviour
     private void RedrawGraphLine()
     {
         const int pointCount = 51;
-        var consideration = dto.ToConsideration();
+        var consideration = Dto.ToConsideration();
 
         float w = math.max(graph.rect.width, 0f);
         float h = math.max(graph.rect.height, 0f);

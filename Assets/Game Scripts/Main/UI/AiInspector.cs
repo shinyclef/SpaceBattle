@@ -9,12 +9,12 @@ public class AiInspector : MonoBehaviour
     public const string ScoreFormat = "#.000";
     public const string InputFormat = "#.###";
 
-    
     [SerializeField] private TextMeshProUGUI headingLabel = default;
     [SerializeField] private TextMeshProUGUI decisionLabel = default;
     [SerializeField] private TMP_Dropdown decisionDropdown = default;
     [SerializeField] private Button saveButton = default;
     [SerializeField] private Button revertButton = default;
+    [SerializeField] private Button newChoiceButton = default;
     [SerializeField] private Transform choicesList = default;
     [SerializeField] private GameObject choicePrefab = default;
 
@@ -27,7 +27,8 @@ public class AiInspector : MonoBehaviour
     private bool populating;
 
     public static AiInspector I { get; private set; }
-    public static DecisionType RecordedDecision { get { return (I == null || !I.gameObject.activeSelf) ? DecisionType.None : recordedDecision; } }
+    public static bool RecordingPaused { get; private set; }
+    public static DecisionType RecordedDecision { get { return (RecordingPaused || I == null || !I.gameObject.activeSelf) ? DecisionType.None : recordedDecision; } }
     private string SelectedDecision { get { return options[decisionDropdown.value]; } }
     private DecisionType SelectedDecisionType { get { return (DecisionType)Enum.Parse(typeof(DecisionType), SelectedDecision); } }
 
@@ -59,6 +60,13 @@ public class AiInspector : MonoBehaviour
                 SetDirtyState(true);
             }
         }
+    }
+
+    public void OnStructureChanged()
+    {
+        Logger.Log("Pausing");
+        SetDirtyState(AiDataSys.I.DataIsDirty);
+        RecordingPaused = true;
     }
 
     public void OnMenuButtonPressed()
@@ -94,10 +102,22 @@ public class AiInspector : MonoBehaviour
         AiDataSys.I.ReloadAiData();
     }
 
+    public void OnNewChoiceButtonPressed()
+    {
+        Logger.Log("New Choice");
+    }
+
     private void OnAiLoaded()
     {
         PopulateDecisionDropDown();
     }
+
+    private void OnAiNativeArraysGenerated()
+    {
+        SetRecordedDataIndecies();
+        RecordingPaused = false;
+    }
+    
 
     #endregion
 
@@ -113,6 +133,7 @@ public class AiInspector : MonoBehaviour
     private void Start()
     {
         Messenger.Global.AddListener(Msg.AiLoadedFromDisk, OnAiLoaded);
+        Messenger.Global.AddListener(Msg.AiNativeArrayssGenerated, OnAiNativeArraysGenerated);
         Messenger.Global.AddListener(Msg.AiRevertedUnsavedChanges, UpdateValuesFromDto);
         OnAiLoaded();
     }
@@ -194,6 +215,8 @@ public class AiInspector : MonoBehaviour
         {
             Destroy(choicesList.GetChild(i).gameObject);
         }
+
+        newChoiceButton.interactable = false;
     }
 
     private void PopulateChoices()
@@ -216,16 +239,28 @@ public class AiInspector : MonoBehaviour
             return;
         }
 
-        int recordedDataIndex = -1;
         for (int i = 0; i < dec.Choices.Length; i++)
         {
             ChoiceUi c = Instantiate(choicePrefab, choicesList).GetComponent<ChoiceUi>();
             choices.Add(c);
-            recordedDataIndex = recordedDataIndex + 1 + (dec.Choices[i].Considerations.Length * 2);
-            c.Setup(dec.Choices[i], recordedDataIndex);
+            c.Setup(dec.Choices[i]);
         }
 
+        SetRecordedDataIndecies();
         populating = false;
         SetDirtyState(AiDataSys.I.DataIsDirty);
+        newChoiceButton.interactable = true;
+    }
+
+    private void SetRecordedDataIndecies()
+    {
+        Logger.Log("Setting indecies");
+        int recordedDataIndex = -1;
+        for (int i = 0; i < choices.Count; i++)
+        {
+            ChoiceUi c = choices[i];
+            recordedDataIndex = recordedDataIndex + 1 + (c.ConsiderationsCount * 2);
+            c.SetRecordedDataIndecies(recordedDataIndex);
+        }
     }
 }

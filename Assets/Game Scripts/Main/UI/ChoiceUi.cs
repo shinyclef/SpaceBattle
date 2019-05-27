@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -28,6 +29,7 @@ public class ChoiceUi : MonoBehaviour
     private int recordedDataIndex;
     private bool heightChangeEventScheduled;
 
+    public int ConsiderationsCount => dto.Considerations.Length;
     public float Score { get; private set; }
 
     private float ChoiceInfoPanelHeight { get { return choiceInfoExpanded ? choiceInfoExpandedHeight : choiceInfoCollapsedHeight; } }
@@ -54,6 +56,35 @@ public class ChoiceUi : MonoBehaviour
         AiInspector.I.OnConfigurationChanged(numberField);
     }
 
+    public void OnRemoveButtonPressed()
+    {
+        Logger.Log("Remove Choice");
+    }
+    
+    public void OnNewConsiderationButtonPressed()
+    {
+        AddConsideration();
+    }
+
+    private void OnChoiceHeightChanged()
+    {
+        if (heightChangeEventScheduled)
+        {
+            return;
+        }
+
+        heightChangeEventScheduled = true;
+        Scheduler.InvokeAfterOneFrame(() =>
+        {
+            for (int i = 0; i < considerations.Count; i++)
+            {
+                considerations[i].OnChoiceHeightChanged();
+            }
+
+            heightChangeEventScheduled = false;
+        });
+    }
+
     #endregion
 
     private void Awake()
@@ -66,10 +97,9 @@ public class ChoiceUi : MonoBehaviour
         heightChangeEventScheduled = false;
     }
 
-    public void Setup(ChoiceDto dto, int recordedDataIndex)
+    public void Setup(ChoiceDto dto)
     {
         this.dto = dto;
-        this.recordedDataIndex = recordedDataIndex;
         choiceLabel.text = dto.ChoiceType.ToString();
         totalScoreLabel.text = ".0";
 
@@ -80,10 +110,24 @@ public class ChoiceUi : MonoBehaviour
         PopulateConsiderations();
     }
 
+    public void SetRecordedDataIndecies(int recordedDataIndex)
+    {
+        this.recordedDataIndex = recordedDataIndex;
+        for (int i = 0; i < considerations.Count; i++)
+        {
+            ConsiderationUi con = considerations[i];
+            con.SetRecordedDataIndecies(recordedDataIndex - (dto.Considerations.Length * 2) + (i * 2));
+        }
+    }
+
     private void Update()
     {
         SetIsSelected(false); // AiInspector will reselect if this is still the best choice
-        Score = AiDataSys.NativeData.RecordedScores[recordedDataIndex];
+        if (!AiInspector.RecordingPaused)
+        {
+            Score = AiDataSys.NativeData.RecordedScores[recordedDataIndex];
+        }
+        
         totalScoreLabel.text = Score.ToString(AiInspector.ScoreFormat);
         if (!GInput.AnyKeyActivity)
         {
@@ -105,6 +149,36 @@ public class ChoiceUi : MonoBehaviour
 
             ChangeHeight((choiceInfoExpandedHeight - choiceInfoCollapsedHeight) * (choiceInfoExpanded ? 1f : -1f));
         }
+    }
+
+    public void RemoveConsideration(ConsiderationUi considerationUi)
+    {
+        var newArr = new ConsiderationDto[dto.Considerations.Length - 1];
+        int j = 0;
+        for (int i = 0; i < dto.Considerations.Length; i++)
+        {
+            if (dto.Considerations[i] != considerationUi.Dto)
+            {
+                newArr[j] = dto.Considerations[i];
+                j++;
+            }
+        }
+
+        dto.Considerations = newArr;
+        considerations.Remove(considerationUi);
+        AiDataSys.I.UpdateAiData();
+        AiInspector.I.OnStructureChanged();
+    }
+
+    public void AddConsideration()
+    {
+        var newArr =  new ConsiderationDto[dto.Considerations.Length + 1];
+        Array.Copy(dto.Considerations, newArr, dto.Considerations.Length);
+        ConsiderationDto consideration = ConsiderationDto.GetDefault();
+        newArr[newArr.Length - 1] = consideration;
+        dto.Considerations = newArr;
+        AiDataSys.I.UpdateAiData();
+        AiInspector.I.OnStructureChanged();
     }
 
     public void SetIsSelected(bool selected)
@@ -134,25 +208,6 @@ public class ChoiceUi : MonoBehaviour
         OnChoiceHeightChanged();
     }
 
-    private void OnChoiceHeightChanged()
-    {
-        if (heightChangeEventScheduled)
-        {
-            return;
-        }
-
-        heightChangeEventScheduled = true;
-        Scheduler.InvokeAfterOneFrame(() =>
-        {
-            for (int i = 0; i < considerations.Count; i++)
-            {
-                considerations[i].OnChoiceHeightChanged();
-            }
-
-            heightChangeEventScheduled = false;
-        });
-    }
-
     private void PopulateConsiderations()
     {
         considerations.Clear();
@@ -160,7 +215,7 @@ public class ChoiceUi : MonoBehaviour
         {
             ConsiderationUi con = Instantiate(considerationPrefab, considerationList).GetComponent<ConsiderationUi>();
             UILineRenderer line = Instantiate(graphLinePrefab, graph).GetComponent<UILineRenderer>();
-            con.Setup(dto.Considerations[i], this, DistinctColourList.GetColour(i), recordedDataIndex - (dto.Considerations.Length * 2) + (i * 2), graph, line);
+            con.Setup(dto.Considerations[i], this, DistinctColourList.GetColour(i), graph, line);
             considerations.Add(con);
         }
 

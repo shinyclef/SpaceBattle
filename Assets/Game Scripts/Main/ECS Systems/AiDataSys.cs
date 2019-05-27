@@ -30,7 +30,7 @@ public class AiDataSys : ComponentSystem
 
         try
         {
-            savedData.CopyValuesFrom(Data);
+            savedData = Data.Clone();
             string json = JsonUtility.ToJson(savedData, true);
             File.WriteAllText(Config.AiPath, json);
         }
@@ -83,7 +83,7 @@ public class AiDataSys : ComponentSystem
         }
         else if (updateRequired)
         {
-            GenerateNativeArraysFromDto();
+            UpdateAi();
         }
 
         updateRequired = false;
@@ -91,15 +91,7 @@ public class AiDataSys : ComponentSystem
         reloadFromDiskRequired = false;
     }
 
-    private void RevertAi()
-    {
-        if (savedData != null && Data != null)
-        {
-            Data.CopyValuesFrom(savedData);
-            GenerateNativeArraysFromDto();
-            Messenger.Global.Post(Msg.AiRevertedUnsavedChanges);
-        }
-    }
+
 
     private void LoadAiFromDisk()
     {
@@ -123,6 +115,18 @@ public class AiDataSys : ComponentSystem
         Data = savedData.Clone();
         GenerateNativeArraysFromDto();
         Messenger.Global.Post(Msg.AiLoadedFromDisk);
+    }
+
+    private void RevertAi()
+    {
+        Data = savedData.Clone();
+        GenerateNativeArraysFromDto();
+        Messenger.Global.Post(Msg.AiRevertedUnsavedChanges);
+    }
+
+    private void UpdateAi()
+    {
+        GenerateNativeArraysFromDto();
     }
 
     private void GenerateNativeArraysFromDto()
@@ -190,5 +194,6 @@ public class AiDataSys : ComponentSystem
 
         nativeData.RecordedScores = new NativeArray<float>(maxScoresToRecord, Allocator.Persistent);
         NativeData = nativeData;
+        Messenger.Global.Post(Msg.AiNativeArrayssGenerated);
     }
 }

@@ -31,6 +31,7 @@ public enum Msg
     // ai
     AiLoadedFromDisk,               //                          Global. The Utility AI has been loaded or reloaded.
     AiRevertedUnsavedChanges,       //                          Global. The Utility AI has reverted unsaved changes.
+    AiNativeArrayssGenerated,       //                          Global. The Utility AI has generated its native arrays. They can now be accessed.
 
     TotalTypes // used as a count
 };

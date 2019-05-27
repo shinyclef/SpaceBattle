@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine.Assertions;
 
@@ -214,6 +215,21 @@ public class ConsiderationDto : IEquatable<ConsiderationDto>
     public float YShift;
     public float InputMin;
     public float InputMax;
+
+    public static ConsiderationDto GetDefault()
+    {
+        return new ConsiderationDto
+        {
+            FactType = FactType.Constant,
+            GraphType = GraphType.Constant,
+            Slope = 0,
+            Exp = 0,
+            XShift = 0,
+            YShift = 0.5f,
+            InputMin = 0,
+            InputMax = 0
+        };
+    }
 
     public bool Equals(ConsiderationDto other)
     {
