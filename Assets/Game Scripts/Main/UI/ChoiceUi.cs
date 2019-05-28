@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UI;
 using UnityEngine.UI.Extensions;
 
@@ -14,13 +15,14 @@ public class ChoiceUi : MonoBehaviour
     [SerializeField] private TMP_InputField momentumInput = default;
     [SerializeField] private RectTransform considerationList = default;
     [SerializeField] private RectTransform choiceInfoPanel = default;
+    [SerializeField] private RectTransform reorderPanel = default;
     [SerializeField] private RectTransform inputsPanel = default;
     [SerializeField] private RectTransform graph = default;
     [SerializeField] private float choiceInfoExpandedHeight = default;
     [SerializeField] private GameObject considerationPrefab = default;
     [SerializeField] private GameObject graphLinePrefab = default;
 
-    private ChoiceDto dto;
+    private DecisionDto decision;
     private List<ConsiderationUi> considerations;
     private LayoutElement layoutElement;
     private float considerationCollapsedHeight;
@@ -29,7 +31,9 @@ public class ChoiceUi : MonoBehaviour
     private int recordedDataIndex;
     private bool heightChangeEventScheduled;
 
-    public int ConsiderationsCount => dto.Considerations.Length;
+    public ChoiceDto Dto { get; private set; }
+
+    public int ConsiderationsCount => Dto.Considerations.Length;
     public float Score { get; private set; }
 
     private float ChoiceInfoPanelHeight { get { return choiceInfoExpanded ? choiceInfoExpandedHeight : choiceInfoCollapsedHeight; } }
@@ -40,7 +44,7 @@ public class ChoiceUi : MonoBehaviour
     {
         if (numberField.IsValid)
         {
-            dto.Weight = numberField.GetValue();
+            Dto.Weight = numberField.GetValue();
         }
         
         AiInspector.I.OnConfigurationChanged(numberField);
@@ -50,7 +54,7 @@ public class ChoiceUi : MonoBehaviour
     {
         if (numberField.IsValid)
         {
-            dto.Momentum = numberField.GetValue();
+            Dto.Momentum = numberField.GetValue();
         }
 
         AiInspector.I.OnConfigurationChanged(numberField);
@@ -58,12 +62,42 @@ public class ChoiceUi : MonoBehaviour
 
     public void OnRemoveButtonPressed()
     {
-        Logger.Log("Remove Choice");
+        Remove();
     }
     
     public void OnNewConsiderationButtonPressed()
     {
         AddConsideration();
+    }
+
+    public void OnReorderUpButtonPressed()
+    {
+        int index = transform.GetSiblingIndex();
+        if (index == 0)
+        {
+            return;
+        }
+
+        ChoiceDto other = decision.Choices[index - 1];
+        decision.Choices[index - 1] = Dto;
+        decision.Choices[index] = other;
+        transform.SetSiblingIndex(index - 1);
+        AiInspector.I.ChangeChoiceIndex(this, index, index - 1);
+    }
+
+    public void OnReorderDownButtonPressed()
+    {
+        int index = transform.GetSiblingIndex();
+        if (index == transform.parent.childCount - 1)
+        {
+            return;
+        }
+
+        ChoiceDto other = decision.Choices[index + 1];
+        decision.Choices[index + 1] = Dto;
+        decision.Choices[index] = other;
+        transform.SetSiblingIndex(index + 1);
+        AiInspector.I.ChangeChoiceIndex(this, index, index + 1);
     }
 
     private void OnChoiceHeightChanged()
@@ -97,9 +131,10 @@ public class ChoiceUi : MonoBehaviour
         heightChangeEventScheduled = false;
     }
 
-    public void Setup(ChoiceDto dto)
+    public void Setup(ChoiceDto dto, DecisionDto decision)
     {
-        this.dto = dto;
+        Dto = dto;
+        this.decision = decision;
         choiceLabel.text = dto.ChoiceType.ToString();
         totalScoreLabel.text = ".0";
 
@@ -116,7 +151,7 @@ public class ChoiceUi : MonoBehaviour
         for (int i = 0; i < considerations.Count; i++)
         {
             ConsiderationUi con = considerations[i];
-            con.SetRecordedDataIndecies(recordedDataIndex - (dto.Considerations.Length * 2) + (i * 2));
+            con.SetRecordedDataIndecies(recordedDataIndex - (Dto.Considerations.Length * 2) + (i * 2));
         }
     }
 
@@ -138,6 +173,7 @@ public class ChoiceUi : MonoBehaviour
         {
             choiceInfoExpanded = !choiceInfoExpanded;
             inputsPanel.gameObject.SetActive(choiceInfoExpanded);
+            reorderPanel.gameObject.SetActive(choiceInfoExpanded);
 
             Vector2 size = choiceInfoPanel.sizeDelta;
             size.y = ChoiceInfoPanelHeight;
@@ -151,20 +187,41 @@ public class ChoiceUi : MonoBehaviour
         }
     }
 
+    private void Remove()
+    {
+        for (int i = 0; i < considerations.Count; i++)
+        {
+            considerations[i].Remove(false);
+        }
+
+        Destroy(gameObject);
+        AiInspector.I.RemoveChoice(this);
+    }
+
+    public void ChangeConsiderationIndex(ConsiderationUi considerationUi, int oldIndex, int newIndex)
+    {
+        considerations.RemoveAt(oldIndex);
+        considerations.Insert(newIndex, considerationUi);
+        considerations[oldIndex].SetColour(DistinctColourList.GetColour(oldIndex));
+        considerations[newIndex].SetColour(DistinctColourList.GetColour(newIndex));
+        AiDataSys.I.UpdateAiData();
+        AiInspector.I.OnStructureChanged();
+    }
+
     public void RemoveConsideration(ConsiderationUi considerationUi)
     {
-        var newArr = new ConsiderationDto[dto.Considerations.Length - 1];
+        var newArr = new ConsiderationDto[Dto.Considerations.Length - 1];
         int j = 0;
-        for (int i = 0; i < dto.Considerations.Length; i++)
+        for (int i = 0; i < Dto.Considerations.Length; i++)
         {
-            if (dto.Considerations[i] != considerationUi.Dto)
+            if (Dto.Considerations[i] != considerationUi.Dto)
             {
-                newArr[j] = dto.Considerations[i];
+                newArr[j] = Dto.Considerations[i];
                 j++;
             }
         }
 
-        dto.Considerations = newArr;
+        Dto.Considerations = newArr;
         considerations.Remove(considerationUi);
         AiDataSys.I.UpdateAiData();
         AiInspector.I.OnStructureChanged();
@@ -172,11 +229,11 @@ public class ChoiceUi : MonoBehaviour
 
     public void AddConsideration()
     {
-        var newArr =  new ConsiderationDto[dto.Considerations.Length + 1];
-        Array.Copy(dto.Considerations, newArr, dto.Considerations.Length);
+        var newArr =  new ConsiderationDto[Dto.Considerations.Length + 1];
+        Array.Copy(Dto.Considerations, newArr, Dto.Considerations.Length);
         ConsiderationDto consideration = ConsiderationDto.GetDefault();
         newArr[newArr.Length - 1] = consideration;
-        dto.Considerations = newArr;
+        Dto.Considerations = newArr;
         AiDataSys.I.UpdateAiData();
         AiInspector.I.OnStructureChanged();
     }
@@ -188,8 +245,8 @@ public class ChoiceUi : MonoBehaviour
 
     public void UpdateValuesFromDto()
     {
-        weightInput.text = dto.Weight == 0 ? "0" : dto.Weight.ToString(AiInspector.InputFormat);
-        momentumInput.text = dto.Momentum == 0 ? "0" : dto.Momentum.ToString(AiInspector.InputFormat);
+        weightInput.text = Dto.Weight == 0 ? "0" : Dto.Weight.ToString(AiInspector.InputFormat);
+        momentumInput.text = Dto.Momentum == 0 ? "0" : Dto.Momentum.ToString(AiInspector.InputFormat);
         for (int i = 0; i < considerations.Count; i++)
         {
             considerations[i].UpdateValuesFromDto();
@@ -211,11 +268,11 @@ public class ChoiceUi : MonoBehaviour
     private void PopulateConsiderations()
     {
         considerations.Clear();
-        for (int i = 0; i < dto.Considerations.Length; i++)
+        for (int i = 0; i < Dto.Considerations.Length; i++)
         {
             ConsiderationUi con = Instantiate(considerationPrefab, considerationList).GetComponent<ConsiderationUi>();
             UILineRenderer line = Instantiate(graphLinePrefab, graph).GetComponent<UILineRenderer>();
-            con.Setup(dto.Considerations[i], this, DistinctColourList.GetColour(i), graph, line);
+            con.Setup(Dto.Considerations[i], this, DistinctColourList.GetColour(i), graph, line);
             considerations.Add(con);
         }
 

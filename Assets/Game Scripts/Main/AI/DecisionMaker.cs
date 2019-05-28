@@ -50,23 +50,47 @@ public struct DecisionMaker
 
     public ChoiceType SelectedChoice { get; private set; }
 
-    public void PrepareDecision(DecisionType decisionType, ref Random rand)
+    public bool PrepareDecision(DecisionType decisionType, ref Random rand)
     {
+        if (Decisions.Length == 0)
+        {
+            return false;
+        }
+
         choiceIndexFrom = Decisions[(int)decisionType].ChoiceIndexStart;
         choiceIndexTo = (int)decisionType < Decisions.Length - 1 ? Decisions[(int)decisionType + 1].ChoiceIndexStart : (ushort)Choices.Length;
-        choiceIndex = choiceIndexFrom;
+        if (choiceIndexFrom == choiceIndexTo)
+        {
+            return false;
+        }
 
+        this.rand = rand;
+        choiceIndex = choiceIndexFrom;
         grandTotalScore = 0f;
         bestChoiceScore = 0f;
         decision = Decisions[(int)decisionType];
         minRequiredChoiceScore = 0f;
-
-        this.rand = rand;
-        PrepareChoiceVariables();
-        NextRequiredFactType = Considerations[considerationIndex].FactType;
-
-        record = RecordedEntity && decisionType == RecordedDecision;
         recordIndex = 0;
+        record = RecordedEntity && decisionType == RecordedDecision;
+
+        if (!PrepareChoiceVariables())
+        {
+            // we're skipping this choice
+            if (record)
+            {
+                // still need to record the skipped choice
+                RecordedScores[recordIndex] = currentChoiceScore;
+                recordIndex++;
+            }
+
+            if (!FinaliseChoiceAndMoveToNext())
+            {
+                return false;
+            }
+        }
+
+        NextRequiredFactType = Considerations[considerationIndex].FactType;
+        return true;
     }
 
     public bool EvaluateNextConsideration(float factValueRaw)
@@ -122,40 +146,65 @@ public struct DecisionMaker
             minRequiredChoiceScore = bestChoiceScore * decision.MinimumRequiredOfBest;
 
             // we've completed this consideration, let's score it and look at the next choice
-            if (!MoveToNextChoice())
+            if (!FinaliseChoiceAndMoveToNext())
             {
                 SelectChoiceHighestScore();
                 return false;
             }
         }
 
+        if (considerationIndex >= Considerations.Length)
+        {
+            Logger.Log($"considerationIndex: {considerationIndex}, Considerations.Length: {Considerations.Length}, considerationIndexFrom: {considerationIndexFrom}, considerationIndexTo: {considerationIndexTo}");
+        }
+
         NextRequiredFactType = Considerations[considerationIndex].FactType;
         return true;
     }
 
-    private void PrepareChoiceVariables()
+    private bool PrepareChoiceVariables()
     {
+        currentChoiceScore = 0;
         choice = Choices[choiceIndex];
         considerationIndexFrom = choice.ConsiderationIndexStart;
         considerationIndexTo = choiceIndex < Choices.Length - 1 ? Choices[choiceIndex + 1].ConsiderationIndexStart : (ushort)Considerations.Length;
-        considerationIndex = considerationIndexFrom;
-        modificationFactor = 1f - (1f / (considerationIndexTo - considerationIndexFrom));
-        currentChoiceScore = choice.Weight + math.select(0f, choice.MomentumFactor, choice.ChoiceType == CurrentChoice);
-    }
-
-    private bool MoveToNextChoice()
-    {
-        UtilityScores.Add(currentChoiceScore);
-        grandTotalScore += currentChoiceScore;
-
-        choiceIndex++;
-        if (choiceIndex == choiceIndexTo)
+        if (considerationIndexFrom == considerationIndexTo)
         {
-            // there are no choices left to evaluate
             return false;
         }
 
-        PrepareChoiceVariables();
+        considerationIndex = considerationIndexFrom;
+        modificationFactor = 1f - (1f / (considerationIndexTo - considerationIndexFrom));
+        currentChoiceScore = choice.Weight + math.select(0f, choice.MomentumFactor, choice.ChoiceType == CurrentChoice);
+        return true;
+    }
+
+    private bool FinaliseChoiceAndMoveToNext()
+    {
+        // finalise choice
+        UtilityScores.Add(currentChoiceScore);
+        grandTotalScore += currentChoiceScore;
+
+        // move to next choice
+        choiceIndex++;
+        if (choiceIndex == choiceIndexTo)
+        {
+            return false; // there are no choices left to evaluate
+        }
+
+        if (!PrepareChoiceVariables())
+        {
+            // we're skipping this choice
+            if (record)
+            {
+                // still need to recorded the skipped choice
+                RecordedScores[recordIndex] = currentChoiceScore;
+                recordIndex++;
+            }
+
+            return FinaliseChoiceAndMoveToNext();
+        }
+
         return true;
     }
 

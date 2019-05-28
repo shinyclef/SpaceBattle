@@ -43,7 +43,7 @@ public class CombatMovementAiSys : JobComponentSystem
         return jh;
     }
 
-    [BurstCompile]
+    //[BurstCompile]
     private struct Job : IJobForEachWithEntity<CombatTarget, LocalToWorld, MoveDestination, CombatMovement, Heading>
     {
         [NativeDisableContainerSafetyRestriction] public NativeArray<Random> Rngs;
@@ -94,9 +94,8 @@ public class CombatMovementAiSys : JobComponentSystem
                     utilityScores = UtilityScoreBufs[entity];
                     DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores, 
                         cm.CurrentChoice, ref RecordedScores, RecordedDecision, entity.Index == 8);
-                    dm.PrepareDecision(DecisionType.CombatMovement, ref rand);
-                    bool hasNext;
-                    do
+                    bool hasNext = dm.PrepareDecision(DecisionType.CombatMovement, ref rand);
+                    while (hasNext)
                     {
                         FactType requiredFact = dm.NextRequiredFactType;
                         // Logger.LogIf(entity.Index == 9, $"Required Fact: {requiredFact}");
@@ -132,7 +131,6 @@ public class CombatMovementAiSys : JobComponentSystem
 
                         hasNext = dm.EvaluateNextConsideration(factValue);
                     }
-                    while (hasNext);
 
                     selectedChoice = dm.SelectedChoice;
                     //Logger.LogIf(entity.Index == 9, $"selectedChoice was: {selectedChoice}");

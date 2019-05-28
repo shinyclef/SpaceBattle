@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using TMPro;
+﻿using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,6 +10,7 @@ public class ConsiderationUi : MonoBehaviour
     [SerializeField] private TextMeshProUGUI score = default;
     [SerializeField] private Toggle toggle = default;
     [SerializeField] private Image toggleForeground = default;
+    [SerializeField] private RectTransform reorderPanel = default;
     [SerializeField] private RectTransform inputsPanel = default;
     [SerializeField] private TMP_InputField factFromInput = default;
     [SerializeField] private TMP_InputField factToInput = default;
@@ -37,10 +37,7 @@ public class ConsiderationUi : MonoBehaviour
 
     public void OnRemoveButtonPressed()
     {
-        bool isExpanded = inputsPanel.gameObject.activeSelf;
-        choice.ChangeHeight(isExpanded ? -layoutElementExpandedHeight : -layoutElementCollapsedHeight);
-        choice.RemoveConsideration(this);
-        Destroy(gameObject);
+        Remove(true);
     }
 
     public void OnFactFromInputChanged(NumberInputField numberField)
@@ -121,6 +118,36 @@ public class ConsiderationUi : MonoBehaviour
         UpdateGraphBallPosition();
     }
 
+    public void OnReorderUpButtonPressed()
+    {
+        int index = transform.GetSiblingIndex();
+        if (index == 0)
+        {
+            return;
+        }
+
+        ConsiderationDto other = choice.Dto.Considerations[index - 1];
+        choice.Dto.Considerations[index - 1] = Dto;
+        choice.Dto.Considerations[index] = other;
+        transform.SetSiblingIndex(index - 1);
+        choice.ChangeConsiderationIndex(this, index, index - 1);
+    }
+
+    public void OnReorderDownButtonPressed()
+    {
+        int index = transform.GetSiblingIndex();
+        if (index == transform.parent.childCount - 1)
+        {
+            return;
+        }
+
+        ConsiderationDto other = choice.Dto.Considerations[index + 1];
+        choice.Dto.Considerations[index + 1] = Dto;
+        choice.Dto.Considerations[index] = other;
+        transform.SetSiblingIndex(index + 1);
+        choice.ChangeConsiderationIndex(this, index, index + 1);
+    }
+
     #endregion
 
     private void Awake()
@@ -131,16 +158,13 @@ public class ConsiderationUi : MonoBehaviour
 
     public void Setup(ConsiderationDto dto, ChoiceUi choice, Color color, RectTransform graph, UILineRenderer graphLine)
     {
-        this.Dto = dto;
+        Dto = dto;
         this.choice = choice;
         this.graph = graph;
         this.graphLine = graphLine;
 
         graphBall = Instantiate(graphBallPrefab, graph).GetComponent<Image>();
-        graphBall.color = color;
-
-        toggleForeground.color = color;
-        graphLine.color = color;
+        SetColour(color);
 
         label.text = dto.FactType.ToString();
         score.text = ".0";
@@ -167,6 +191,27 @@ public class ConsiderationUi : MonoBehaviour
         yInput.text = Dto.YShift == 0 ? "0" : Dto.YShift.ToString(AiInspector.InputFormat);
     }
 
+    public void Remove(bool removeFromChoice)
+    {
+        bool isExpanded = inputsPanel.gameObject.activeSelf;
+        Destroy(graphLine.gameObject);
+        Destroy(graphBall.gameObject);
+        if (removeFromChoice)
+        {
+            choice.ChangeHeight(isExpanded ? -layoutElementExpandedHeight : -layoutElementCollapsedHeight);
+            choice.RemoveConsideration(this);
+        }
+
+        Destroy(gameObject);
+    }
+
+    public void SetColour(Color color)
+    {
+        graphBall.color = color;
+        toggleForeground.color = color;
+        graphLine.color = color;
+    }
+
     private void Update()
     {
         if (!AiInspector.RecordingPaused)
@@ -186,6 +231,7 @@ public class ConsiderationUi : MonoBehaviour
         {
             bool expand = !inputsPanel.gameObject.activeSelf;
             inputsPanel.gameObject.SetActive(expand);
+            reorderPanel.gameObject.SetActive(expand);
             SetHeight(expand ? layoutElementExpandedHeight : layoutElementCollapsedHeight);
             choice.ChangeHeight((layoutElementExpandedHeight - layoutElementCollapsedHeight) * (expand ? 1f : -1f));
         }

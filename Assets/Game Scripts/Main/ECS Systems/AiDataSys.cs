@@ -91,8 +91,6 @@ public class AiDataSys : ComponentSystem
         reloadFromDiskRequired = false;
     }
 
-
-
     private void LoadAiFromDisk()
     {
         if (!File.Exists(Config.AiPath))

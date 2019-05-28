@@ -20,6 +20,7 @@ public class AiInspector : MonoBehaviour
 
     private static DecisionType recordedDecision;
 
+    DecisionDto decisionDto;
     private PopupMenu popupMenu;
     private List<ChoiceUi> choices;
     private int invalidFieldsCount;
@@ -64,7 +65,6 @@ public class AiInspector : MonoBehaviour
 
     public void OnStructureChanged()
     {
-        Logger.Log("Pausing");
         SetDirtyState(AiDataSys.I.DataIsDirty);
         RecordingPaused = true;
     }
@@ -161,7 +161,10 @@ public class AiInspector : MonoBehaviour
             }
         }
 
-        bestChoice.SetIsSelected(true);
+        if (bestChoice.Score > 0)
+        {
+            bestChoice.SetIsSelected(true);
+        }
     }
 
     public void UpdateValuesFromDto()
@@ -170,6 +173,33 @@ public class AiInspector : MonoBehaviour
         {
             choices[i].UpdateValuesFromDto();
         }
+    }
+
+    public void ChangeChoiceIndex(ChoiceUi choiceUi, int oldIndex, int newIndex)
+    {
+        choices.RemoveAt(oldIndex);
+        choices.Insert(newIndex, choiceUi);
+        AiDataSys.I.UpdateAiData();
+        OnStructureChanged();
+    }
+
+    public void RemoveChoice(ChoiceUi choice)
+    {
+        var newArr = new ChoiceDto[decisionDto.Choices.Length - 1];
+        int j = 0;
+        for (int i = 0; i < decisionDto.Choices.Length; i++)
+        {
+            if (decisionDto.Choices[i] != choice.Dto)
+            {
+                newArr[j] = decisionDto.Choices[i];
+                j++;
+            }
+        }
+
+        decisionDto.Choices = newArr;
+        choices.Remove(choice);
+        AiDataSys.I.UpdateAiData();
+        OnStructureChanged();
     }
 
     private void Localize()
@@ -223,27 +253,27 @@ public class AiInspector : MonoBehaviour
     {
         populating = true;
         ClearChoices();
-        DecisionDto dec = null;
+        decisionDto = null;
         for (int i = 0; i < AiDataSys.Data.Decisions.Length; i++)
         {
             if (AiDataSys.Data.Decisions[i].DecisionType.ToString() == SelectedDecision)
             {
-                dec = AiDataSys.Data.Decisions[i];
+                decisionDto = AiDataSys.Data.Decisions[i];
                 break;
             }
         }
 
-        if (dec == null)
+        if (decisionDto == null)
         {
             Logger.LogWarning("Can't populate AI Inspector decision list. No decisions were found.");
             return;
         }
 
-        for (int i = 0; i < dec.Choices.Length; i++)
+        for (int i = 0; i < decisionDto.Choices.Length; i++)
         {
             ChoiceUi c = Instantiate(choicePrefab, choicesList).GetComponent<ChoiceUi>();
             choices.Add(c);
-            c.Setup(dec.Choices[i]);
+            c.Setup(decisionDto.Choices[i], decisionDto);
         }
 
         SetRecordedDataIndecies();
@@ -254,7 +284,6 @@ public class AiInspector : MonoBehaviour
 
     private void SetRecordedDataIndecies()
     {
-        Logger.Log("Setting indecies");
         int recordedDataIndex = -1;
         for (int i = 0; i < choices.Count; i++)
         {
