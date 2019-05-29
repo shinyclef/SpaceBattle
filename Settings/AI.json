@@ -1,62 +1,50 @@
 {
     "Decisions": [
         {
-            "DecisionType": 0,
-            "MinimumRequiredOfBest": 0.10000000149011612,
+            "DecisionType": "CombatMovement",
+            "MinimumRequiredOfBest": 0.800000011920929,
             "Choices": [
                 {
-                    "ChoiceType": 1,
-                    "ChoiceName": "",
+                    "ChoiceType": "FlyTowardsEnemy",
                     "Weight": 1.0,
                     "Momentum": 0.0,
                     "Considerations": [
                         {
-                            "FactType": 1,
-                            "GraphType": 2,
+                            "FactType": "DistanceFromTarget",
+                            "GraphType": "Exponential",
                             "Slope": -0.6000000238418579,
                             "Exp": 6.0,
                             "XShift": 1.0,
                             "YShift": 0.800000011920929,
-                            "InputMin": 5.0,
-                            "InputMax": 20.0
+                            "InputMin": 20.0,
+                            "InputMax": 45.0
                         },
                         {
-                            "FactType": 2,
-                            "GraphType": 2,
-                            "Slope": 0.6000000238418579,
+                            "FactType": "AngleFromTarget",
+                            "GraphType": "Exponential",
+                            "Slope": 0.4000000059604645,
                             "Exp": 6.0,
                             "XShift": 1.0,
-                            "YShift": 0.20000000298023225,
+                            "YShift": 0.4000000059604645,
                             "InputMin": 0.0,
                             "InputMax": 180.0
                         }
                     ]
                 },
                 {
-                    "ChoiceType": 2,
-                    "ChoiceName": "",
+                    "ChoiceType": "FlyAwayFromEnemy",
                     "Weight": 1.0,
                     "Momentum": 0.0,
                     "Considerations": [
                         {
-                            "FactType": 1,
-                            "GraphType": 2,
-                            "Slope": 0.6000000238418579,
-                            "Exp": 6.0,
-                            "XShift": 1.0,
-                            "YShift": 0.20000000298023225,
-                            "InputMin": 5.0,
-                            "InputMax": 20.0
-                        },
-                        {
-                            "FactType": 2,
-                            "GraphType": 2,
-                            "Slope": -0.6000000238418579,
-                            "Exp": 6.0,
-                            "XShift": 1.0,
-                            "YShift": 0.800000011920929,
+                            "FactType": "Constant",
+                            "GraphType": "Constant",
+                            "Slope": 0.0,
+                            "Exp": 0.0,
+                            "XShift": 0.0,
+                            "YShift": 0.5,
                             "InputMin": 0.0,
-                            "InputMax": 180.0
+                            "InputMax": 0.0
                         }
                     ]
                 }

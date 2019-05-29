@@ -9,11 +9,11 @@ public struct DecisionMaker
     public NativeArray<Consideration> Considerations;
     public DynamicBuffer<UtilityScoreBuf> UtilityScores;
     public ChoiceType CurrentChoice;
+    public float Time;
     public NativeArray<float> RecordedScores;
     public DecisionType RecordedDecision;
     private bool RecordedEntity;
 
-    private Random rand;
     private float minRequiredChoiceScore;
     private float grandTotalScore;
     private float currentChoiceScore;
@@ -34,12 +34,13 @@ public struct DecisionMaker
     private int recordIndex;
 
     public DecisionMaker(ref NativeArray<Decision> decisions, ref NativeArray<Choice> choices, ref NativeArray<Consideration> considerations, 
-        ref DynamicBuffer<UtilityScoreBuf> utilityScores, ChoiceType currentChoice, ref NativeArray<float> recordedScores, DecisionType recordedDecision, bool recordedEntity) : this()
+        ref DynamicBuffer<UtilityScoreBuf> utilityScores, float time, ChoiceType currentChoice, ref NativeArray<float> recordedScores, DecisionType recordedDecision, bool recordedEntity) : this()
     {
         Decisions = decisions;
         Choices = choices;
         Considerations = considerations;
         UtilityScores = utilityScores;
+        Time = time;
         CurrentChoice = currentChoice;
         RecordedScores = recordedScores;
         RecordedDecision = recordedDecision;
@@ -64,7 +65,6 @@ public struct DecisionMaker
             return false;
         }
 
-        this.rand = rand;
         choiceIndex = choiceIndexFrom;
         grandTotalScore = 0f;
         bestChoiceScore = 0f;
@@ -93,7 +93,7 @@ public struct DecisionMaker
         return true;
     }
 
-    public bool EvaluateNextConsideration(float factValueRaw)
+    public bool EvaluateNextConsideration(float factValueRaw, ref Random rand)
     {
         // evluate the considertion and multiply the result with the factValue
         Consideration consideration = Considerations[considerationIndex];
@@ -148,14 +148,9 @@ public struct DecisionMaker
             // we've completed this consideration, let's score it and look at the next choice
             if (!FinaliseChoiceAndMoveToNext())
             {
-                SelectChoiceHighestScore();
+                SelectChoiceRandomVariance(ref rand);
                 return false;
             }
-        }
-
-        if (considerationIndex >= Considerations.Length)
-        {
-            Logger.Log($"considerationIndex: {considerationIndex}, Considerations.Length: {Considerations.Length}, considerationIndexFrom: {considerationIndexFrom}, considerationIndexTo: {considerationIndexTo}");
         }
 
         NextRequiredFactType = Considerations[considerationIndex].FactType;
@@ -227,7 +222,48 @@ public struct DecisionMaker
         }
     }
 
-    private void SelectChoiceWeightedRandom()
+    private void SelectChoiceNoiseOffset(half noiseSeed, half noiseWaveLen)
+    {
+        float max = float.MinValue;
+        for (int i = 0; i < UtilityScores.Length; i++)
+        {
+            float noiseOffset = noise.snoise(new float2(noiseSeed, Time * noiseWaveLen));
+            if (UtilityScores[i].Value + noiseOffset > max)
+            {
+                max = UtilityScores[i].Value + noiseOffset;
+                SelectedChoice = Choices[choiceIndexFrom + i].ChoiceType;
+            }
+        }
+
+        if (max == float.MinValue)
+        {
+            //Logger.Log($"Heads up, I'm selecting default choice! Max was {max}.");
+            SelectedChoice = ChoiceType.None;
+        }
+    }
+
+    private void SelectChoiceRandomVariance(ref Random rand)
+    {
+        float max = -100;
+        for (int i = 0; i < UtilityScores.Length; i++)
+        {
+            float randVariance = 0.5f;
+            float randOffset = rand.NextFloat() * randVariance - (0.5f * randVariance);
+            if (UtilityScores[i].Value + randOffset > max)
+            {
+                max = UtilityScores[i].Value + randOffset;
+                SelectedChoice = Choices[choiceIndexFrom + i].ChoiceType;
+            }
+        }
+
+        if (max == -100)
+        {
+            //Logger.Log($"Heads up, I'm selecting default choice! Max was {max}.");
+            SelectedChoice = ChoiceType.None;
+        }
+    }
+
+    private void SelectChoiceWeightedRandom(ref Random rand)
     {
         float max = 0;
         for (int i = 0; i < UtilityScores.Length; i++)

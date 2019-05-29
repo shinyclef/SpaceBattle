@@ -1,6 +1,7 @@
 ﻿public enum ChoiceType
 {
     None,
-    FlyTowardEnemy,
-    FlyAwayFromEnemy
+    FlyTowardsEnemy,
+    FlyAwayFromEnemy,
+    AimAtEnemy
 }

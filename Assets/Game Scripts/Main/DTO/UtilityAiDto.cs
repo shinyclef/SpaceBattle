@@ -58,7 +58,7 @@ public class UtilityAiDto : IEquatable<UtilityAiDto>
 [Serializable]
 public class DecisionDto : IEquatable<DecisionDto>
 {
-    public DecisionType DecisionType;
+    public string DecisionType;
     public float MinimumRequiredOfBest;
     public ChoiceDto[] Choices;
 
@@ -118,7 +118,7 @@ public class DecisionDto : IEquatable<DecisionDto>
     {
         return new Decision
         {
-            DecisionType = DecisionType,
+            DecisionType = (DecisionType)Enum.Parse(typeof(DecisionType), DecisionType),
             ChoiceIndexStart = choiceIndexStart,
             MinimumRequiredOfBest = new half(MinimumRequiredOfBest)
         };
@@ -128,8 +128,7 @@ public class DecisionDto : IEquatable<DecisionDto>
 [Serializable]
 public class ChoiceDto : IEquatable<ChoiceDto>
 {
-    public ChoiceType ChoiceType;
-    public string ChoiceName;
+    public string ChoiceType;
     public float Weight;
     public float Momentum;
     public ConsiderationDto[] Considerations;
@@ -137,7 +136,6 @@ public class ChoiceDto : IEquatable<ChoiceDto>
     public bool Equals(ChoiceDto other)
     {
         if (ChoiceType != other.ChoiceType ||
-            ChoiceName != other.ChoiceName ||
             Weight != other.Weight ||
             Momentum != other.Momentum ||
             Considerations.Length != other.Considerations.Length)
@@ -167,7 +165,6 @@ public class ChoiceDto : IEquatable<ChoiceDto>
         return new ChoiceDto
         {
             ChoiceType = ChoiceType,
-            ChoiceName = ChoiceName,
             Weight = Weight,
             Momentum = Momentum,
             Considerations = considerations
@@ -183,7 +180,6 @@ public class ChoiceDto : IEquatable<ChoiceDto>
         }
 
         ChoiceType = other.ChoiceType;
-        ChoiceName = other.ChoiceName;
         Weight = other.Weight;
         Momentum = other.Momentum;
         for (int i = 0; i < Considerations.Length; i++)
@@ -196,7 +192,7 @@ public class ChoiceDto : IEquatable<ChoiceDto>
     {
         return new Choice
         {
-            ChoiceType = ChoiceType,
+            ChoiceType = (ChoiceType)Enum.Parse(typeof(ChoiceType), ChoiceType),
             ConsiderationIndexStart = considerationIndexStart,
             Weight = Weight,
             MomentumFactor = Momentum
@@ -207,8 +203,8 @@ public class ChoiceDto : IEquatable<ChoiceDto>
 [Serializable]
 public class ConsiderationDto : IEquatable<ConsiderationDto>
 {
-    public FactType FactType;
-    public GraphType GraphType;
+    public string FactType;
+    public string GraphType;
     public float Slope;
     public float Exp;
     public float XShift;
@@ -220,8 +216,8 @@ public class ConsiderationDto : IEquatable<ConsiderationDto>
     {
         return new ConsiderationDto
         {
-            FactType = FactType.Constant,
-            GraphType = GraphType.Constant,
+            FactType = "Constant",
+            GraphType = "Constant",
             Slope = 0,
             Exp = 0,
             XShift = 0,
@@ -274,8 +270,8 @@ public class ConsiderationDto : IEquatable<ConsiderationDto>
     {
         return new Consideration
         {
-            FactType = FactType,
-            GraphType = GraphType,
+            FactType = (FactType)Enum.Parse(typeof(FactType), FactType),
+            GraphType = (GraphType)Enum.Parse(typeof(GraphType), GraphType),
             Slope = Slope,
             Exp = Exp,
             XShift = new half(XShift),

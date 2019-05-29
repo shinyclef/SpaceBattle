@@ -135,7 +135,7 @@ public class ChoiceUi : MonoBehaviour
     {
         Dto = dto;
         this.decision = decision;
-        choiceLabel.text = dto.ChoiceType.ToString();
+        choiceLabel.text = dto.ChoiceType;
         totalScoreLabel.text = ".0";
 
         inputsPanel.gameObject.SetActive(true); // force awake to be called

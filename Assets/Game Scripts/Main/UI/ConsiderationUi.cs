@@ -166,7 +166,7 @@ public class ConsiderationUi : MonoBehaviour
         graphBall = Instantiate(graphBallPrefab, graph).GetComponent<Image>();
         SetColour(color);
 
-        label.text = dto.FactType.ToString();
+        label.text = dto.FactType;
         score.text = ".0";
 
         // force awake to be called

@@ -227,7 +227,7 @@ public class AiInspector : MonoBehaviour
         options = new List<string>();
         for (int i = 0; i < dto.Decisions.Length; i++)
         {
-            options.Add(dto.Decisions[i].DecisionType.ToString());
+            options.Add(dto.Decisions[i].DecisionType);
         }
 
         if (options.Count > 0)
@@ -256,7 +256,7 @@ public class AiInspector : MonoBehaviour
         decisionDto = null;
         for (int i = 0; i < AiDataSys.Data.Decisions.Length; i++)
         {
-            if (AiDataSys.Data.Decisions[i].DecisionType.ToString() == SelectedDecision)
+            if (AiDataSys.Data.Decisions[i].DecisionType == SelectedDecision)
             {
                 decisionDto = AiDataSys.Data.Decisions[i];
                 break;

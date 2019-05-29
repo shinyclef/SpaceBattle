@@ -13,6 +13,7 @@ using Random = Unity.Mathematics.Random;
 [UpdateAfter(typeof(CombatTargetSys))]
 public class CombatMovementAiSys : JobComponentSystem
 {
+    public bool EnableDebugRays;
     private NativeArray<Random> rngs;
 
     protected override void OnCreate()
@@ -36,14 +37,15 @@ public class CombatMovementAiSys : JobComponentSystem
             Considerations = AiDataSys.NativeData.Considerations,
             RecordedScores = AiDataSys.NativeData.RecordedScores,
             RecordedDecision = AiInspector.RecordedDecision,
-            Time = Time.time
+            Time = Time.time,
+            DeltaTime = Time.deltaTime
         };
 
         JobHandle jh = job.Schedule(this, inputDeps);
         return jh;
     }
 
-    //[BurstCompile]
+    //TODO [BurstCompile]
     private struct Job : IJobForEachWithEntity<CombatTarget, LocalToWorld, MoveDestination, CombatMovement, Heading>
     {
         [NativeDisableContainerSafetyRestriction] public NativeArray<Random> Rngs;
@@ -55,8 +57,9 @@ public class CombatMovementAiSys : JobComponentSystem
         public DecisionType RecordedDecision;
 
         public float Time;
+        public float DeltaTime;
 
-        #pragma warning disable 0649
+    #pragma warning disable 0649
         [NativeSetThreadIndex] private int threadId;
         #pragma warning restore 0649
         [NativeDisableParallelForRestriction] private DynamicBuffer<UtilityScoreBuf> utilityScores;
@@ -64,17 +67,17 @@ public class CombatMovementAiSys : JobComponentSystem
         private int eId;
 
         public void Execute(Entity entity, int index,
-            [ReadOnly] ref CombatTarget enemy,
+            [ReadOnly] ref CombatTarget target,
             [ReadOnly] ref LocalToWorld l2w,
             ref MoveDestination dest,
             ref CombatMovement cm,
             ref Heading heading)
         {
             eId = entity.Index;
-            if (enemy.Entity != Entity.Null)
+            if (target.Entity != Entity.Null)
             {
                 //eId = entity.Index;
-                float2 targetPos = enemy.Pos;
+                float2 targetPos = target.Pos;
                 Random rand = Rngs[threadId];
                 ChoiceType selectedChoice;
                 if (Time - cm.LastEvalTime < 0.0f)
@@ -92,7 +95,7 @@ public class CombatMovementAiSys : JobComponentSystem
 
                     // make decision
                     utilityScores = UtilityScoreBufs[entity];
-                    DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores, 
+                    DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores, Time,
                         cm.CurrentChoice, ref RecordedScores, RecordedDecision, entity.Index == 8);
                     bool hasNext = dm.PrepareDecision(DecisionType.CombatMovement, ref rand);
                     while (hasNext)
@@ -129,7 +132,7 @@ public class CombatMovementAiSys : JobComponentSystem
                                 break;
                         }
 
-                        hasNext = dm.EvaluateNextConsideration(factValue);
+                        hasNext = dm.EvaluateNextConsideration(factValue, ref rand);
                     }
 
                     selectedChoice = dm.SelectedChoice;
@@ -139,7 +142,7 @@ public class CombatMovementAiSys : JobComponentSystem
 
                 switch (selectedChoice)
                 {
-                    case ChoiceType.FlyTowardEnemy:
+                    case ChoiceType.FlyTowardsEnemy:
                         dest.Value = targetPos;
                         dest.IsCombatTarget = true;
                         break;
@@ -147,18 +150,26 @@ public class CombatMovementAiSys : JobComponentSystem
                     case ChoiceType.FlyAwayFromEnemy:
                         if (cm.CurrentChoice != ChoiceType.FlyAwayFromEnemy)
                         {
-                            float2 offset = rand.NextBool() ? l2w.Right.xy : -l2w.Right.xy;
+                            // we start by choosing to go left or right
+                            float2 offset = (rand.NextBool() ? l2w.Right.xy : -l2w.Right.xy) * 0.3f;
                             targetPos += offset;
+                            
                             dest.Value = targetPos;
-                            cm.LastHeading = Heading.FromFloat2(targetPos - l2w.Position.xy);
+                            
+                            //cm.LastHeading = Heading.FromFloat2(targetPos - l2w.Position.xy);
                             //Logger.LogIf(entity.Index == 9, "Head: " + Heading.ToFloat2(cm.LastHeading));
                         }
                         else
                         {
-                            float2 dir = Heading.ToFloat2(cm.LastHeading);
-                            dest.Value = l2w.Position.xy + (dir.Equals(float2.zero) ? l2w.Up.xy : dir);
+                            // draw a line from target, through a point a few units in front of the ship, and on for a few units beyond that
+                            float2 inFrontOfShip = l2w.Position.xy + l2w.Up.xy * 5;
+                            float2 offset = math.normalize(inFrontOfShip - targetPos) * 10;
+                            float2 desiredDestination = inFrontOfShip + offset;
+
+                            // we do this lerp so that the original left/right decision is respected
+                            dest.Value = math.lerp(dest.Value, desiredDestination, DeltaTime * 5);
                         }
-                        
+
                         dest.IsCombatTarget = false;
                         break;
 
@@ -174,7 +185,6 @@ public class CombatMovementAiSys : JobComponentSystem
                 {
                     //Logger.LogIf(entity.Index == 9, $"New Choice was: {selectedChoice}");
                     cm.CurrentChoice = selectedChoice;
-                    cm.LastChoiceTime = Time;
                 }
 
                 Rngs[threadId] = rand;

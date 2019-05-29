@@ -1,14 +1,15 @@
 ﻿using System;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 [Serializable]
 public struct CombatMovement : IComponentData
 {
     public ChoiceType CurrentChoice;
-    public float LastChoiceTime;
     public float LastEvalTime;
-    public float LastHeading;
+    public half NoiseSeed;
+    public half NoiseWaveLen;
 }
 
 public class CombatMovementComp : MonoBehaviour, IConvertGameObjectToEntity

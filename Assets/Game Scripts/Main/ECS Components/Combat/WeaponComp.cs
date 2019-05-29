@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -24,7 +23,7 @@ public struct Weapon : IComponentData
 }
 
 [RequiresEntityConversion]
-public class WeaponComp : MonoBehaviour, IDeclareReferencedPrefabs, IConvertGameObjectToEntity
+public class WeaponComp : MonoBehaviour, IConvertGameObjectToEntity
 {
     public GameObject ProjectilePrefab;
     public float3 SpawnOffset;
@@ -62,10 +61,5 @@ public class WeaponComp : MonoBehaviour, IDeclareReferencedPrefabs, IConvertGame
                 col->Filter = filter;
             }
         });
-    }
-
-    public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
-    {
-        referencedPrefabs.Add(ProjectilePrefab);
     }
 }
