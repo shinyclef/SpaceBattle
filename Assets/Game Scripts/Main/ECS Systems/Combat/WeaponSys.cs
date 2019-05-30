@@ -31,7 +31,7 @@ public class WeaponSys : JobComponentSystem
     }
 
     //[BurstCompile]
-    private struct Job : IJobForEachWithEntity<MoveDestination, Translation, Rotation, Velocity, CombatTarget, Weapon>
+    private struct Job : IJobForEachWithEntity<MoveDestination, LocalToWorld, Rotation, Velocity, CombatTarget, Weapon>
     {
         public EntityCommandBuffer.Concurrent BeginSimCB;
         [ReadOnly] public ComponentDataFromEntity<Velocity> VelocityData;
@@ -39,7 +39,7 @@ public class WeaponSys : JobComponentSystem
 
         public void Execute(Entity entity, int index, 
             [ReadOnly] ref MoveDestination moveDest, 
-            [ReadOnly] ref Translation tran, 
+            [ReadOnly] ref LocalToWorld l2w, 
             [ReadOnly] ref Rotation rot,
             [ReadOnly] ref Velocity vel,
             [ReadOnly] ref CombatTarget target,
@@ -47,8 +47,8 @@ public class WeaponSys : JobComponentSystem
         {
             if (wep.CooldownEnd == 0)
             {
-                wep.CooldownEnd = Time + (Time * 10000 + index) % wep.FireMajorInterval;
-                wep.BurstShotCooldownEnd = Time + (Time * 10000 + index) % wep.FireMinorInterval;
+                wep.CooldownEnd = Time + wep.FireMajorInterval;
+                wep.BurstShotCooldownEnd = wep.FireMinorInterval;
                 return;
             }
 
@@ -74,13 +74,18 @@ public class WeaponSys : JobComponentSystem
             bool fire = false;
             if (!isBursting)
             {
-                float2 projectedEnemyPos = moveDest.Value + VelocityData[target.Entity].Value * wep.projectileLifeTime;
-                if (math.distance(tran.Value.xy, projectedEnemyPos) < wep.projectileRange)
+                float2 targetDir = math.normalize(target.Pos - l2w.Position.xy);
+                float2 forwardDir = l2w.Up.xy;
+                if (math.dot(targetDir, forwardDir) > 0.9f)
                 {
-                    wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireMajorInterval, Time + wep.FireMajorInterval - 0.1f);
-                    wep.BurstShotCooldownEnd = math.max(wep.BurstShotCooldownEnd + wep.FireMinorInterval, Time + wep.FireMinorInterval - 0.01f);
-                    wep.LastBurstShot = 1;
-                    fire = true;
+                    float2 projectedEnemyPos = moveDest.Value + VelocityData[target.Entity].Value * wep.projectileLifeTime;
+                    if (math.distance(l2w.Position.xy, projectedEnemyPos) < wep.projectileRange)
+                    {
+                        wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireMajorInterval, Time + wep.FireMajorInterval - 0.1f);
+                        wep.BurstShotCooldownEnd = math.max(wep.BurstShotCooldownEnd + wep.FireMinorInterval, Time + wep.FireMinorInterval - 0.01f);
+                        wep.LastBurstShot = 1;
+                        fire = true;
+                    }
                 }
             }
             else
@@ -92,7 +97,7 @@ public class WeaponSys : JobComponentSystem
 
             if (fire)
             {
-                float3 pos = tran.Value + wep.SpawnOffset.LocalToWorldPos(rot.Value);
+                float3 pos = l2w.Position + wep.SpawnOffset.LocalToWorldPos(rot.Value);
                 Entity proj = BeginSimCB.Instantiate(index, wep.ProjectilePrefab);
                 BeginSimCB.SetComponent(index, proj, new Translation { Value = pos });
                 BeginSimCB.SetComponent(index, proj, new Rotation { Value = rot.Value });

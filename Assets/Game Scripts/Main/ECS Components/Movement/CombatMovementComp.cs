@@ -7,9 +7,17 @@ using UnityEngine;
 public struct CombatMovement : IComponentData
 {
     public ChoiceType CurrentChoice;
+    public float ChoiceSelectedTime;
     public float LastEvalTime;
     public half NoiseSeed;
-    public half NoiseWaveLen;
+
+    public CombatMovement(float noiseSeed01)
+    {
+        CurrentChoice = default;
+        ChoiceSelectedTime = default;
+        LastEvalTime = float.MinValue;
+        NoiseSeed = new half(math.remap(0f, 1f, half.MinValue, half.MaxValue, noiseSeed01));
+    }
 }
 
 public class CombatMovementComp : MonoBehaviour, IConvertGameObjectToEntity

@@ -5,7 +5,8 @@
         "UnityEditor.TestRunner",
         "Common",
         "Main",
-        "Unity.Mathematics"
+        "Unity.Mathematics",
+        "Unity.Burst"
     ],
     "includePlatforms": [
         "Editor"

@@ -67,6 +67,7 @@ public class ShipSpawnerSpawnSys : JobComponentSystem
                 CommandBuffer.SetComponent(ship, new Heading(heading));
                 CommandBuffer.SetComponent(ship, new MoveDestination(moveDest, false));
                 CommandBuffer.SetComponent(ship, new SpawnTime(Time));
+                CommandBuffer.SetComponent(ship, new CombatMovement(Rand.NextFloat()));
                 CommandBuffer.AddSharedComponent(ship, new ShipSpawnerOwnerSsShC(entity.Index, entity.Version));
             }
         }

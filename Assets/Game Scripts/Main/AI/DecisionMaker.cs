@@ -49,6 +49,8 @@ public struct DecisionMaker
 
     public FactType NextRequiredFactType { get; private set; }
 
+    public ChoiceType CurrentlyEvaluatedChoice { get; private set; }
+
     public ChoiceType SelectedChoice { get; private set; }
 
     public bool PrepareDecision(DecisionType decisionType, ref Random rand)
@@ -90,6 +92,7 @@ public struct DecisionMaker
         }
 
         NextRequiredFactType = Considerations[considerationIndex].FactType;
+        CurrentlyEvaluatedChoice = Choices[choiceIndex].ChoiceType;
         return true;
     }
 
@@ -99,7 +102,7 @@ public struct DecisionMaker
         Consideration consideration = Considerations[considerationIndex];
 
         // normalize input
-        float factValue = consideration.GetNormalizedInput(factValueRaw);
+        float factValue = consideration.GetNormalizedInput(factValueRaw, Time);
         float score = consideration.Evaluate(factValue);
         if (record)
         {
@@ -148,12 +151,13 @@ public struct DecisionMaker
             // we've completed this consideration, let's score it and look at the next choice
             if (!FinaliseChoiceAndMoveToNext())
             {
-                SelectChoiceRandomVariance(ref rand);
+                SelectChoiceHighestScore();
                 return false;
             }
         }
 
         NextRequiredFactType = Considerations[considerationIndex].FactType;
+        CurrentlyEvaluatedChoice = Choices[choiceIndex].ChoiceType;
         return true;
     }
 

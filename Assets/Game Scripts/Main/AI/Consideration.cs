@@ -12,8 +12,16 @@ public struct Consideration : IComponentData
     public float InputMin;
     public float InputMax;
 
-    public float GetNormalizedInput(float input)
+    public float GetNormalizedInput(float input, float time)
     {
+        if (FactType == FactType.Noise)
+        {
+            // input: seed
+            // InputMin: wave sample distance
+            // InputMax: amplitude
+            return math.clamp(math.remap(0f, 127f, 0f, 1f, gmath.FastNoise(time * InputMin, input) * InputMax), 0f, 1f);
+        }
+
         return math.clamp((input - InputMin) / (InputMax - InputMin), 0f, 1f);
     }
 

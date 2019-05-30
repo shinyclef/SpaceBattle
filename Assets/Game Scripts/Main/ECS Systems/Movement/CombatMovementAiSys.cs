@@ -45,7 +45,7 @@ public class CombatMovementAiSys : JobComponentSystem
         return jh;
     }
 
-    //TODO [BurstCompile]
+    [BurstCompile]
     private struct Job : IJobForEachWithEntity<CombatTarget, LocalToWorld, MoveDestination, CombatMovement, Heading>
     {
         [NativeDisableContainerSafetyRestriction] public NativeArray<Random> Rngs;
@@ -64,7 +64,7 @@ public class CombatMovementAiSys : JobComponentSystem
         #pragma warning restore 0649
         [NativeDisableParallelForRestriction] private DynamicBuffer<UtilityScoreBuf> utilityScores;
 
-        private int eId;
+        //private int eId;
 
         public void Execute(Entity entity, int index,
             [ReadOnly] ref CombatTarget target,
@@ -73,14 +73,14 @@ public class CombatMovementAiSys : JobComponentSystem
             ref CombatMovement cm,
             ref Heading heading)
         {
-            eId = entity.Index;
+            //eId = entity.Index;
             if (target.Entity != Entity.Null)
             {
                 //eId = entity.Index;
                 float2 targetPos = target.Pos;
                 Random rand = Rngs[threadId];
                 ChoiceType selectedChoice;
-                if (Time - cm.LastEvalTime < 0.0f)
+                if (Time - cm.LastEvalTime < 0.3f)
                 {
                     selectedChoice = cm.CurrentChoice;
                 }
@@ -124,6 +124,18 @@ public class CombatMovementAiSys : JobComponentSystem
                                 }
 
                                 factValue = angle;
+                                break;
+
+                            case FactType.Noise:
+                                factValue = cm.NoiseSeed;
+                                break;
+
+                            case FactType.TimeSinceLastChoiceSelection:
+                                factValue = Time - cm.ChoiceSelectedTime;
+                                break;
+
+                            case FactType.TimeSinceThisChoiceSelection:
+                                factValue = dm.CurrentlyEvaluatedChoice == cm.CurrentChoice ? Time - cm.ChoiceSelectedTime : 0f;
                                 break;
 
                             default:
@@ -185,6 +197,7 @@ public class CombatMovementAiSys : JobComponentSystem
                 {
                     //Logger.LogIf(entity.Index == 9, $"New Choice was: {selectedChoice}");
                     cm.CurrentChoice = selectedChoice;
+                    cm.ChoiceSelectedTime = Time;
                 }
 
                 Rngs[threadId] = rand;
