@@ -48,4 +48,6 @@ public class SpawnerGameGroup : ComponentSystemGroup
 public class GameGroupLateSim : ComponentSystemGroup
 {
     ClearTriggerInfoBufferSys ClearTriggerInfoBufferSys;
-}
+    DeselectionSys DeselectionSys;
+    SelectionSys SelectionSys;
+} 

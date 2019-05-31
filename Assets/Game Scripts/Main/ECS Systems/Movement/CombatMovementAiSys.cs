@@ -38,7 +38,8 @@ public class CombatMovementAiSys : JobComponentSystem
             RecordedScores = AiDataSys.NativeData.RecordedScores,
             RecordedDecision = AiInspector.RecordedDecision,
             Time = Time.time,
-            DeltaTime = Time.deltaTime
+            DeltaTime = Time.deltaTime,
+            RecordedEntity = SelectionSys.SelectedEntity
         };
 
         JobHandle jh = job.Schedule(this, inputDeps);
@@ -58,6 +59,7 @@ public class CombatMovementAiSys : JobComponentSystem
 
         public float Time;
         public float DeltaTime;
+        public Entity RecordedEntity;
 
     #pragma warning disable 0649
         [NativeSetThreadIndex] private int threadId;
@@ -96,7 +98,7 @@ public class CombatMovementAiSys : JobComponentSystem
                     // make decision
                     utilityScores = UtilityScoreBufs[entity];
                     DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores, Time,
-                        cm.CurrentChoice, ref RecordedScores, RecordedDecision, entity.Index == 8);
+                        cm.CurrentChoice, ref RecordedScores, RecordedDecision, entity == RecordedEntity);
                     bool hasNext = dm.PrepareDecision(DecisionType.CombatMovement, ref rand);
                     while (hasNext)
                     {
