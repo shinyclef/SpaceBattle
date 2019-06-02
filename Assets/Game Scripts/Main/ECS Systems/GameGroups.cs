@@ -9,26 +9,23 @@ public class InitializationGameGroup : ComponentSystemGroup
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(ExportPhysicsWorld))]
-public class TriggerGameGroup : ComponentSystemGroup
+public class PhysicsGameGroup : ComponentSystemGroup
 {
-    TriggerInfoPrepareSys TriggerInfoPrepareSys;
-    TriggerInfoApplySys TriggerInfoApplySys;
-    TriggerInfoNativeCleanupSys TriggerInfoNativeCleanupSys;
+    ProcessTriggerEventsSys ProcessTriggerEventsSys;
 }
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateAfter(typeof(TriggerGameGroup))]
+[UpdateAfter(typeof(PhysicsGameGroup))]
 public class MainGameGroup : ComponentSystemGroup
 {
+    NearestEnemySys NearestEnemySys;
     LifeTimeExpireSys LifeTimeExpireSys;
     HeadingSys HeadingSys;
     RotationSys RotationSys;
     VelocitySys VelocitySys;
     MovementSys MovementSys;
-    NearestEnemySys NearestEnemySys;
     CombatTargetSys CombatTargetSys;
     CombatMovementAiSys CombatMovementAiSys;
-    //MoveDestinationSys MoveDestinationSys;
     DamageHealthOnTriggerSys DamageHealthOnTriggerSys;
     WeaponSys WeaponSys;
 }

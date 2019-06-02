@@ -10,24 +10,24 @@ using UnityEngine;
 //[UpdateAfter(typeof(DamageHealthOnTriggerSys))]
 public class WeaponSys : JobComponentSystem
 {
-    private BeginInitializationEntityCommandBufferSystem beingSimCB;
+    private BeginSimulationEntityCommandBufferSystem beginSimCB;
 
     protected override void OnCreate()
     {
-        beingSimCB = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
+        beginSimCB = World.GetOrCreateSystem<BeginSimulationEntityCommandBufferSystem>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
         var job = new Job()
         {
-            BeginSimCB = beingSimCB.CreateCommandBuffer().ToConcurrent(),
+            BeginSimCB = beginSimCB.CreateCommandBuffer().ToConcurrent(),
             VelocityData = GetComponentDataFromEntity<Velocity>(),
             Time = Time.time
         };
 
         JobHandle jh = job.Schedule(this, inputDeps);
-        beingSimCB.AddJobHandleForProducer(jh);
+        beginSimCB.AddJobHandleForProducer(jh);
         return jh;
     }
 

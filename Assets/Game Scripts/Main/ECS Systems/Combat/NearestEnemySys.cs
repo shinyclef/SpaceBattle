@@ -7,7 +7,7 @@ using Unity.Physics.Systems;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateInGroup(typeof(MainGameGroup))]
+[UpdateInGroup(typeof(PhysicsGameGroup))]
 public class NearestEnemySys : JobComponentSystem
 {
     private const float MinUpdateInterval = 0.5f;
@@ -38,7 +38,7 @@ public class NearestEnemySys : JobComponentSystem
 
         public void Execute(Entity entity, int index, [ReadOnly] ref Translation tran, [ReadOnly] ref PhysicsCollider col, ref NearestEnemy nearestEnemy)
         {
-            if (Time - nearestEnemy.LastRefreshTime < MinUpdateInterval)
+            if (Time - nearestEnemy.LastRefreshTime < MinUpdateInterval || CollisionWorld.Bodies.Length == 0)
             {
                 return;
             }
@@ -47,8 +47,8 @@ public class NearestEnemySys : JobComponentSystem
             {
                 CollisionFilter filter = new CollisionFilter
                 {
-                    CategoryBits = 1u << (int)PhysicsLayer.RayCast,
-                    MaskBits = 1u << (int)PhysicsLayer.Ships,
+                    BelongsTo = 1u << (int)PhysicsLayer.RayCast,
+                    CollidesWith = 1u << (int)PhysicsLayer.Ships,
                     GroupIndex = col.ColliderPtr->Filter.GroupIndex
                 };
                 

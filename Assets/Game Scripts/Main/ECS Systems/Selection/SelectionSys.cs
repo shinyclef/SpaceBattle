@@ -39,20 +39,17 @@ public class SelectionSys : ComponentSystem
         UnityEngine.Ray screenRay = Game.MainCam.ScreenPointToRay(GInput.MousePos);
         RaycastInput input = new RaycastInput
         {
-            Ray = new Ray()
-            {
-                Origin = screenRay.origin,
-                Direction = screenRay.direction * 1000
-            },
+            Start = screenRay.origin,
+            End = screenRay.direction * 1000,
             Filter = new CollisionFilter()
             {
-                CategoryBits = 1u << (int)PhysicsLayer.RayCast,
-                MaskBits = 1u << (int)PhysicsLayer.Ships,
+                BelongsTo = 1u << (int)PhysicsLayer.RayCast,
+                CollidesWith = 1u << (int)PhysicsLayer.Ships,
                 GroupIndex = 0
             }
         };
 
-        UnityEngine.Debug.DrawRay(input.Ray.Origin, input.Ray.Direction, UnityEngine.Color.yellow, 1f);
+        UnityEngine.Debug.DrawRay(input.Start, input.End, UnityEngine.Color.yellow, 1f);
         RaycastHit hit = new RaycastHit();
         bool haveHit = collisionWorld.CastRay(input, out hit);
         if (haveHit)

@@ -61,7 +61,7 @@ public class CombatMovementAiSys : JobComponentSystem
         public float DeltaTime;
         public Entity RecordedEntity;
 
-    #pragma warning disable 0649
+        #pragma warning disable 0649
         [NativeSetThreadIndex] private int threadId;
         #pragma warning restore 0649
         [NativeDisableParallelForRestriction] private DynamicBuffer<UtilityScoreBuf> utilityScores;
