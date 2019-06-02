@@ -7,7 +7,6 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(MainGameGroup))]
-//[UpdateAfter(typeof(ShipSpawnerSys))]
 public class HeadingSys : JobComponentSystem
 {
     protected override JobHandle OnUpdate(JobHandle inputDeps)

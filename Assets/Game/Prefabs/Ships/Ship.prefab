@@ -28,6 +28,7 @@ GameObject:
   - component: {fileID: 4719083850618633891}
   - component: {fileID: 150960301214975645}
   - component: {fileID: 3252467797196541155}
+  - component: {fileID: 7949361866144093023}
   m_Layer: 0
   m_Name: Ship
   m_TagString: Untagged
@@ -69,7 +70,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5341682179256921529}
-  m_Mesh: {fileID: 4300000, guid: da27c846d0337234a8efddbedbfbf04c, type: 2}
+  m_Mesh: {fileID: 4300000, guid: c2b05234170a04d4d9f97e625f1beffd, type: 2}
 --- !u!23 &5917063259637586277
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -395,5 +396,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 939384804929a084dbf2a0a9b7753907, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &7949361866144093023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5341682179256921529}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 242f7b7e06984244cb6f345644447426, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

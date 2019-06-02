@@ -20,8 +20,6 @@ public class DebugRaysSys : ComponentSystem
         {
             Debug.DrawLine(l2w.Position, new float3(moveDestination.Value, l2w.Position.z), Color.green);
             Debug.DrawLine(l2w.Position, new float3(l2w.Position.xy + l2w.Up.xy, l2w.Position.z), Color.white);
-            
-
         });
     }
 }

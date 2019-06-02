@@ -38,8 +38,8 @@ public class CameraCtr : MonoBehaviour
     private void UpdatePosition()
     {
         Vector3 v = GetInputVelocity();
-        targetPanPos += new Vector2(-v.x, v.y);
-        targetZoomPos -= v.z;
+        targetPanPos += new Vector2(v.x, v.y);
+        targetZoomPos += v.z;
 
         currentPanPos = Vector2.Lerp(currentPanPos, targetPanPos, panSmoothing);
         currentZoomPos = Mathf.Lerp(currentZoomPos, targetZoomPos, zoomSmoothing);

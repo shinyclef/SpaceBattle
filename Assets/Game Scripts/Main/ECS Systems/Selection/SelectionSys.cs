@@ -49,7 +49,6 @@ public class SelectionSys : ComponentSystem
             }
         };
 
-        UnityEngine.Debug.DrawRay(input.Start, input.End, UnityEngine.Color.yellow, 1f);
         RaycastHit hit = new RaycastHit();
         bool haveHit = collisionWorld.CastRay(input, out hit);
         if (haveHit)

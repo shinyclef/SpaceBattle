@@ -12,13 +12,13 @@ public class InitializationGameGroup : ComponentSystemGroup
 public class PhysicsGameGroup : ComponentSystemGroup
 {
     ProcessTriggerEventsSys ProcessTriggerEventsSys;
+    NearestEnemySysOld NearestEnemySys;
 }
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(PhysicsGameGroup))]
 public class MainGameGroup : ComponentSystemGroup
 {
-    NearestEnemySys NearestEnemySys;
     LifeTimeExpireSys LifeTimeExpireSys;
     HeadingSys HeadingSys;
     RotationSys RotationSys;

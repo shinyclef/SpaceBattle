@@ -25,6 +25,7 @@ public class DamageHealthOnTriggerSys : JobComponentSystem
             TriggerInfoBufs = GetBufferFromEntity<TriggerInfoBuf>(true)
         };
 
+        World.GetExistingSystem<ProcessTriggerEventsSys>().FinalJobHandle.Complete();
         JobHandle jh = job.Schedule(this, inputDeps);
         endSimCB.AddJobHandleForProducer(jh);
         return jh;

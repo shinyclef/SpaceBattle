@@ -6,7 +6,6 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(MainGameGroup))]
-[UpdateAfter(typeof(NearestEnemySys))]
 public class CombatTargetSys : JobComponentSystem
 {
     protected override JobHandle OnUpdate(JobHandle inputDeps)

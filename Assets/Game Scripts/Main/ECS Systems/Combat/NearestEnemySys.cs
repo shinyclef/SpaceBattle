@@ -2,80 +2,91 @@
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
+using Unity.Mathematics;
 using Unity.Physics;
-using Unity.Physics.Systems;
 using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(PhysicsGameGroup))]
+[UpdateAfter(typeof(SpatialPartitionSys))]
 public class NearestEnemySys : JobComponentSystem
 {
-    private const float MinUpdateInterval = 0.5f;
-    private BuildPhysicsWorld buildPhysicsWorldSys;
+    private const float MinUpdateInterval = 0.0f; // TODO: return nearest enemy search interval to 0.5f
 
     protected override void OnCreate()
     {
-        buildPhysicsWorldSys = World.GetOrCreateSystem<BuildPhysicsWorld>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        var job = new NearestCastJob()
+        var job = new GetNearestJob()
         {
             Time = Time.time,
-            CollisionWorld = buildPhysicsWorldSys.PhysicsWorld.CollisionWorld
+            FactionComps = GetComponentDataFromEntity<Faction>(true),
+            SpatialPartition = World.GetExistingSystem<SpatialPartitionSys>().SpatialPartition.ToConcurrent()
         };
 
-        JobHandle jh = job.Schedule(this, inputDeps);
-        return jh;
+        return inputDeps;
+        //JobHandle jh = job.Schedule(this, inputDeps);
+        //return jh;
     }
 
     [BurstCompile]
-    private struct NearestCastJob : IJobForEachWithEntity<Translation, PhysicsCollider, NearestEnemy>
+    private struct GetNearestJob : IJobNativeMultiHashMapVisitKeyValue<int2, Entity>
     {
         public float Time;
-        [ReadOnly] public CollisionWorld CollisionWorld;
+        [ReadOnly] public ComponentDataFromEntity<Faction> FactionComps;
+        [ReadOnly] public NativeMultiHashMap<int2, Entity>.Concurrent SpatialPartition;
 
-        public void Execute(Entity entity, int index, [ReadOnly] ref Translation tran, [ReadOnly] ref PhysicsCollider col, ref NearestEnemy nearestEnemy)
+        public void ExecuteNext(int2 key, Entity value)
         {
-            if (Time - nearestEnemy.LastRefreshTime < MinUpdateInterval || CollisionWorld.Bodies.Length == 0)
-            {
-                return;
-            }
-
-            unsafe
-            {
-                CollisionFilter filter = new CollisionFilter
-                {
-                    BelongsTo = 1u << (int)PhysicsLayer.RayCast,
-                    CollidesWith = 1u << (int)PhysicsLayer.Ships,
-                    GroupIndex = col.ColliderPtr->Filter.GroupIndex
-                };
-                
-                PointDistanceInput pointInput = new PointDistanceInput
-                {
-                    Position = tran.Value,
-                    MaxDistance = nearestEnemy.QueryRange,
-                    Filter = filter
-                };
-
-                DistanceHit hit;
-                CollisionWorld.CalculateDistance(pointInput, out hit);
-
-                Entity hitEntity = CollisionWorld.Bodies[hit.RigidBodyIndex].Entity;
-                if (hitEntity == entity ||
-                    CollisionWorld.Bodies[hit.RigidBodyIndex].Collider->Filter.GroupIndex == col.ColliderPtr->Filter.GroupIndex) // TODO: Remove this temporary case when collider groups are working
-                {
-                    nearestEnemy.Entity = Entity.Null;
-                }
-                else
-                {
-                    nearestEnemy.Entity = CollisionWorld.Bodies[hit.RigidBodyIndex].Entity;
-                }
-
-                nearestEnemy.LastRefreshTime = Time;
-                //Logger.Log($"{entity} found {nearestEnemy.Entity}.");
-            }
+            throw new System.NotImplementedException();
         }
     }
+
+    //[BurstCompile]
+    //private struct GetNearestJob : IJobForEachWithEntity<LocalToWorld, NearestEnemy>
+    //{
+    //    public float Time;
+    //    [ReadOnly] public ComponentDataFromEntity<Faction> FactionComps;
+    //    [ReadOnly] public NativeMultiHashMap<int2, Entity>.Concurrent SpatialPartition;
+
+    //    public void Execute(Entity entity, int index, [ReadOnly] ref LocalToWorld l2w, ref NearestEnemy nearestEnemy)
+    //    {
+    //        if (Time - nearestEnemy.LastRefreshTime < MinUpdateInterval)
+    //        {
+    //            return;
+    //        }
+
+    //        Factions thisFaction = FactionComps[entity].Value;
+
+    //        // search surrounding partitions that are in range
+    //        float range = nearestEnemy.QueryRange;
+    //        int2 zone = SpatialPartitionUtil.ToSpatialPartition(l2w.Position.xy);
+    //        if (SpatialPartition.TryGetFirstValue(zone, out Entity entity, out NativeMultiHashMapIterator<int2> iterator))
+    //        {
+    //            do
+    //            {
+                    
+    //            }
+    //            while (SpatialPartition.TryGetNextValue(out entity, ref iterator));
+    //        }
+
+
+
+
+    //        Entity foundEntity = Entity.Null;
+    //        if (foundEntity == entity || FactionComps[foundEntity].Value == thisFaction)
+    //        {
+    //            nearestEnemy.Entity = Entity.Null;
+    //        }
+    //        else
+    //        {
+    //            nearestEnemy.Entity = foundEntity;
+    //        }
+
+    //        nearestEnemy.LastRefreshTime = Time;
+    //        //Logger.Log($"{entity} found {nearestEnemy.Entity}.");
+    //    }
+    //}
 }

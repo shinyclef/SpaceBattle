@@ -1,4 +1,5 @@
-﻿using Unity.Burst;
+﻿using System.Collections.Generic;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
@@ -15,7 +16,10 @@ public class ProcessTriggerEventsSys : JobComponentSystem
     private StepPhysicsWorld stepPhysicsWorldSys;
     private EntityQuery triggerReceiversQuery;
     private NativeArray<int> counts;
+    private NativeMultiHashMap<Entity, TriggerInfo> map;
     private bool firstIterationSkipped = false;
+
+    public JobHandle FinalJobHandle { get; private set; }
 
     protected override void OnCreate()
     {
@@ -37,7 +41,13 @@ public class ProcessTriggerEventsSys : JobComponentSystem
             return inputDeps;
         }
 
-        stepPhysicsWorldSys.FinalJobHandle.Complete();
+        if (map.IsCreated)
+        {
+            map.Dispose();
+        }
+
+        stepPhysicsWorldSys.FinalJobHandle.Complete(); // expensive
+
         var countJob = new CountJob
         {
             Counts = counts
@@ -57,30 +67,36 @@ public class ProcessTriggerEventsSys : JobComponentSystem
         {
             return countJH;
         }
-
-        var map = new NativeMultiHashMap<Entity, TriggerInfo>(count * 2, Allocator.TempJob);
-        var processJob = new ProcessTriggerEventsJob
+        
+        map = new NativeMultiHashMap<Entity, TriggerInfo>(count * 2, Allocator.TempJob);
+        var populateMapJob = new PopulateTriggerMapJob
         {
             TriggerMap = map.ToConcurrent(),
             HandleTriggersTagComps = GetComponentDataFromEntity<HandleTriggersTag>(true)
         };
 
-        JobHandle processJH = processJob.Schedule(stepPhysicsWorldSys.Simulation, ref buildPhysicsWorldSys.PhysicsWorld, countJH);
+        JobHandle populateMapJH = populateMapJob.Schedule(stepPhysicsWorldSys.Simulation, ref buildPhysicsWorldSys.PhysicsWorld, countJH);
         var addBufferDataJob = new AddBufferDataJob
         {
             TriggerMap = map
         };
 
-        processJH.Complete();
+        populateMapJH.Complete();
         NativeArray<Entity> entities = map.GetKeyArray(Allocator.TempJob);
-        EntityManager.AddComponent(entities, typeof(HasTriggerInfoTag));
-        
-        JobHandle addBufferDataJH = addBufferDataJob.Schedule(triggerReceiversQuery, processJH);
-        entities.Dispose();
-        addBufferDataJH.Complete();
-        map.Dispose();
+        EntityManager.AddComponent(entities, typeof(HasTriggerInfoTag)); // expensive
 
+        JobHandle addBufferDataJH = addBufferDataJob.Schedule(triggerReceiversQuery, populateMapJH);
+        entities.Dispose();
+        FinalJobHandle = addBufferDataJH;
         return addBufferDataJH;
+    }
+
+    protected override void OnStopRunning()
+    {
+        if (map.IsCreated)
+        {
+            map.Dispose();
+        }
     }
 
     [BurstCompile]
@@ -98,7 +114,7 @@ public class ProcessTriggerEventsSys : JobComponentSystem
     }
 
     [BurstCompile]
-    private struct ProcessTriggerEventsJob : ITriggerEventsJob
+    private struct PopulateTriggerMapJob : ITriggerEventsJob
     {
         public NativeMultiHashMap<Entity, TriggerInfo>.Concurrent TriggerMap;
         [ReadOnly] public ComponentDataFromEntity<HandleTriggersTag> HandleTriggersTagComps;
@@ -125,7 +141,7 @@ public class ProcessTriggerEventsSys : JobComponentSystem
     {
         [NativeDisableParallelForRestriction] [ReadOnly] public NativeMultiHashMap<Entity, TriggerInfo> TriggerMap;
 
-        public void Execute(Entity entity, int index, DynamicBuffer<TriggerInfoBuf> buffer)
+        public void Execute(Entity entity, int index, [WriteOnly] DynamicBuffer<TriggerInfoBuf> buffer)
         {
             if (TriggerMap.TryGetFirstValue(entity, out TriggerInfo info, out NativeMultiHashMapIterator<Entity> iterator))
             {
