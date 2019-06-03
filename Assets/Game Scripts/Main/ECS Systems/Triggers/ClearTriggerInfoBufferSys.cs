@@ -2,7 +2,7 @@
 using Unity.Entities;
 using Unity.Jobs;
 
-[UpdateInGroup(typeof(GameGroupLateSim))]
+[UpdateInGroup(typeof(LateSimGameGroup))]
 public class ClearTriggerInfoBufferSys : JobComponentSystem
 {
     private EntityQuery query;

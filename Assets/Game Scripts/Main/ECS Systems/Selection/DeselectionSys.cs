@@ -1,6 +1,6 @@
 ﻿using Unity.Entities;
 
-[UpdateInGroup(typeof(GameGroupLateSim))]
+[UpdateInGroup(typeof(LateSimGameGroup))]
 public class DeselectionSys : ComponentSystem
 {
     private bool hasLeftClicked;

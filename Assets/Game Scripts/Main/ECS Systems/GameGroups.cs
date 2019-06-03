@@ -28,6 +28,7 @@ public class MainGameGroup : ComponentSystemGroup
     CombatMovementAiSys CombatMovementAiSys;
     DamageHealthOnTriggerSys DamageHealthOnTriggerSys;
     WeaponSys WeaponSys;
+    NearestEnemySys NearestEnemySys;
 }
 
 /// <summary>
@@ -42,7 +43,7 @@ public class SpawnerGameGroup : ComponentSystemGroup
 }
 
 [UpdateInGroup(typeof(LateSimulationSystemGroup))]
-public class GameGroupLateSim : ComponentSystemGroup
+public class LateSimGameGroup : ComponentSystemGroup
 {
     ClearTriggerInfoBufferSys ClearTriggerInfoBufferSys;
     DeselectionSys DeselectionSys;

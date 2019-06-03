@@ -6,6 +6,7 @@ using UnityEngine;
 public struct NearestEnemy : IComponentData
 {
     public Entity Entity;
+    public Entity ZoneTargetBufferEntity;
     public float QueryRange;
     public float LastRefreshTime;
 }

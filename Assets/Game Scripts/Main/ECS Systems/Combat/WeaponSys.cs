@@ -7,7 +7,6 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(MainGameGroup))]
-//[UpdateAfter(typeof(DamageHealthOnTriggerSys))]
 public class WeaponSys : JobComponentSystem
 {
     private BeginSimulationEntityCommandBufferSystem beginSimCB;

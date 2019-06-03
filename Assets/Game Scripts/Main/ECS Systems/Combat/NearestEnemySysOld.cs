@@ -8,7 +8,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(PhysicsGameGroup))]
-[UpdateAfter(typeof(SpatialPartitionSys))]
+[DisableAutoCreation]
 public class NearestEnemySysOld : JobComponentSystem
 {
     private const float MinUpdateInterval = 0.0f; // TODO: return nearest enemy search interval to 0.5f

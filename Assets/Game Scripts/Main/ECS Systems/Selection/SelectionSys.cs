@@ -2,7 +2,7 @@
 using Unity.Physics;
 using Unity.Physics.Systems;
 
-[UpdateInGroup(typeof(GameGroupLateSim))]
+[UpdateInGroup(typeof(LateSimGameGroup))]
 [UpdateAfter(typeof(DeselectionSys))]
 public class SelectionSys : ComponentSystem
 {
