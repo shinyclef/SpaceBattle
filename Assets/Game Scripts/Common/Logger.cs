@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define LOG
+
+using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -6,33 +8,16 @@ public static class Logger
 {
     private const bool VerboseLog = true;
 
-    public static void LogPrivate(object msg)
-    {
-        Debug.Log(msg);
-    }
-
-    public static void LogVerbosePrivate(object msg)
-    {
-        Debug.Log(msg);
-    }
-
-    public static void LogWarningPrivate(object msg)
-    {
-        Debug.LogWarning(msg);
-    }
-
-    public static void LogErrorPrivate(object msg)
-    {
-        Debug.LogError(msg);
-    }
-
     public static void Log(object msg)
     {
+        #if (LOG)
         Debug.Log(msg);
+        #endif
     }
 
     public static void LogVerbose(object msg, string tag, bool stackTrace = false)
     {
+#if (LOG)
         if (VerboseLog)
         {
             if (stackTrace)
@@ -42,19 +27,22 @@ public static class Logger
 
             Debug.Log(msg);
         }
+#endif
     }
 
     public static void LogVerbose(object msg, bool stackTrace = false)
     {
+#if (LOG)
         if (VerboseLog)
         {
             if (stackTrace)
             {
                 msg = $"{msg}{Environment.NewLine}{StackTraceUtility.ExtractStackTrace()}";
             }
-
+            
             Debug.Log(msg);
         }
+#endif
     }
 
     public static void LogVerboseIf(bool condition, object msg)
@@ -67,40 +55,48 @@ public static class Logger
 
     public static void LogMethod(object msg = null, [CallerMemberName] string methodName = null, bool stackTrace = false)
     {
+        #if (LOG)
         LogVerbose($"{methodName}{(msg == null ? "" : ":")} {msg}", stackTrace);
+        #endif
     }
 
     public static void LogIf(bool condition, object msg, bool stackTrace = false)
     {
+#if (LOG)
         if (condition)
         {
             if (stackTrace)
             {
                 msg = $"{msg}{Environment.NewLine}{StackTraceUtility.ExtractStackTrace()}";
             }
-
+            
             Debug.Log(msg);
         }
+#endif
     }
 
     public static void LogWarning(object msg, bool stackTrace = true)
     {
+#if (LOG)
         if (stackTrace)
         {
             msg = $"{msg}{Environment.NewLine}{StackTraceUtility.ExtractStackTrace()}";
         }
-
+        
         Debug.LogWarning(msg);
+#endif
     }
 
     public static void LogError(object msg, bool stackTrace = true)
     {
+#if (LOG)
         if (stackTrace)
         {
             msg = $"{msg}{Environment.NewLine}{StackTraceUtility.ExtractStackTrace()}";
         }
-
+        
         Debug.LogError(msg);
+#endif
     }
 
     public enum LogType : short

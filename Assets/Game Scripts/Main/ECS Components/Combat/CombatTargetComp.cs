@@ -11,6 +11,7 @@ public struct CombatTarget : IComponentData
     public float2 Pos;
     public float Heading;
     public float AcquiredTime;
+    public float RequestedTime;
 }
 
 public class CombatTargetComp : MonoBehaviour, IConvertGameObjectToEntity

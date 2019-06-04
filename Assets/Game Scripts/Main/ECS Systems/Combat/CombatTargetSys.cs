@@ -8,6 +8,8 @@ using UnityEngine;
 [UpdateInGroup(typeof(MainGameGroup))]
 public class CombatTargetSys : JobComponentSystem
 {
+    private const float CommitToTargetTime = 0f; // TODO: 3f
+
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
         var job = new Job
@@ -21,16 +23,21 @@ public class CombatTargetSys : JobComponentSystem
     }
 
     [BurstCompile]
-    private struct Job : IJobForEachWithEntity<NearestEnemy, CombatTarget>
+    private struct Job : IJobForEachWithEntity<SpawnTime, NearestEnemy, CombatTarget>
     {
         [ReadOnly] public ComponentDataFromEntity<LocalToWorld> L2WComps;
         public float Time;
 
-        public void Execute(Entity entity, int index, [ReadOnly] ref NearestEnemy nearestEnemy, ref CombatTarget target)
+        public void Execute(Entity entity, int index, [ReadOnly] ref SpawnTime spawnTime, [ReadOnly] ref NearestEnemy nearestEnemy, ref CombatTarget target)
         {
+            if (Time - spawnTime.Value < 0.5f)
+            {
+                return;
+            }
+
             // switch to nearest enemy if existing target is gone, or enough time has passed
             bool targetExists = target.Entity != Entity.Null && L2WComps.Exists(target.Entity);
-            if (target.Entity != nearestEnemy.Entity && (!targetExists || Time - target.AcquiredTime > 5f))
+            if (!targetExists || Time - target.AcquiredTime > CommitToTargetTime)
             {
                 target.Entity = nearestEnemy.Entity;
                 target.AcquiredTime = Time;
@@ -42,6 +49,10 @@ public class CombatTargetSys : JobComponentSystem
                 LocalToWorld targetL2W = L2WComps[target.Entity];
                 target.Pos = targetL2W.Position.xy;
                 target.Heading = Heading.FromFloat2(targetL2W.Up.xy);
+            }
+            else
+            {
+                target.Entity = Entity.Null;
             }
         }
     }

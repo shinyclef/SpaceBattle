@@ -12,7 +12,6 @@ public class InitializationGameGroup : ComponentSystemGroup
 public class PhysicsGameGroup : ComponentSystemGroup
 {
     ProcessTriggerEventsSys ProcessTriggerEventsSys;
-    NearestEnemySysOld NearestEnemySys;
 }
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]

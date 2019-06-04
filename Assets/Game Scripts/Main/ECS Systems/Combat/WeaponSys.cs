@@ -76,7 +76,7 @@ public class WeaponSys : JobComponentSystem
             {
                 float2 targetDir = math.normalize(target.Pos - l2w.Position.xy);
                 float2 forwardDir = l2w.Up.xy;
-                if (math.dot(targetDir, forwardDir) > 0.98f)
+                if (math.dot(targetDir, forwardDir) > 0.995f)
                 {
                     float2 projectedEnemyPos = moveDest.Value + VelocityData[target.Entity].Value * wep.projectileLifeTime;
                     if (math.distance(l2w.Position.xy, projectedEnemyPos) < wep.projectileRange)

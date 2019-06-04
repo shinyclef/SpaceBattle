@@ -5,13 +5,13 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
+using UnityEngine;
 
 [UpdateInGroup(typeof(MainGameGroup))]
 [UpdateAfter(typeof(NearestEnemyRequestSys))]
 public class NearestEnemySys : JobComponentSystem
 {
     private NearestEnemyRequestSys nearestEnemyRequestSys;
-    private const float MinUpdateInterval = 0.0f; // TODO: return nearest enemy search interval to 0.5f
 
     protected override void OnCreate()
     {
@@ -25,56 +25,48 @@ public class NearestEnemySys : JobComponentSystem
             return inputDeps;
         }
 
-        var getBufferEntityJob = new GetBufferEntityJob
+        var updateNearestEnemyJob = new UpdateNearestEnemyJob
         {
-            ZoneTargetBuffers = nearestEnemyRequestSys.ZoneTargetBuffers
+            Time = Time.time,
+            ZoneTargetBuffers = nearestEnemyRequestSys.ZoneTargetBuffers,
+            NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(true),
         };
 
-        inputDeps = getBufferEntityJob.Schedule(this, inputDeps);
-
-        var assignTargetJob = new AssignTargetJob
-        {
-            NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(true)
-        };
-
-        inputDeps = assignTargetJob.Schedule(this, inputDeps);
+        inputDeps = updateNearestEnemyJob.Schedule(this, inputDeps);
         return inputDeps;
     }
 
     [BurstCompile]
-    private struct GetBufferEntityJob : IJobForEach<LocalToWorld, Faction, NearestEnemy>
+    private struct UpdateNearestEnemyJob : IJobForEach<LocalToWorld, Faction, NearestEnemy>
     {
+        public float Time;
         [ReadOnly] public NativeHashMap<int3, Entity> ZoneTargetBuffers;
+        [ReadOnly] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
 
         public void Execute([ReadOnly] ref LocalToWorld l2w, [ReadOnly] ref Faction faction, ref NearestEnemy enemy)
         {
             int2 zone = SpatialPartitionUtil.ToSpatialPartition(l2w.Position.xy);
-            int factionInt = (int)faction.Value;
+            int factionInt = (int)faction.Value; 
             int3 bucket = new int3(zone.x, zone.y, factionInt);
-
-            Entity e;
-            ZoneTargetBuffers.TryGetValue(bucket, out e);
-            enemy.ZoneTargetBufferEntity = e;
-        }
-    }
-
-    [BurstCompile]
-    private struct AssignTargetJob : IJobForEach<NearestEnemy>
-    {
-        [ReadOnly] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
-
-        public void Execute(ref NearestEnemy enemy)
-        {
-            Entity bufEntity = enemy.ZoneTargetBufferEntity;
-            if (NearbyEnemyBufs.Exists(bufEntity))
+            if (ZoneTargetBuffers.TryGetValue(bucket, out Entity bufEntity) &&
+                bufEntity != Entity.Null && NearbyEnemyBufs.Exists(bufEntity))
             {
                 DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[bufEntity];
-                enemy.Entity = buf[0];
+                if (buf.Length > 0)
+                {
+                    enemy.Entity = buf[0];
+                    return;
+                }
+
+                //Logger.Log("Len == 0"); // TODO: Cleanup
             }
             else
             {
-                enemy.Entity = Entity.Null;
+                // TODO: Cleanup
+                //Logger.Log($"TryGet: {ZoneTargetBuffers.TryGetValue(bucket, out Entity bufEntity2)}, NotNull: {bufEntity != Entity.Null}, Exists: {NearbyEnemyBufs.Exists(bufEntity)}");
             }
+
+            enemy.Entity = Entity.Null;
         }
     }
 }
