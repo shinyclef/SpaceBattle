@@ -11,11 +11,11 @@ using UnityEngine;
 [UpdateAfter(typeof(NearestEnemyRequestSys))]
 public class NearestEnemySys : JobComponentSystem
 {
-    private NearestEnemyRequestSys nearestEnemyRequestSys;
+    private NearestEnemyRequestSysAttempt1 nearestEnemyRequestSys;
 
     protected override void OnCreate()
     {
-        nearestEnemyRequestSys = World.GetOrCreateSystem<NearestEnemyRequestSys>();
+        nearestEnemyRequestSys = World.GetOrCreateSystem<NearestEnemyRequestSysAttempt1>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
@@ -45,6 +45,11 @@ public class NearestEnemySys : JobComponentSystem
 
         public void Execute([ReadOnly] ref LocalToWorld l2w, [ReadOnly] ref Faction faction, ref NearestEnemy enemy)
         {
+            if (!enemy.UpdatePending)
+            {
+                return;
+            }
+
             int2 zone = SpatialPartitionUtil.ToSpatialPartition(l2w.Position.xy);
             int factionInt = (int)faction.Value; 
             int3 bucket = new int3(zone.x, zone.y, factionInt);
@@ -55,6 +60,8 @@ public class NearestEnemySys : JobComponentSystem
                 if (buf.Length > 0)
                 {
                     enemy.Entity = buf[0];
+                    enemy.LastUpdatedTime = Time;
+                    enemy.UpdatePending = false;
                     return;
                 }
 

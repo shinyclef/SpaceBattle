@@ -6,6 +6,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(MainGameGroup))]
+[UpdateAfter(typeof(NearestEnemySys))]
 public class CombatTargetSys : JobComponentSystem
 {
     private const float CommitToTargetTime = 0f; // TODO: 3f
@@ -27,20 +28,22 @@ public class CombatTargetSys : JobComponentSystem
     {
         [ReadOnly] public ComponentDataFromEntity<LocalToWorld> L2WComps;
         public float Time;
-
         public void Execute(Entity entity, int index, [ReadOnly] ref SpawnTime spawnTime, [ReadOnly] ref NearestEnemy nearestEnemy, ref CombatTarget target)
         {
-            if (Time - spawnTime.Value < 0.5f)
-            {
-                return;
-            }
-
-            // switch to nearest enemy if existing target is gone, or enough time has passed
             bool targetExists = target.Entity != Entity.Null && L2WComps.Exists(target.Entity);
-            if (!targetExists || Time - target.AcquiredTime > CommitToTargetTime)
+            bool newTargetRequired = !targetExists || Time - target.AcquiredTime > CommitToTargetTime;
+            
+            if (newTargetRequired)
             {
-                target.Entity = nearestEnemy.Entity;
-                target.AcquiredTime = Time;
+                if (nearestEnemy.LastUpdatedTime == Time)
+                {
+                    target.Entity = nearestEnemy.Entity;
+                    target.AcquiredTime = Time;
+                }
+                else if (!nearestEnemy.UpdatePending)
+                {
+                    nearestEnemy.UpdatePending = true;
+                }
             }
 
             targetExists = target.Entity != Entity.Null && L2WComps.Exists(target.Entity);

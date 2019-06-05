@@ -11,188 +11,94 @@ using UnityEngine;
 
 [UpdateInGroup(typeof(MainGameGroup))]
 [AlwaysUpdateSystem]
+//[DisableAutoCreation]
 public class NearestEnemyRequestSys : JobComponentSystem
 {
     public const float UpdateInterval = 0.5f;
-    private float cycleTime;
-    private float lastCycleTime;
-    private int cycleIndexEnd;
-    private int originalZonesLength;
-    private int incrementalZonesLength;
 
     private EntityArchetype archetype;
-    private NativeArray<Entity> bufferEntityPool;
-    private NativeHashMap<int3, Entity> zoneTargetBuffers;
-    private NativeHashMap<int3, int> requestedZones;
-    private NativeArray<int3> requestedZoneKeys;
+    private NativeQueue<Entity> bufferEntityPool;
+    private NativeHashMap<int3, Entity> nearestEnemiesBuffers;
+    private NativeHashMap<int3, float> activeZones;
+    private NativeHashMap<int3, byte> queriedZones;
+    private NativeList<int3> zoneKeys;
 
     private BuildPhysicsWorld buildPhysicsWorldSys;
     private StepPhysicsWorld stepPhysicsWorldSys;
     private EntityQuery nearestEnemyReceiversQuery;
 
-    public NativeHashMap<int3, Entity> ZoneTargetBuffers { get { return zoneTargetBuffers; } }
+    public NativeHashMap<int3, Entity> NearestEnemiesBuffers { get { return nearestEnemiesBuffers; } }
 
     protected override void OnCreate()
     {
-        lastCycleTime = float.MaxValue;
         archetype = EntityManager.CreateArchetype(typeof(NearbyEnemyBuf));
 
-        bufferEntityPool = new NativeArray<Entity>(1, Allocator.Persistent);
-        zoneTargetBuffers = new NativeHashMap<int3, Entity>(1, Allocator.Persistent);
-        requestedZones = new NativeHashMap<int3, int>(1, Allocator.Persistent);
+        bufferEntityPool = new NativeQueue<Entity>(Allocator.Persistent);
+        bufferEntityPool.Enqueue(EntityManager.CreateEntity(archetype));
+        nearestEnemiesBuffers = new NativeHashMap<int3, Entity>(1, Allocator.Persistent);
+        activeZones = new NativeHashMap<int3, float>(1, Allocator.Persistent);
         EnsureMinimumCapacity(1024);
 
         buildPhysicsWorldSys = World.GetOrCreateSystem<BuildPhysicsWorld>();
         stepPhysicsWorldSys = World.GetOrCreateSystem<StepPhysicsWorld>();
-
         nearestEnemyReceiversQuery = GetEntityQuery(typeof(LocalToWorld), typeof(NearestEnemy));
+    }
+
+    private void PrepareQueriedZonesMap(int capacity)
+    {
+        if (queriedZones.IsCreated)
+        {
+            queriedZones.Dispose();
+        }
+
+        if (zoneKeys.IsCreated)
+        {
+            zoneKeys.Dispose();
+        }
+
+        queriedZones = new NativeHashMap<int3, byte>(capacity, Allocator.TempJob);
+        zoneKeys = new NativeList<int3>(capacity, Allocator.TempJob);
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        if (lastCycleTime >= UpdateInterval && cycleIndexEnd == originalZonesLength)
-        {
-            //Logger.Log("NEW CYCLE!");
-            lastCycleTime = 0f;
-            cycleIndexEnd = 0;
-            inputDeps = PrepareNewCycle(inputDeps);
-        }
-        else
-        {
-            inputDeps = HandleIncrementalAdditions(inputDeps);
-        }
-
-        cycleTime = lastCycleTime + Time.deltaTime; // TODO: Confirm DeltaTime or FixedDeltaTime.
-        if (cycleIndexEnd < originalZonesLength)
-        {
-            inputDeps = ContinueCycle(inputDeps);
-        }
-
-        lastCycleTime = cycleTime;
-        //Logger.Log($"CycleTime: {cycleTime}");
-        return inputDeps;
-    }
-
-    private JobHandle PrepareNewCycle(JobHandle inputDeps)
-    {
-        requestedZones.Clear();
         int count = nearestEnemyReceiversQuery.CalculateLength();
         EnsureMinimumCapacity(count);
+        PrepareQueriedZonesMap(count);
 
-        var populateRequestMapJob = new PopulateRequestMapJob()
+        // 1. Populate queriedZones, parallel
+        inputDeps = new PopulateQueriedZonesJob()
         {
-            RequestedZones = requestedZones.ToConcurrent()
-        };
+            QueriedZones = queriedZones.ToConcurrent(),
+            ZoneKeys = zoneKeys
+        }.Schedule(this, inputDeps);
 
-        inputDeps = populateRequestMapJob.Run(this, inputDeps);
-
-        NativeArray<int3> zoneTargetBuffersKeys = zoneTargetBuffers.GetKeyArray(Allocator.TempJob);
-        var removeEmptyZonesJob = new RemoveEmptyZonesJob
+        // 2. Update activeZones, single thread
+        inputDeps = new UpdateActiveZonesMap()
         {
-            RequestedZones = requestedZones,
-            ZoneTargetBuffers = zoneTargetBuffers,
-            ZoneTargetBuffersKeys = zoneTargetBuffersKeys,
-            NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(false),
-        };
-
-        inputDeps = removeEmptyZonesJob.Schedule(inputDeps);
-        inputDeps.Complete();
-
-        if (requestedZoneKeys.IsCreated)
-        {
-            requestedZoneKeys.Dispose();
-        }
-
-        requestedZoneKeys = requestedZones.GetKeyArray(Allocator.TempJob);
-        originalZonesLength = requestedZoneKeys.Length;
-        incrementalZonesLength = originalZonesLength;
-        
-        return inputDeps;
-    }
-
-    private JobHandle HandleIncrementalAdditions(JobHandle inputDeps)
-    {
-        // any zones that no longer have an active target (perhaps it was destroyed) need to be removed
-        var zoneTargetBuffersKeys = ZoneTargetBuffers.GetKeyArray(Allocator.TempJob);
-        var clearZonesWithNoActiveTargetJob = new ClearZonesWithNoActiveTargetJob
-        {
-            ZoneTargetBuffers = zoneTargetBuffers,
-            ZoneTargetBuffersKeys = zoneTargetBuffersKeys,
-            NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(true),
-            LocalToWorlds = GetComponentDataFromEntity<LocalToWorld>(true),
-        };
-
-        inputDeps = clearZonesWithNoActiveTargetJob.Schedule(inputDeps);
-        inputDeps.Complete();
-
-        // for any zones entered just now, we need to produce a scan immediately so nearest enemy searches do return something
-        int count = nearestEnemyReceiversQuery.CalculateLength();
-        EnsureMinimumCapacity(count);
-
-        var populateRequestMapJob = new PopulateRequestMapJob()
-        {
-            RequestedZones = requestedZones.ToConcurrent()
-        };
-
-        inputDeps = populateRequestMapJob.Schedule(this, inputDeps);
-        inputDeps.Complete();
-
-        if (requestedZoneKeys.IsCreated)
-        {
-            requestedZoneKeys.Dispose();
-        }
-
-        requestedZoneKeys = requestedZones.GetKeyArray(Allocator.TempJob);
-
-        // scan for all inremental zones now. we're at the end of the requestedZoneKeys array started from what we added this frame
-        var scanForEnemiesJob = new ScanForEnemiesJob()
-        {
-            IndexStart = incrementalZonesLength,
-            CollisionWorld = buildPhysicsWorldSys.PhysicsWorld.CollisionWorld,
-            RequestedZones = requestedZones.ToConcurrent(),
-            RequestedZonekeys = requestedZoneKeys,
+            Time = Time.time,
+            ActiveZones = activeZones,
+            QueriedZones = queriedZones,
+            NearestEnemiesBuffers = nearestEnemiesBuffers,
             BufferEntityPool = bufferEntityPool,
-            NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(false),
-            ZoneTargetBuffers = zoneTargetBuffers.ToConcurrent()
-        };
+            NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>()
+        }.Schedule(inputDeps);
 
-        //Logger.LogIf(requestedZoneKeys.Length - incrementalZonesLength > 0, $"Incremental: {requestedZoneKeys.Length - incrementalZonesLength}");
-        inputDeps = scanForEnemiesJob.Schedule(requestedZoneKeys.Length - incrementalZonesLength, 4, inputDeps);
-        incrementalZonesLength = requestedZoneKeys.Length;
-
-        return inputDeps;
-    }
-
-    private JobHandle ContinueCycle(JobHandle inputDeps)
-    {
-        int indexStart = cycleIndexEnd;
-        cycleIndexEnd = UpdateInterval == 0f ? originalZonesLength : math.min(math.max((int)math.floor((cycleTime / UpdateInterval) * originalZonesLength), indexStart + 1), originalZonesLength);
-        int indexLen = cycleIndexEnd - indexStart;
-        //Logger.Log($"Ind: {indexStart}-{indexEnd} (keys: {keys.Length}.");
-
-        var clearZonesAboutToBeScannedJob = new ClearZonesAboutToBeScannedJob
-        {
-            IndexStart = indexStart,
-            IndexEnd = cycleIndexEnd,
-            RequestedZoneKeys = requestedZoneKeys,
-            ZoneTargetBuffers = zoneTargetBuffers
-        };
-
-        inputDeps = clearZonesAboutToBeScannedJob.Schedule(inputDeps);
         inputDeps.Complete();
-        stepPhysicsWorldSys.FinalJobHandle.Complete();
-        var scanForEnemiesJob = new ScanForEnemiesJob()
-        {
-            IndexStart = indexStart,
-            CollisionWorld = buildPhysicsWorldSys.PhysicsWorld.CollisionWorld,
-            RequestedZones = requestedZones.ToConcurrent(),
-            RequestedZonekeys = requestedZoneKeys,
-            BufferEntityPool = bufferEntityPool,
-            NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(false),
-            ZoneTargetBuffers = zoneTargetBuffers.ToConcurrent()
-        };
+        var keys = activeZones.GetKeyArray(Allocator.TempJob);
 
-        inputDeps = scanForEnemiesJob.Schedule(indexLen, 4, inputDeps);
+        // 3.Refresh the zones
+        //inputDeps = new ScanForEnemiesJob()
+        //{
+        //    ZoneKeys = keys,
+        //    CollisionWorld = buildPhysicsWorldSys.PhysicsWorld.CollisionWorld,
+        //    NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(false),
+        //    NearestEnemiesBuffers = nearestEnemiesBuffers.ToConcurrent()
+
+        //}.Schedule(keys.Length, 4, inputDeps);
+
+
+
         return inputDeps;
     }
 
@@ -203,237 +109,204 @@ public class NearestEnemyRequestSys : JobComponentSystem
 
     private void DisposeAll()
     {
-        if (requestedZones.IsCreated)
+        if (queriedZones.IsCreated)
         {
-            requestedZones.Dispose();
+            queriedZones.Dispose();
         }
 
-        if (requestedZoneKeys.IsCreated)
+        if (activeZones.IsCreated)
         {
-            requestedZoneKeys.Dispose();
+            activeZones.Dispose();
         }
 
-        if (zoneTargetBuffers.IsCreated)
+        if (zoneKeys.IsCreated)
         {
-            zoneTargetBuffers.Dispose();
+            zoneKeys.Dispose();
         }
 
         if (bufferEntityPool.IsCreated)
         {
             bufferEntityPool.Dispose();
         }
+
+        if (nearestEnemiesBuffers.IsCreated)
+        {
+            nearestEnemiesBuffers.Dispose();
+        }
     }
 
     private void EnsureMinimumCapacity(int minCount)
     {
-        if (bufferEntityPool.Length < minCount)
+        if (activeZones.Capacity < minCount)
         {
-            int newLen = bufferEntityPool.Length * 2;
+            int newLen = math.max(activeZones.Length * 2, 1);
             while (newLen < minCount)
             {
                 newLen *= 2;
             }
 
-            bufferEntityPool.Dispose();
-            bufferEntityPool = new NativeArray<Entity>(newLen, Allocator.Persistent);
-            EntityManager.CreateEntity(archetype, bufferEntityPool);
+            var newPoolEntities = new NativeArray<Entity>(newLen - activeZones.Length, Allocator.TempJob);
+            EntityManager.CreateEntity(archetype, newPoolEntities);
+            for (int i = 0; i < newPoolEntities.Length; i++)
+            {
+                bufferEntityPool.Enqueue(newPoolEntities[i]);
+            }
+
+            newPoolEntities.Dispose();
 
             var newZoneTargetBuffers = new NativeHashMap<int3, Entity>(newLen, Allocator.Persistent);
-            NativeArray<int3> oldKeys = zoneTargetBuffers.GetKeyArray(Allocator.TempJob);
+            NativeArray<int3> oldKeys = nearestEnemiesBuffers.GetKeyArray(Allocator.TempJob);
             for (int i = 0; i < oldKeys.Length; i++)
             {
                 int3 key = oldKeys[i];
-                newZoneTargetBuffers.TryAdd(key, zoneTargetBuffers[key]);
+                newZoneTargetBuffers.TryAdd(key, nearestEnemiesBuffers[key]);
             }
 
             oldKeys.Dispose();
-            zoneTargetBuffers.Dispose();
-            zoneTargetBuffers = newZoneTargetBuffers;
+            nearestEnemiesBuffers.Dispose();
+            nearestEnemiesBuffers = newZoneTargetBuffers;
 
-            var newRequestedZones = new NativeHashMap<int3, int>(newLen, Allocator.Persistent);
-            oldKeys = requestedZones.GetKeyArray(Allocator.TempJob);
+            var newActiveZones = new NativeHashMap<int3, float>(newLen, Allocator.Persistent);
+            oldKeys = activeZones.GetKeyArray(Allocator.TempJob);
             for (int i = 0; i < oldKeys.Length; i++)
             {
                 int3 key = oldKeys[i];
-                newRequestedZones.TryAdd(key, requestedZones[key]);
+                newActiveZones.TryAdd(key, activeZones[key]);
+            }
+
+            for (int i = 0; i < oldKeys.Length; i++)
+            {
+                int3 key = oldKeys[i];
+                newActiveZones.TryAdd(key, activeZones[key]);
             }
 
             oldKeys.Dispose();
-            requestedZones.Dispose();
-            requestedZones = newRequestedZones;
+            activeZones.Dispose();
+            activeZones = newActiveZones;
         }
     }
 
-    #region Prepare New Cycle Jobs
-
     [BurstCompile]
-    private struct PopulateRequestMapJob : IJobForEach<LocalToWorld, Faction, NearestEnemy>
+    private struct PopulateQueriedZonesJob : IJobForEach<LocalToWorld, Faction, NearestEnemy>
     {
-        public NativeHashMap<int3, int>.Concurrent RequestedZones;
-        
+        public NativeHashMap<int3, byte>.Concurrent QueriedZones;
+        public NativeList<int3> ZoneKeys;
+
         public void Execute([ReadOnly] ref LocalToWorld l2w, [ReadOnly] ref Faction faction, [ReadOnly] ref NearestEnemy nearestEnemy)
         {
-            int2 zone = SpatialPartitionUtil.ToSpatialPartition(l2w.Position.xy);
-            int factionInt = (int)faction.Value;
-            int3 bucket = new int3(zone.x, zone.y, factionInt);
-            RequestedZones.TryAdd(bucket, 0);
+            if (nearestEnemy.UpdatePending)
+            {
+                int2 zone = SpatialPartitionUtil.ToSpatialPartition(l2w.Position.xy);
+                int factionInt = (int)faction.Value;
+                int3 bucket = new int3(zone.x, zone.y, factionInt);
+                if (QueriedZones.TryAdd(bucket, 0))
+                {
+                    ZoneKeys.Add(bucket);
+                }
+            }
         }
     }
 
     [BurstCompile]
-    private struct RemoveEmptyZonesJob : IJob
+    private struct UpdateActiveZonesMap : IJob
     {
-        [ReadOnly] public NativeHashMap<int3, int> RequestedZones;
-        public NativeHashMap<int3, Entity> ZoneTargetBuffers;
-        [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<int3> ZoneTargetBuffersKeys;
+        public float Time;
+        public NativeHashMap<int3, float> ActiveZones;
+        [ReadOnly] public NativeHashMap<int3, byte> QueriedZones;
+        public NativeHashMap<int3, Entity> NearestEnemiesBuffers;
+        public NativeQueue<Entity> BufferEntityPool;
         public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
 
         public void Execute()
         {
-            // Iterate through ZoneTargetBuffersKeys. If it's not found in RequestedZones, remove it from ZoneTargetBuffers.
-            for (int i = 0; i < ZoneTargetBuffersKeys.Length; i++)
+            // 1. Remove zone if not in QueriedZones
+            var activeZoneKeys = ActiveZones.GetKeyArray(Allocator.Temp);
+            for (int i = 0; i < activeZoneKeys.Length; i++)
             {
-                int3 bucket = ZoneTargetBuffersKeys[i];
-                NearbyEnemyBufs[ZoneTargetBuffers[bucket]].Clear();
-                if (!RequestedZones.TryGetValue(bucket, out int val))
+                int3 bucket = activeZoneKeys[i];
+                if (!QueriedZones.TryGetValue(bucket, out _))
                 {
-                    ZoneTargetBuffers.Remove(bucket);
-                }
-            }
-        }
-    }
-
-    #endregion
-
-    #region Continuous Cycle Jobs
-
-    [BurstCompile]
-    private struct ClearZonesWithNoActiveTargetJob : IJob
-    {
-        public NativeHashMap<int3, Entity> ZoneTargetBuffers;
-        [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<int3> ZoneTargetBuffersKeys;
-        [ReadOnly] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
-        [ReadOnly] public ComponentDataFromEntity<LocalToWorld> LocalToWorlds;
-
-        public void Execute()
-        {
-            for (int i = 0; i < ZoneTargetBuffersKeys.Length; i++)
-            {
-                int3 bucket = ZoneTargetBuffersKeys[i];
-                if (ZoneTargetBuffers.TryGetValue(bucket, out Entity bufEntity))
-                {
-                    DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[bufEntity];
-                    bool found = false;
-                    for (int j = 0; j < buf.Length; j++)
+                    // clear and remove the nearest enemies buffer
+                    NearbyEnemyBufs[NearestEnemiesBuffers[bucket]].Clear();
+                    NearestEnemiesBuffers.TryGetValue(bucket, out Entity e);
                     {
-                        found = true;
-                        break;
+                        BufferEntityPool.Enqueue(e);
                     }
 
-                    if (!found)
-                    {
-                        ZoneTargetBuffers.Remove(bucket);
-                    }
+                    NearestEnemiesBuffers.Remove(bucket);
+
+                    // remove from AcitiveZones
+                    ActiveZones.Remove(bucket);
                 }
             }
-        }
-    }
 
-    [BurstCompile]
-    private struct PopulateIncrementalRequestedZonesJob : IJobForEach<LocalToWorld, Faction, NearestEnemy>
-    {
-        [NativeDisableParallelForRestriction] [ReadOnly] public NativeHashMap<int3, int> RequestedZones;
-        public NativeHashMap<int3, int>.Concurrent NewZones;
+            activeZoneKeys.Dispose();
 
-        public void Execute([ReadOnly] ref LocalToWorld l2w, [ReadOnly] ref Faction faction, [ReadOnly] ref NearestEnemy nearestEnemy)
-        {
-            int2 zone = SpatialPartitionUtil.ToSpatialPartition(l2w.Position.xy);
-            int factionInt = (int)faction.Value;
-            int3 bucket = new int3(zone.x, zone.y, factionInt);
-
-            if (!RequestedZones.TryGetValue(bucket, out int val))
+            // 2. Add new zones from QueriedZones
+            var queriedZoneKeys = QueriedZones.GetKeyArray(Allocator.Temp);
+            for (int i = 0; i < queriedZoneKeys.Length; i++)
             {
-                NewZones.TryAdd(bucket, 0);
-            }
-        }
-    }
-
-    [BurstCompile]
-    private struct ClearZonesAboutToBeScannedJob : IJob
-    {
-        public int IndexStart;
-        public int IndexEnd;
-        [ReadOnly] public NativeArray<int3> RequestedZoneKeys;
-        public NativeHashMap<int3, Entity> ZoneTargetBuffers;
-
-        public void Execute()
-        {
-            for (int i = IndexStart; i < IndexEnd; i++)
-            {
-                int3 bucket = RequestedZoneKeys[i];
-                if (ZoneTargetBuffers.TryGetValue(bucket, out Entity val))
+                int3 bucket = queriedZoneKeys[i];
+                if (!ActiveZones.TryGetValue(bucket, out _))
                 {
-                    ZoneTargetBuffers.Remove(bucket);
+                    // add nearest enemy buffer
+                    NearestEnemiesBuffers.TryAdd(bucket, BufferEntityPool.Dequeue());
+
+                    // add to ActiveZones
+                    ActiveZones.TryAdd(bucket, Time);
                 }
             }
+
+            queriedZoneKeys.Dispose();
         }
     }
 
-    [BurstCompile]
-    private struct ScanForEnemiesJob : IJobParallelFor
-    {
-        private const float ScanRange = 600f;
 
-        public int IndexStart;
-        [ReadOnly] public CollisionWorld CollisionWorld;
-        [ReadOnly] public NativeHashMap<int3, int>.Concurrent RequestedZones;
-        [ReadOnly] public NativeArray<int3> RequestedZonekeys;
-        [ReadOnly] public NativeArray<Entity> BufferEntityPool;
-        [NativeDisableParallelForRestriction] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
-        public NativeHashMap<int3, Entity>.Concurrent ZoneTargetBuffers;
+    //[BurstCompile]
+    //private struct ScanForEnemiesJob : IJobParallelFor
+    //{
+    //    private const float ScanRange = 600f;
 
-        public void Execute(int index)
-        {
-            int3 bucket = RequestedZonekeys[IndexStart + index];
-            Entity bufferEntity = BufferEntityPool[IndexStart + index];
-            if (!ZoneTargetBuffers.TryAdd(bucket, bufferEntity))
-            {
-                return;
-            }
+    //    [DeallocateOnJobCompletion [ReadOnly] public NativeArray<int3> ZoneKeys;
+    //    [ReadOnly] public CollisionWorld CollisionWorld;
+    //    [NativeDisableParallelForRestriction] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
+    //    public NativeHashMap<int3, Entity>.Concurrent NearestEnemiesBuffers;
 
-            DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[bufferEntity];
-            buf.Clear();
+    //    public void Execute(int index)
+    //    {
+    //        int3 bucket = ZoneKeys[index];
+    //        Entity bufferEntity = NearestEnemiesBuffers.
+    //        DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[bufferEntity];
+    //        buf.Clear();
 
-            unsafe
-            {
-                CollisionFilter filter = new CollisionFilter
-                {
-                    BelongsTo = 1u << (int)PhysicsLayer.RayCast,
-                    CollidesWith = 1u << (int)PhysicsLayer.Ships,
-                    GroupIndex = -bucket.z
-                };
+    //        unsafe
+    //        {
+    //            CollisionFilter filter = new CollisionFilter
+    //            {
+    //                BelongsTo = 1u << (int)PhysicsLayer.RayCast,
+    //                CollidesWith = 1u << (int)PhysicsLayer.Ships,
+    //                GroupIndex = -bucket.z
+    //            };
 
-                PointDistanceInput pointInput = new PointDistanceInput
-                {
-                    Position = new float3(bucket.xy, 0f),
-                    MaxDistance = ScanRange,
-                    Filter = filter
-                };
+    //            PointDistanceInput pointInput = new PointDistanceInput
+    //            {
+    //                Position = new float3(bucket.xy, 0f),
+    //                MaxDistance = ScanRange,
+    //                Filter = filter
+    //            };
 
-                DistanceHit hit;
-                if (CollisionWorld.CalculateDistance(pointInput, out hit))
-                {
-                    // TODO: Remove this temporary case when collider groups are working
-                    if (CollisionWorld.Bodies[hit.RigidBodyIndex].Collider->Filter.GroupIndex == -bucket.z) 
-                    {
-                        throw new Exception("Found my own team... that's not good");
-                    }
+    //            DistanceHit hit;
+    //            if (CollisionWorld.CalculateDistance(pointInput, out hit))
+    //            {
+    //                // TODO: Remove this temporary case when collider groups are working
+    //                if (CollisionWorld.Bodies[hit.RigidBodyIndex].Collider->Filter.GroupIndex == -bucket.z)
+    //                {
+    //                    throw new Exception("Found my own team... that's not good");
+    //                }
 
-                    buf.Add(CollisionWorld.Bodies[hit.RigidBodyIndex].Entity);
-                }
-            }
-        }
-    }
-
-    #endregion
+    //                buf.Add(CollisionWorld.Bodies[hit.RigidBodyIndex].Entity);
+    //            }
+    //        }
+    //    }
+    //}
 }

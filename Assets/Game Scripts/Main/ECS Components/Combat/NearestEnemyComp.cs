@@ -6,6 +6,8 @@ using UnityEngine;
 public struct NearestEnemy : IComponentData
 {
     public Entity Entity;
+    public bool UpdatePending;
+    public float LastUpdatedTime;
 }
 
 public class NearestEnemyComp : MonoBehaviour, IConvertGameObjectToEntity

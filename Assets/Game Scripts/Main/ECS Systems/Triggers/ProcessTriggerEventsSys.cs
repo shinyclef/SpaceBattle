@@ -25,7 +25,7 @@ public class ProcessTriggerEventsSys : JobComponentSystem
         buildPhysicsWorldSys = World.GetOrCreateSystem<BuildPhysicsWorld>();
         stepPhysicsWorldSys = World.GetOrCreateSystem<StepPhysicsWorld>();
         triggerReceiversQuery = GetEntityQuery(typeof(HasTriggerInfoTag), typeof(HandleTriggersTag), typeof(TriggerInfoBuf));
-        counts = new NativeArray<int>(JobsUtility.MaxJobThreadCount, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+        counts = new NativeArray<int>(JobsUtility.MaxJobThreadCount, Allocator.Persistent);
         for (int i = 0; i < JobsUtility.MaxJobThreadCount; i++)
         {
             counts[i] = 0;
@@ -90,11 +90,16 @@ public class ProcessTriggerEventsSys : JobComponentSystem
         return addBufferDataJH;
     }
 
-    protected override void OnStopRunning()
+    protected override void OnDestroy()
     {
         if (map.IsCreated)
         {
             map.Dispose();
+        }
+
+        if (counts.IsCreated)
+        {
+            counts.Dispose();
         }
     }
 

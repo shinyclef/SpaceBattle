@@ -26,20 +26,21 @@ namespace Tests
             keys.Dispose();
 
 
+            int j = 999;
             for (int i = 500; i < 1000; i++)
             {
-                map.TryAdd(i, i);
+                map.TryAdd(i, j);
+                j--;
             }
 
             keys = map.GetKeyArray(Allocator.Temp);
 
             for (int i = 0; i < 1000; i++)
             {
-                Expect(keys[i] == i);
+                Expect(keys[i] == i); // this is not the order I put in!
             }
 
             map.Dispose();
-            
         }
     }
 }
