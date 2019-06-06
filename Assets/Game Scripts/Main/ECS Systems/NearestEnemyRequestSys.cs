@@ -13,7 +13,7 @@ using UnityEngine;
 //[DisableAutoCreation]
 public class NearestEnemyRequestSys : JobComponentSystem
 {
-    public const float UpdateInterval = 0.0f;
+    public const float UpdateInterval = 1f;
 
     private EntityArchetype archetype;
     private NativeQueue<Entity> bufferEntityPool;
@@ -71,20 +71,22 @@ public class NearestEnemyRequestSys : JobComponentSystem
         // 2. Update activeZones, single thread
         inputDeps = new UpdateActiveZonesMapJob()
         {
-            Time = Time.time,
             ActiveZones = activeZones,
             QueriedZones = queriedZones,
             NearestEnemiesBuffers = nearestEnemiesBuffers,
             BufferEntityPool = bufferEntityPool,
-            NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(),
-            Keys = keys
+            NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(false),
+            Keys = keys,
+            L2Ws = GetComponentDataFromEntity<LocalToWorld>(false)
         }.Schedule(inputDeps);
 
         // 3. Refresh the zones
         inputDeps = JobHandle.CombineDependencies(inputDeps, stepPhysicsWorldSys.FinalJobHandle);
         inputDeps = new ScanForEnemiesJob()
         {
+            Time = Time.time,
             CollisionWorld = buildPhysicsWorldSys.PhysicsWorld.CollisionWorld,
+            ActiveZones = activeZones,
             ZoneKeys = keys.AsDeferredJobArray(),
             NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(false),
             NearestEnemiesBuffers = nearestEnemiesBuffers
@@ -198,17 +200,17 @@ public class NearestEnemyRequestSys : JobComponentSystem
     [BurstCompile]
     private struct UpdateActiveZonesMapJob : IJob
     {
-        public float Time;
         public NativeHashMap<int3, float> ActiveZones;
         [ReadOnly] public NativeHashMap<int3, byte> QueriedZones;
         public NativeHashMap<int3, Entity> NearestEnemiesBuffers;
         public NativeQueue<Entity> BufferEntityPool;
         public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
         public NativeList<int3> Keys;
+        public ComponentDataFromEntity<LocalToWorld> L2Ws;
 
         public void Execute()
         {
-            // 1. Remove zone if not in QueriedZones
+            // 1. Remove zone if not in QueriedZones, set last update time to float.min if the zone has no existing targets left
             var activeZoneKeys = ActiveZones.GetKeyArray(Allocator.Temp);
             for (int i = 0; i < activeZoneKeys.Length; i++)
             {
@@ -216,7 +218,8 @@ public class NearestEnemyRequestSys : JobComponentSystem
                 if (!QueriedZones.TryGetValue(bucket, out _))
                 {
                     // clear and remove the nearest enemies buffer
-                    NearbyEnemyBufs[NearestEnemiesBuffers[bucket]].Clear();
+                    DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[NearestEnemiesBuffers[bucket]];
+                    buf.Clear();
                     NearestEnemiesBuffers.TryGetValue(bucket, out Entity e);
                     {
                         BufferEntityPool.Enqueue(e);
@@ -226,6 +229,27 @@ public class NearestEnemyRequestSys : JobComponentSystem
 
                     // remove from AcitiveZones
                     ActiveZones.Remove(bucket);
+                }
+                else
+                {
+                    DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[NearestEnemiesBuffers[bucket]];
+                    for (int j = buf.Length - 1; j >= 0; j--)
+                    {
+                        if (!L2Ws.Exists(buf[j]))
+                        {
+                            buf.RemoveAt(j);
+                        }
+                    }
+
+                    if (buf.Length == 0)
+                    {
+                        ActiveZones.Remove(bucket);
+                    }
+                    else
+                    {
+                        ActiveZones.Remove(bucket);
+                        ActiveZones.TryAdd(bucket, float.MinValue);
+                    }
                 }
             }
 
@@ -240,7 +264,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
                     NearestEnemiesBuffers.TryAdd(bucket, BufferEntityPool.Dequeue());
 
                     // add to ActiveZones
-                    ActiveZones.TryAdd(bucket, Time);
+                    ActiveZones.TryAdd(bucket, float.MinValue);
                 }
             }
 
@@ -255,7 +279,9 @@ public class NearestEnemyRequestSys : JobComponentSystem
     {
         private const float ScanRange = 600f;
 
+        public float Time;
         [ReadOnly] public CollisionWorld CollisionWorld;
+        [ReadOnly] public NativeHashMap<int3, float> ActiveZones;
         [ReadOnly] public NativeArray<int3> ZoneKeys;
         [NativeDisableParallelForRestriction] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
         [NativeDisableParallelForRestriction] public NativeHashMap<int3, Entity> NearestEnemiesBuffers;
@@ -263,6 +289,12 @@ public class NearestEnemyRequestSys : JobComponentSystem
         public void Execute(int index)
         {
             int3 bucket = ZoneKeys[index];
+            ActiveZones.TryGetValue(bucket, out float lastUpdateTime);
+            if (Time - lastUpdateTime < UpdateInterval)
+            {
+                return;
+            }
+
             NearestEnemiesBuffers.TryGetValue(bucket, out Entity bufferEntity);
             DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[bufferEntity];
             buf.Clear();

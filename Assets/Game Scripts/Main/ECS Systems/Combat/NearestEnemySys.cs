@@ -64,13 +64,6 @@ public class NearestEnemySys : JobComponentSystem
                     enemy.UpdatePending = false;
                     return;
                 }
-
-                //Logger.Log("Len == 0"); // TODO: Cleanup
-            }
-            else
-            {
-                // TODO: Cleanup
-                //Logger.Log($"TryGet: {ZoneTargetBuffers.TryGetValue(bucket, out Entity bufEntity2)}, NotNull: {bufEntity != Entity.Null}, Exists: {NearbyEnemyBufs.Exists(bufEntity)}");
             }
 
             enemy.Entity = Entity.Null;

@@ -2,10 +2,12 @@
 using Unity.Physics;
 using Unity.Physics.Systems;
 
-[UpdateInGroup(typeof(LateSimGameGroup))]
+[UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateAfter(typeof(DeselectionSys))]
 public class SelectionSys : ComponentSystem
 {
+    private const bool DebugMode = false;
+
     private BuildPhysicsWorld buildPhysicsWorldSys;
     private bool hasLeftClicked;
 
@@ -49,13 +51,20 @@ public class SelectionSys : ComponentSystem
             }
         };
 
-        RaycastHit hit = new RaycastHit();
-        bool haveHit = collisionWorld.CastRay(input, out hit);
+        #pragma warning disable 0162
+        if (DebugMode)
+        {
+            UnityEngine.Debug.DrawRay(input.Start, input.End, UnityEngine.Color.yellow, 1f);
+        }
+        #pragma warning restore 0162
+
+        bool haveHit = collisionWorld.CastRay(input, out RaycastHit hit);
         if (haveHit)
         {
             Entity e = collisionWorld.Bodies[hit.RigidBodyIndex].Entity;
             EntityManager.AddComponent(e, typeof(IsSelectedTag));
             SelectedEntity = e;
+            Logger.LogIf(DebugMode, "Have hit!");
         }
         else
         {

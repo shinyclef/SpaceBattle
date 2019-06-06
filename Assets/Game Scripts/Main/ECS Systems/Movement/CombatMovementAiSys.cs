@@ -10,7 +10,7 @@ using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
 [UpdateInGroup(typeof(MainGameGroup))]
-[UpdateAfter(typeof(NearestEnemySys))]
+[UpdateAfter(typeof(CombatTargetSys))]
 public class CombatMovementAiSys : JobComponentSystem
 {
     public bool EnableDebugRays;

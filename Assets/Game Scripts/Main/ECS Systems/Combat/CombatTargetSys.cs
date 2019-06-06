@@ -9,7 +9,7 @@ using UnityEngine;
 [UpdateAfter(typeof(NearestEnemySys))]
 public class CombatTargetSys : JobComponentSystem
 {
-    private const float CommitToTargetTime = 30f; // TODO: 3f
+    private const float CommitToTargetTime = 3f;
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
@@ -23,7 +23,7 @@ public class CombatTargetSys : JobComponentSystem
         return jh;
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     private struct Job : IJobForEachWithEntity<SpawnTime, NearestEnemy, CombatTarget>
     {
         [ReadOnly] public ComponentDataFromEntity<LocalToWorld> L2WComps;
@@ -35,17 +35,13 @@ public class CombatTargetSys : JobComponentSystem
             
             if (newTargetRequired)
             {
-                Logger.Log($"New target required. time: {nearestEnemy.LastUpdatedTime == Time}, pend: {!nearestEnemy.UpdatePending}");
-
                 if (nearestEnemy.LastUpdatedTime == Time)
                 {
-                    //Logger.Log("is time");
                     target.Entity = nearestEnemy.Entity;
                     target.AcquiredTime = Time;
                 }
                 else if (!nearestEnemy.UpdatePending)
                 {
-                    //Logger.Log("pending!");
                     nearestEnemy.UpdatePending = true;
                 }
             }
