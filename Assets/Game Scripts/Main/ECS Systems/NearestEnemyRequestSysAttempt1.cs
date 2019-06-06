@@ -14,7 +14,7 @@ using UnityEngine;
 [DisableAutoCreation]
 public class NearestEnemyRequestSysAttempt1 : JobComponentSystem
 {
-    public const float UpdateInterval = 0.5f;
+    public const float UpdateInterval = 0.0f;
     private float cycleTime;
     private float lastCycleTime;
     private int cycleIndexEnd;

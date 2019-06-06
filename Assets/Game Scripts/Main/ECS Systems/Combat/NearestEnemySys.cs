@@ -11,16 +11,16 @@ using UnityEngine;
 [UpdateAfter(typeof(NearestEnemyRequestSys))]
 public class NearestEnemySys : JobComponentSystem
 {
-    private NearestEnemyRequestSysAttempt1 nearestEnemyRequestSys;
+    private NearestEnemyRequestSys nearestEnemyRequestSys;
 
     protected override void OnCreate()
     {
-        nearestEnemyRequestSys = World.GetOrCreateSystem<NearestEnemyRequestSysAttempt1>();
+        nearestEnemyRequestSys = World.GetOrCreateSystem<NearestEnemyRequestSys>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        if (!nearestEnemyRequestSys.ZoneTargetBuffers.IsCreated)
+        if (!nearestEnemyRequestSys.NearestEnemiesBuffers.IsCreated)
         {
             return inputDeps;
         }
@@ -28,7 +28,7 @@ public class NearestEnemySys : JobComponentSystem
         var updateNearestEnemyJob = new UpdateNearestEnemyJob
         {
             Time = Time.time,
-            ZoneTargetBuffers = nearestEnemyRequestSys.ZoneTargetBuffers,
+            ZoneTargetBuffers = nearestEnemyRequestSys.NearestEnemiesBuffers,
             NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(true),
         };
 

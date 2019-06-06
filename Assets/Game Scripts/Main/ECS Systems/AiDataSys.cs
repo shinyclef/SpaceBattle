@@ -69,6 +69,17 @@ public class AiDataSys : ComponentSystem
         LoadAiFromDisk();
     }
 
+    protected override void OnDestroy()
+    {
+        if (isLoaded)
+        {
+            nativeData.Decisions.Dispose();
+            nativeData.Choices.Dispose();
+            nativeData.Considerations.Dispose();
+            nativeData.RecordedScores.Dispose();
+        }
+    }
+
     protected override void OnUpdate()
     {
         if (reloadFromDiskRequired)

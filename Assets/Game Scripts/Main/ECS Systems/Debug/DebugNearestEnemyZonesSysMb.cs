@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class DebugRaysSysMb : MonoBehaviour
+public class DebugNearestEnemyZonesSysMb : MonoBehaviour
 {
     public bool EnableDebug;
     private bool debugWasEnabled;
@@ -8,7 +8,7 @@ public class DebugRaysSysMb : MonoBehaviour
     private void Awake()
     {
         debugWasEnabled = EnableDebug;
-        DebugRaysSys.I.Enabled = EnableDebug;
+        DebugNearestEnemyZonesSys.I.Enabled = EnableDebug;
     }
 
     private void Update()
@@ -16,7 +16,7 @@ public class DebugRaysSysMb : MonoBehaviour
         if (EnableDebug != debugWasEnabled)
         {
             debugWasEnabled = EnableDebug;
-            DebugRaysSys.I.Enabled = EnableDebug;
+            DebugNearestEnemyZonesSys.I.Enabled = EnableDebug;
         }
     }
 }

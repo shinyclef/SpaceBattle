@@ -4,7 +4,7 @@ using static Unity.Mathematics.math;
 
 public struct SpatialPartitionUtil
 {
-    private const int NodeSize = 20;
+    private const int NodeSize = 40;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int2 ToSpatialPartition(float2 pos)

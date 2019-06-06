@@ -84,7 +84,7 @@ public class WeaponSys : JobComponentSystem
                         wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireMajorInterval, Time + wep.FireMajorInterval - 0.1f);
                         wep.BurstShotCooldownEnd = math.max(wep.BurstShotCooldownEnd + wep.FireMinorInterval, Time + wep.FireMinorInterval - 0.01f);
                         wep.LastBurstShot = 1;
-                        fire = true;
+                        //fire = true;
                     }
                 }
             }

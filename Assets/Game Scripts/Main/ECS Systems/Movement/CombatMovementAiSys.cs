@@ -18,7 +18,15 @@ public class CombatMovementAiSys : JobComponentSystem
 
     protected override void OnCreate()
     {
-        rngs = new NativeArray<Random>(JobsUtility.MaxJobThreadCount, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+        rngs = new NativeArray<Random>(JobsUtility.MaxJobThreadCount, Allocator.Persistent);
+    }
+
+    protected override void OnDestroy()
+    {
+        if (rngs.IsCreated)
+        {
+            rngs.Dispose();
+        }
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)

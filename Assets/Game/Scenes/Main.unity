@@ -3856,8 +3856,8 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 1779965215723008332, guid: 226f7a2bc172211499316757943251a2,
     type: 3}
-  MaxShips: 2000
-  SpawnRatePerSecond: 800
+  MaxShips: 200
+  SpawnRatePerSecond: 300
   SpawnSpread:
     x: 100
     y: 20
@@ -4659,6 +4659,64 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AiInspector: {fileID: 517179440}
+--- !u!1 &1221549084
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1221549085}
+  - component: {fileID: 1221549087}
+  - component: {fileID: 1221549086}
+  m_Layer: 0
+  m_Name: Debug
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1221549085
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1221549084}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1586150473}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1221549086
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1221549084}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b193aaccb5eb8f43920c3ff8341c8ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  EnableDebug: 0
+--- !u!114 &1221549087
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1221549084}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 045dd1c1c01c5f144af7174971109912, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  EnableDebug: 0
 --- !u!1 &1379709073
 GameObject:
   m_ObjectHideFlags: 0
@@ -5433,7 +5491,6 @@ GameObject:
   - component: {fileID: 1586150482}
   - component: {fileID: 1586150483}
   - component: {fileID: 1586150484}
-  - component: {fileID: 1586150485}
   m_Layer: 0
   m_Name: Game
   m_TagString: Untagged
@@ -5456,6 +5513,7 @@ Transform:
   - {fileID: 497602033}
   - {fileID: 2043388726}
   - {fileID: 498411265}
+  - {fileID: 1221549085}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5655,19 +5713,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   aiInspectorTransform: {fileID: 517179441}
---- !u!114 &1586150485
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1586150472}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 045dd1c1c01c5f144af7174971109912, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  EnableDebugRays: 0
 --- !u!1 &1658854641
 GameObject:
   m_ObjectHideFlags: 0
@@ -6246,8 +6291,8 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 2944533906311966927, guid: 19d1abca87912fc44b88ab83a16449aa,
     type: 3}
-  MaxShips: 2000
-  SpawnRatePerSecond: 800
+  MaxShips: 200
+  SpawnRatePerSecond: 300
   SpawnSpread:
     x: 100
     y: 20
@@ -6473,7 +6518,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1813004060
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6490,8 +6535,8 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 4903339397265122764, guid: d6ed2930c3712744caaf13322c21c6ff,
     type: 3}
-  MaxShips: 2000
-  SpawnRatePerSecond: 800
+  MaxShips: 1000
+  SpawnRatePerSecond: 300
   SpawnSpread:
     x: 100
     y: 20
