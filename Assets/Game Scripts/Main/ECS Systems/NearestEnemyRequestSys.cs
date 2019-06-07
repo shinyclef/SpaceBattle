@@ -10,7 +10,6 @@ using UnityEngine;
 
 [UpdateInGroup(typeof(MainGameGroup))]
 [AlwaysUpdateSystem]
-//[DisableAutoCreation]
 public class NearestEnemyRequestSys : JobComponentSystem
 {
     public const float UpdateInterval = 1f;
@@ -28,7 +27,6 @@ public class NearestEnemyRequestSys : JobComponentSystem
 
     public JobHandle FinalJobHandle { get; private set; }
     public NativeHashMap<int3, Entity> NearestEnemiesBuffers { get { return nearestEnemiesBuffers; } }
-    //public NativeHashMap<int3, Entity> NearestEnemiesBuffers { get { return World.GetOrCreateSystem<NearestEnemyRequestSysAttempt1>().ZoneTargetBuffers; } }
 
     protected override void OnCreate()
     {
@@ -90,7 +88,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
             ZoneKeys = keys.AsDeferredJobArray(),
             NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(false),
             NearestEnemiesBuffers = nearestEnemiesBuffers
-        }.Schedule(keys, 32, inputDeps);
+        }.Schedule(keys, 4, inputDeps);
 
         FinalJobHandle = inputDeps;
         return inputDeps;

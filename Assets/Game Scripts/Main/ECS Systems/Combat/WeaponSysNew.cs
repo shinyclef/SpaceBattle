@@ -7,39 +7,39 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(MainGameGroup))]
-public class WeaponSys : JobComponentSystem
+//[DisableAutoCreation]
+public class WeaponSysNew : JobComponentSystem
 {
-    private BeginSimulationEntityCommandBufferSystem beginSimCB;
+    private StructureSyncSys spawnerSys;
 
     protected override void OnCreate()
     {
-        beginSimCB = World.GetOrCreateSystem<BeginSimulationEntityCommandBufferSystem>();
+        spawnerSys = World.GetOrCreateSystem<StructureSyncSys>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        var job = new Job()
+        inputDeps = new Job()
         {
-            BeginSimCB = beginSimCB.CreateCommandBuffer().ToConcurrent(),
+            Projectiles = spawnerSys.Projectiles.ToConcurrent(),
             VelocityData = GetComponentDataFromEntity<Velocity>(),
             Time = Time.time
-        };
+        }.Schedule(this, inputDeps);
 
-        JobHandle jh = job.Schedule(this, inputDeps);
-        beginSimCB.AddJobHandleForProducer(jh);
-        return jh;
+        spawnerSys.AddJobHandleForProducer(inputDeps);
+        return inputDeps;
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     private struct Job : IJobForEachWithEntity<MoveDestination, LocalToWorld, Rotation, Velocity, CombatTarget, Weapon>
     {
-        public EntityCommandBuffer.Concurrent BeginSimCB;
+        public NativeQueue<ProjectileSpawnData>.Concurrent Projectiles;
         [ReadOnly] public ComponentDataFromEntity<Velocity> VelocityData;
         public float Time;
 
-        public void Execute(Entity entity, int index, 
-            [ReadOnly] ref MoveDestination moveDest, 
-            [ReadOnly] ref LocalToWorld l2w, 
+        public void Execute(Entity entity, int index,
+            [ReadOnly] ref MoveDestination moveDest,
+            [ReadOnly] ref LocalToWorld l2w,
             [ReadOnly] ref Rotation rot,
             [ReadOnly] ref Velocity vel,
             [ReadOnly] ref CombatTarget target,
@@ -98,10 +98,14 @@ public class WeaponSys : JobComponentSystem
             if (fire)
             {
                 float3 pos = l2w.Position + wep.SpawnOffset.LocalToWorldPos(rot.Value);
-                Entity proj = BeginSimCB.Instantiate(index, wep.ProjectilePrefab);
-                BeginSimCB.SetComponent(index, proj, new Translation { Value = pos });
-                BeginSimCB.SetComponent(index, proj, new Rotation { Value = rot.Value });
-                BeginSimCB.SetComponent(index, proj, new SpawnTime { Value = Time });
+                ProjectileSpawnData data = new ProjectileSpawnData
+                {
+                    PrefabEntity = wep.ProjectilePrefab,
+                    Pos = pos.xy,
+                    Rot = rot.Value
+                };
+
+                Projectiles.Enqueue(data);
             }
         }
     }

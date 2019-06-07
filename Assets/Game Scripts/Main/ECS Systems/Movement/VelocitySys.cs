@@ -17,7 +17,7 @@ public class VelocitySys : JobComponentSystem
             Dt = Time.deltaTime
         };
 
-        JobHandle jh = job.ScheduleSingle(this, inputDeps);
+        JobHandle jh = job.Schedule(this, inputDeps);
         return jh;
     }
 

@@ -1,11 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 
 [UpdateInGroup(typeof(SpawnerGameGroup))]
-public class ShipSpawnerReclaimSys : ComponentSystem
+[AlwaysUpdateSystem]
+public class ShipSpawnerReclaimSys : JobComponentSystem
 {
     private EntityQuery destroyedShipsQuery;
+    private NativeHashMap<Entity, int> destroyedShipCounts;
+    private NativeArray<ArchetypeChunk> chunks;
+    private NativeArray<Entity> keys;
+    private NativeArray<int> vals;
 
     protected override void OnCreate()
     {
@@ -16,48 +22,93 @@ public class ShipSpawnerReclaimSys : ComponentSystem
         });
     }
 
-    protected override void OnUpdate()
+    protected override void OnDestroy()
     {
-        // ------------------------------------------------------- //
-        // For each spawner, decrement its 'ActiveShipCount' value //
-        // ------------------------------------------------------- //
+        Dispose(); 
+    }
 
-        // 1. Query all 'ShipSpawnerOwner' chunks
-        var em = World.Active.EntityManager;
-        var compType = GetArchetypeChunkSharedComponentType<ShipSpawnerOwnerSsShC>();
-
-        // 2. Loop through summing up destroyed counts in a dictionary
-        var destoryedShipCounts = new Dictionary<Entity, int>();
-        using (NativeArray<ArchetypeChunk> chunks = destroyedShipsQuery.CreateArchetypeChunkArray(Allocator.TempJob))
+    private void Dispose()
+    {
+        if (destroyedShipCounts.IsCreated)
         {
-            foreach (ArchetypeChunk chunk in chunks)
-            {
-                ShipSpawnerOwnerSsShC owner = chunk.GetSharedComponentData(compType, em);
-                Entity e = new Entity() { Index = owner.EntityIndex, Version = owner.EntityVer };
-                int count = chunk.Count;
-                if (!destoryedShipCounts.ContainsKey(e))
-                {
-                    destoryedShipCounts.Add(e, count);
-                }
-                else
-                {
-                    destoryedShipCounts[e] += count;
-                }
-            }
+            destroyedShipCounts.Dispose();
+        }
 
-            // 3. Apply totals to components directly
-            foreach (KeyValuePair<Entity, int> pair in destoryedShipCounts)
+        if (chunks.IsCreated)
+        {
+            chunks.Dispose();
+        }
+
+        if (keys.IsCreated)
+        {
+            keys.Dispose();
+        }
+        
+        if (vals.IsCreated)
+        {
+            vals.Dispose();
+        }
+    }
+
+    protected override JobHandle OnUpdate(JobHandle inputDeps)
+    {
+        Dispose();
+        var em = World.Active.EntityManager;
+
+        // 1. Loop through summing up destroyed counts
+        int totalCount = destroyedShipsQuery.CalculateLength();
+        if (totalCount == 0)
+        {
+            return inputDeps;
+        }
+
+        var compType = GetArchetypeChunkSharedComponentType<ShipSpawnerOwnerSsShC>();
+        destroyedShipCounts = new NativeHashMap<Entity, int>(totalCount, Allocator.TempJob);
+        chunks = destroyedShipsQuery.CreateArchetypeChunkArray(Allocator.TempJob);
+        foreach (ArchetypeChunk chunk in chunks)
+        {
+            ShipSpawnerOwnerSsShC owner = chunk.GetSharedComponentData(compType, em);
+            Entity e = new Entity() { Index = owner.EntityIndex, Version = owner.EntityVer };
+            int team = owner.EntityIndex;
+
+            int count = chunk.Count;
+            if (destroyedShipCounts.TryGetValue(e, out int val))
             {
-                if (em.Exists(pair.Key))
-                {
-                    var spawner = em.GetComponentData<ShipSpawner>(pair.Key);
-                    spawner.ActiveShipCount -= pair.Value;
-                    em.SetComponentData(pair.Key, spawner);
-                }
+                destroyedShipCounts.Remove(e);
+                destroyedShipCounts.TryAdd(e, val + count);
+            }
+            else
+            {
+                destroyedShipCounts.TryAdd(e, count);
             }
         }
 
-        // 4. Remove the system shared component
-        em.RemoveComponent(destroyedShipsQuery, typeof(ShipSpawnerOwnerSsShC));
+        // 2. Apply totals to components directly
+        keys = destroyedShipCounts.GetKeyArray(Allocator.TempJob);
+        vals = destroyedShipCounts.GetValueArray(Allocator.TempJob);
+        for (int i = 0; i < keys.Length; i++)
+        {
+            Entity e = keys[i];
+            if (em.Exists(e))
+            {
+                var spawner = em.GetComponentData<ShipSpawner>(e);
+                spawner.ActiveShipCount -= vals[i];
+                em.SetComponentData(e, spawner);
+            }
+        }
+
+        return inputDeps;
+    }
+
+
+    [BurstCompile]
+    private struct Job : IJobChunk
+    {
+        public float Dt;
+
+        public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
+        {
+            
+        }
     }
 }
