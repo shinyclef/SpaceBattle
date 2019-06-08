@@ -24,11 +24,11 @@ public class CombatTargetSys : JobComponentSystem
     }
 
     [BurstCompile]
-    private struct Job : IJobForEachWithEntity<SpawnTime, NearestEnemy, CombatTarget>
+    private struct Job : IJobForEachWithEntity<NearestEnemy, CombatTarget>
     {
         [ReadOnly] public ComponentDataFromEntity<LocalToWorld> L2WComps;
         public float Time;
-        public void Execute(Entity entity, int index, [ReadOnly] ref SpawnTime spawnTime, [ReadOnly] ref NearestEnemy nearestEnemy, ref CombatTarget target)
+        public void Execute(Entity entity, int index, [ReadOnly] ref NearestEnemy nearestEnemy, ref CombatTarget target)
         {
             bool targetExists = target.Entity != Entity.Null && L2WComps.Exists(target.Entity);
             bool newTargetRequired = !targetExists || Time - target.AcquiredTime > CommitToTargetTime;

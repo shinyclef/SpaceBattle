@@ -42,7 +42,7 @@ public class SelectionSys : ComponentSystem
         RaycastInput input = new RaycastInput
         {
             Start = screenRay.origin,
-            End = screenRay.direction * 1000,
+            End = screenRay.origin + screenRay.direction * 1000,
             Filter = new CollisionFilter()
             {
                 BelongsTo = 1u << (int)PhysicsLayer.RayCast,
@@ -54,7 +54,7 @@ public class SelectionSys : ComponentSystem
         #pragma warning disable 0162
         if (DebugMode)
         {
-            UnityEngine.Debug.DrawRay(input.Start, input.End, UnityEngine.Color.yellow, 1f);
+            UnityEngine.Debug.DrawRay(input.Start, input.End - input.Start, UnityEngine.Color.yellow, 1f);
         }
         #pragma warning restore 0162
 

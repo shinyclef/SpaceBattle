@@ -607,6 +607,11 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: NumberInputField+ChangedEvent, Main, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
+  OnValueChangedValid:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: NumberInputField+ChangedEvent, Main, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
 --- !u!1 &977429369597241579
 GameObject:
   m_ObjectHideFlags: 0
@@ -991,6 +996,11 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+    m_TypeName: NumberInputField+ChangedEvent, Main, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  OnValueChangedValid:
+    m_PersistentCalls:
+      m_Calls: []
     m_TypeName: NumberInputField+ChangedEvent, Main, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
 --- !u!1 &1390737081199919633
@@ -3174,6 +3184,11 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: NumberInputField+ChangedEvent, Main, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
+  OnValueChangedValid:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: NumberInputField+ChangedEvent, Main, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
 --- !u!1 &4470147544934570229
 GameObject:
   m_ObjectHideFlags: 0
@@ -3954,6 +3969,11 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: NumberInputField+ChangedEvent, Main, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
+  OnValueChangedValid:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: NumberInputField+ChangedEvent, Main, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
 --- !u!1 &5779451878878988326
 GameObject:
   m_ObjectHideFlags: 0
@@ -4338,6 +4358,11 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+    m_TypeName: NumberInputField+ChangedEvent, Main, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  OnValueChangedValid:
+    m_PersistentCalls:
+      m_Calls: []
     m_TypeName: NumberInputField+ChangedEvent, Main, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
 --- !u!1 &6376931815070832603
@@ -5418,10 +5443,10 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, Unity.ugui,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 21300000, guid: 4dd0a0838a2215d4baa3dbacdd96a768, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
-  m_FillCenter: 0
+  m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
   m_FillClockwise: 1
@@ -6174,6 +6199,11 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+    m_TypeName: NumberInputField+ChangedEvent, Main, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+  OnValueChangedValid:
+    m_PersistentCalls:
+      m_Calls: []
     m_TypeName: NumberInputField+ChangedEvent, Main, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
 --- !u!1 &8800639217562163397

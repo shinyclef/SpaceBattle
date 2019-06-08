@@ -99,16 +99,4 @@ public class ShipSpawnerReclaimSys : JobComponentSystem
 
         return inputDeps;
     }
-
-
-    [BurstCompile]
-    private struct Job : IJobChunk
-    {
-        public float Dt;
-
-        public void Execute(ArchetypeChunk chunk, int chunkIndex, int firstEntityIndex)
-        {
-            
-        }
-    }
 }

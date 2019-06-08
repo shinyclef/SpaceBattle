@@ -10,6 +10,7 @@ public class NumberInputField : MonoBehaviour
 
     [SerializeField] private Color invalidColour = default;
     [SerializeField] private ChangedEvent OnValueChanged = default;
+    [SerializeField] private ChangedEvent OnValueChangedValid = default;
 
     private TMP_InputField input = default;
     private Image inputImage = default;
@@ -54,6 +55,11 @@ public class NumberInputField : MonoBehaviour
         input.text = val.ToString();
     }
 
+    public void SetValueWithoutNotify(float val)
+    {
+        input.SetTextWithoutNotify(val.ToString());
+    }
+
     public void OnChanged()
     {
         float val;
@@ -61,7 +67,11 @@ public class NumberInputField : MonoBehaviour
         IsValid = FloatInputValidator.GetValidValue(input.text, out val);
         ValidStateChanged = IsValid != wasValid;
         DisplayAsValid(IsValid);
-        OnValueChanged?.Invoke(null);
+        OnValueChanged?.Invoke(this);
+        if (IsValid)
+        {
+            OnValueChangedValid?.Invoke(this);
+        }
     }
 
     private void DisplayAsValid(bool valid)

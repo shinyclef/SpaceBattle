@@ -12,5 +12,6 @@
     SpeedTime = 9,
     SlowTime = 10,
     ReloadAi = 11,
-    ToggleAiInspector = 12
+    ToggleAiInspector = 12,
+    ToggleHelpOverlay = 13
 }

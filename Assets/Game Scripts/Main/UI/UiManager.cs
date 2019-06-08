@@ -2,7 +2,10 @@
 
 public class UiManager : MonoBehaviour
 {
-    [SerializeField] private GameObject AiInspector = default;
+    [SerializeField] private GameObject[] uiToggleElements = default;
+    [SerializeField] private GameObject aiInspector = default;
+
+    bool uiActive = true;
 
     private void Update()
     {
@@ -11,9 +14,18 @@ public class UiManager : MonoBehaviour
             return;
         }
 
+        if (GInput.GetButtonDown(Cmd.ToggleHelpOverlay))
+        {
+            uiActive = !uiActive;
+            foreach (GameObject go in uiToggleElements)
+            {
+                go.SetActive(uiActive);
+            }
+        }
+
         if (GInput.GetButtonDown(Cmd.ToggleAiInspector))
         { 
-            AiInspector.SetActive(!AiInspector.activeSelf);
+            aiInspector.SetActive(!aiInspector.activeSelf);
         }
     }
 }

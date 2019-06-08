@@ -7,31 +7,55 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(MainGameGroup))]
-//[DisableAutoCreation]
-public class WeaponSysNew : JobComponentSystem
+public class WeaponSys : JobComponentSystem
 {
-    private StructureSyncSys spawnerSys;
+    private BeginSimulationEntityCommandBufferSystem beginSimCB;
+    private NativeQueue<ProjectileSpawnData> projectiles;
 
     protected override void OnCreate()
     {
-        spawnerSys = World.GetOrCreateSystem<StructureSyncSys>();
+        beginSimCB = World.GetOrCreateSystem<BeginSimulationEntityCommandBufferSystem>();
+    }
+
+    protected override void OnDestroy()
+    {
+        Dispose();
+    }
+
+    private void Dispose()
+    {
+        if (projectiles.IsCreated)
+        {
+            projectiles.Dispose();
+        }
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        inputDeps = new Job()
+        Dispose();
+        projectiles = new NativeQueue<ProjectileSpawnData>(Allocator.TempJob);
+        inputDeps = new FireWeaponJob()
         {
-            Projectiles = spawnerSys.Projectiles.ToConcurrent(),
+            //Projectiles = spawnerSys.Projectiles.ToConcurrent(),
+            Projectiles = projectiles.ToConcurrent(),
             VelocityData = GetComponentDataFromEntity<Velocity>(),
             Time = Time.time
         }.Schedule(this, inputDeps);
 
-        spawnerSys.AddJobHandleForProducer(inputDeps);
+        inputDeps = new PopulateCmdBufJob()
+        {
+            BeginSimCB = beginSimCB.CreateCommandBuffer(),
+            Projectiles = projectiles,
+            Time = Time.time
+        }.Schedule(inputDeps);
+
+        //spawnerSys.AddJobHandleForProducer(inputDeps);
+        beginSimCB.AddJobHandleForProducer(inputDeps);
         return inputDeps;
     }
 
     [BurstCompile]
-    private struct Job : IJobForEachWithEntity<MoveDestination, LocalToWorld, Rotation, Velocity, CombatTarget, Weapon>
+    private struct FireWeaponJob : IJobForEachWithEntity<MoveDestination, LocalToWorld, Rotation, Velocity, CombatTarget, Weapon>
     {
         public NativeQueue<ProjectileSpawnData>.Concurrent Projectiles;
         [ReadOnly] public ComponentDataFromEntity<Velocity> VelocityData;
@@ -78,7 +102,7 @@ public class WeaponSysNew : JobComponentSystem
                 float2 forwardDir = l2w.Up.xy;
                 if (math.dot(targetDir, forwardDir) > 0.995f)
                 {
-                    float2 projectedEnemyPos = moveDest.Value + VelocityData[target.Entity].Value * wep.projectileLifeTime;
+                    float2 projectedEnemyPos = moveDest.Value + VelocityData[target.Entity].Value * (wep.projectileLifeTime * 0.9f);
                     if (math.distance(l2w.Position.xy, projectedEnemyPos) < wep.projectileRange)
                     {
                         wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireMajorInterval, Time + wep.FireMajorInterval - 0.1f);
@@ -108,5 +132,30 @@ public class WeaponSysNew : JobComponentSystem
                 Projectiles.Enqueue(data);
             }
         }
+    }
+
+    private struct PopulateCmdBufJob : IJob
+    {
+        public EntityCommandBuffer BeginSimCB;
+        public NativeQueue<ProjectileSpawnData> Projectiles;
+        public float Time;
+
+        public void Execute()
+        {
+            while (Projectiles.TryDequeue(out ProjectileSpawnData data))
+            {
+                Entity proj = BeginSimCB.Instantiate(data.PrefabEntity);
+                BeginSimCB.SetComponent(proj, new Translation { Value = new float3(data.Pos, 0f) });
+                BeginSimCB.SetComponent(proj, new Rotation { Value = data.Rot });
+                BeginSimCB.SetComponent(proj, new SpawnTime { Value = Time });
+            }
+        }
+    }
+
+    private struct ProjectileSpawnData
+    {
+        public Entity PrefabEntity;
+        public float2 Pos;
+        public quaternion Rot;
     }
 }
