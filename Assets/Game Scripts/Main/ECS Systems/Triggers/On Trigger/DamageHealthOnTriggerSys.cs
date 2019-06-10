@@ -21,8 +21,7 @@ public class DamageHealthOnTriggerSys : JobComponentSystem
         var job = new Job
         {
             EndSimCB = endSimCB.CreateCommandBuffer().ToConcurrent(),
-            DamageHealthComps = GetComponentDataFromEntity<DamageHealthOnTrigger>(),
-            TriggerInfoBufs = GetBufferFromEntity<TriggerInfoBuf>(true)
+            DamageHealthComps = GetComponentDataFromEntity<DamageHealthOnTrigger>()
         };
 
         World.GetExistingSystem<ProcessTriggerEventsSys>().FinalJobHandle.Complete();
@@ -33,16 +32,13 @@ public class DamageHealthOnTriggerSys : JobComponentSystem
 
     [BurstCompile]
     [RequireComponentTag(typeof(HasTriggerInfoTag))]
-    private struct Job : IJobForEachWithEntity<Health>
+    private struct Job : IJobForEachWithEntity_EBC<TriggerInfoBuf, Health>
     {
         public EntityCommandBuffer.Concurrent EndSimCB;
-
         [ReadOnly] public ComponentDataFromEntity<DamageHealthOnTrigger> DamageHealthComps;
-        [ReadOnly] public BufferFromEntity<TriggerInfoBuf> TriggerInfoBufs;
 
-        public void Execute(Entity entity, int index, [ReadOnly] ref Health health)
+        public void Execute(Entity entity, int index, [ReadOnly] DynamicBuffer<TriggerInfoBuf> infoBuf, [ReadOnly] ref Health health)
         {
-            DynamicBuffer<TriggerInfoBuf> infoBuf = TriggerInfoBufs[entity];
             for (int i = 0; i < infoBuf.Length; i++)
             {
                 TriggerInfo info = infoBuf[i];

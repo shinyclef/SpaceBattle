@@ -6,6 +6,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
+[AlwaysUpdateSystem]
 [UpdateInGroup(typeof(MainGameGroup))]
 public class WeaponSys : JobComponentSystem
 {

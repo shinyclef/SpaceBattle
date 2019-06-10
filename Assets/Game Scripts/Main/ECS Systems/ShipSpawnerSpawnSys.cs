@@ -76,7 +76,7 @@ public class ShipSpawnerSpawnSys : JobComponentSystem
 
             float3 ss = spawner.SpawnSpread;
             float heading = Heading.FromQuaternion(rot.Value);
-            float2 moveDest = tran.Value.xy + Heading.ToFloat2(heading);
+            float2 moveDest = tran.Value.xy + gmath.HeadingToFloat2(heading);
             for (int i = 0; i < spawnCount; i++)
             {
                 float3 pos = math.transform(l2w.Value, new float3(Rand.NextFloat(-ss.x, ss.x),

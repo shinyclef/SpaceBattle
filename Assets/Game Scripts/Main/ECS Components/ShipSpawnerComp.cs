@@ -44,6 +44,11 @@ public class ShipSpawnerComp : MonoBehaviour, IDeclareReferencedPrefabs, IConver
         dstManager.AddComponentData(entity, shipSpawner);
         Scheduler.InvokeAfterOneFrame(() =>
         {
+            var mass = dstManager.GetComponentData<PhysicsMass>(shipPrimaryEntity);
+            mass.InverseInertia[0] = 0;
+            mass.InverseInertia[1] = 0;
+            dstManager.SetComponentData(shipPrimaryEntity, mass);
+
             unsafe
             {
                 Collider* col = dstManager.GetComponentData<PhysicsCollider>(shipPrimaryEntity).ColliderPtr;

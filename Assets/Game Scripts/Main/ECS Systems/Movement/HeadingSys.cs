@@ -6,6 +6,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
+[DisableAutoCreation]
 [UpdateInGroup(typeof(MainGameGroup))]
 public class HeadingSys : JobComponentSystem
 {

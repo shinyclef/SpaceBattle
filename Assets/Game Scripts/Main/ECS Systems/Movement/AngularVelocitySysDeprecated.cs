@@ -6,7 +6,7 @@
 //using Unity.Transforms;
 //using UnityEngine;
 
-//[UpdateInGroup(typeof(GameGroupPrePhysics))]
+//[UpdateInGroup(typeof(MainGameGroup))]
 //[UpdateAfter(typeof(HeadingSys))]
 //public class AngularVelocitySys : JobComponentSystem
 //{
@@ -17,14 +17,12 @@
 
 //        public void Execute([ReadOnly] ref Rotation rot, ref Velocity vel)
 //        {
-//            //vel.Value = math.mul(rot.Value, new float3(0, 1, 0)).xy * vel.Speed;
+//            vel.Value = math.mul(rot.Value, new float3(0, 1, 0)).xy * vel.Speed;
 //        }
 //    }
 
 //    protected override JobHandle OnUpdate(JobHandle inputDeps)
 //    {
-//        return inputDeps; // DISABLED
-
 //        var job = new Job()
 //        {
 //            Dt = Time.deltaTime

@@ -20,9 +20,12 @@ public class MainGameGroup : ComponentSystemGroup
 {
     LifeTimeExpireSys LifeTimeExpireSys;
     HeadingSys HeadingSys;
-    RotationSys RotationSys;
-    VelocitySys VelocitySys;
-    MovementSys MovementSys;
+    
+    //Deprecated
+    //RotationSys RotationSys;
+    //VelocitySys VelocitySys;
+    //MovementSys MovementSys;
+
     CombatTargetSys CombatTargetSys;
     CombatMovementAiSys CombatMovementAiSys;
     DamageHealthOnTriggerSys DamageHealthOnTriggerSys;

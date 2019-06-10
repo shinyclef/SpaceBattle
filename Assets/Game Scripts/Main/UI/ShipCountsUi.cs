@@ -122,13 +122,13 @@ public class ShipCountsUi : MonoBehaviour
 
     private void UpdateSpawnRateTotal()
     {
-        int total = (int)(spawnRateInputs[0].GetValue() + spawnRateInputs[1].GetValue() + spawnRateInputs[2].GetValue());
+        int total = (int)(spawnRateInputs[0].LastValidValue + spawnRateInputs[1].LastValidValue + spawnRateInputs[2].LastValidValue);
         spawnRateTotalText.text = total.ToString();
     }
 
     private void UpdateMaxShipsTotal()
     {
-        int total = (int)(maxShipsInputs[0].GetValue() + maxShipsInputs[1].GetValue() + maxShipsInputs[2].GetValue());
+        int total = (int)(maxShipsInputs[0].LastValidValue + maxShipsInputs[1].LastValidValue + maxShipsInputs[2].LastValidValue);
         maxShipsTotalText.text = total.ToString();
     }
 

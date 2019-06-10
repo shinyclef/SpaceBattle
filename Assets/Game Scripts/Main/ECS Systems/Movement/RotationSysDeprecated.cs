@@ -1,29 +1,20 @@
-﻿using System;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
-using Random = Unity.Mathematics.Random;
 
+[DisableAutoCreation]
 [UpdateInGroup(typeof(MainGameGroup))]
 [UpdateAfter(typeof(HeadingSys))]
-public class RotationSys : JobComponentSystem
+public class RotationSysDeprecated : JobComponentSystem
 {
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        NativeArray<Random> rngs = new NativeArray<Random>(Environment.ProcessorCount, Allocator.TempJob);
-        for (int i = 0; i < rngs.Length; i++)
-        {
-            rngs[i] = new Random(Rand.New().NextUInt());
-        }
-
         var job = new Job()
         {
-            Rngs = rngs,
             Dt = Time.deltaTime,
             Time = Time.time
         };
@@ -38,14 +29,8 @@ public class RotationSys : JobComponentSystem
     [BurstCompile]
     private struct Job : IJobForEach<Heading, Rotation>
     {
-        [NativeDisableParallelForRestriction]
-        [DeallocateOnJobCompletion]
-        public NativeArray<Random> Rngs;
         public float Dt;
         public float Time;
-
-        [NativeSetThreadIndex]
-        private int threadIndex;
 
         public void Execute([ReadOnly] ref Heading heading, ref Rotation rot)
         {

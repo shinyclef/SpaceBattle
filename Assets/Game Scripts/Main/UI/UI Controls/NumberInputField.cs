@@ -17,6 +17,7 @@ public class NumberInputField : MonoBehaviour
     private Color validColour;
     private bool isSetup = false;
 
+    public float LastValidValue { get; private set; }
     public bool ValidStateChanged { get; private set; }
     public bool IsValid { get; private set; }
 
@@ -38,6 +39,7 @@ public class NumberInputField : MonoBehaviour
         validColour = inputImage.color;
         IsValid = true;
         ValidStateChanged = false;
+        LastValidValue = float.Parse(input.text);
     }
 
     public bool IsDirty(object cleanValue)
@@ -58,6 +60,14 @@ public class NumberInputField : MonoBehaviour
     public void SetValueWithoutNotify(float val)
     {
         input.SetTextWithoutNotify(val.ToString());
+        bool wasValid = IsValid;
+        IsValid = FloatInputValidator.GetValidValue(input.text, out val);
+        ValidStateChanged = IsValid != wasValid;
+        DisplayAsValid(IsValid);
+        if (IsValid)
+        {
+            LastValidValue = val;
+        }
     }
 
     public void OnChanged()
@@ -70,6 +80,7 @@ public class NumberInputField : MonoBehaviour
         OnValueChanged?.Invoke(this);
         if (IsValid)
         {
+            LastValidValue = val;
             OnValueChangedValid?.Invoke(this);
         }
     }

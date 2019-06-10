@@ -7,8 +7,8 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(MainGameGroup))]
-[UpdateAfter(typeof(RotationSys))]
-public class VelocitySys : JobComponentSystem
+[UpdateAfter(typeof(RotationSysDeprecated))]
+public class VelocitySysDeprecated : JobComponentSystem
 {
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {

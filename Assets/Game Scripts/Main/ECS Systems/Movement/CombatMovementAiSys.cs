@@ -130,7 +130,8 @@ public class CombatMovementAiSys : JobComponentSystem
                                 {
                                     hasAngle = true;
                                     float headingToEnemy = Heading.FromFloat2(math.normalize(targetPos - l2w.Position.xy));
-                                    angle = math.abs(gmath.SignedInnerAngle(heading.CurrentHeading, headingToEnemy));
+                                    //angle = math.abs(gmath.SignedInnerAngle(heading.CurrentHeading, headingToEnemy));
+                                    angle = math.abs(gmath.SignedInnerAngle(l2w.Up.z, headingToEnemy)); // TODO: Confirm this is the same as the above commented out line
                                 }
 
                                 factValue = angle;

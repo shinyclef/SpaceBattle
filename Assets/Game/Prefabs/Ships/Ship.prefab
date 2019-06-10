@@ -15,8 +15,6 @@ GameObject:
   - component: {fileID: 8161561447836266484}
   - component: {fileID: 7563628909285009086}
   - component: {fileID: 6204970610823509874}
-  - component: {fileID: 6041310350132240650}
-  - component: {fileID: 7012521844023294521}
   - component: {fileID: 279122834050534173}
   - component: {fileID: 2003471660708500241}
   - component: {fileID: 192861545974098064}
@@ -29,6 +27,7 @@ GameObject:
   - component: {fileID: 150960301214975645}
   - component: {fileID: 3252467797196541155}
   - component: {fileID: 7949361866144093023}
+  - component: {fileID: 8359158497588073234}
   m_Layer: 0
   m_Name: Ship
   m_TagString: Untagged
@@ -122,9 +121,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_MotionType: 1
-  m_Mass: 0.001
-  m_LinearDamping: 0.01
-  m_AngularDamping: 0.05
+  m_Mass: 100
+  m_LinearDamping: 0.5
+  m_AngularDamping: 0.1
   m_InitialLinearVelocity:
     x: 0
     y: 0
@@ -133,7 +132,7 @@ MonoBehaviour:
     x: 0
     y: 0
     z: 0
-  m_GravityFactor: 1
+  m_GravityFactor: 0
   m_OverrideDefaultMassDistribution: 0
   m_CenterOfMass:
     x: 0
@@ -236,33 +235,6 @@ MonoBehaviour:
   FireMajorInterval: 3
   FireMinorInterval: 0.08
   FireBurstCount: 3
---- !u!114 &6041310350132240650
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5341682179256921529}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 60cadad451311aa47897f8de21c1c561, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Speed: 20
---- !u!114 &7012521844023294521
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5341682179256921529}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0590ee48fce93864cbca98807a2b775a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Acceleration: 200
-  MaxTurnSpeed: 200
 --- !u!114 &279122834050534173
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -349,7 +321,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb9347ec6ac30104c853aec769e3faec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  QueryRange: 500
 --- !u!114 &5468421705742004189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -410,3 +381,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 242f7b7e06984244cb6f345644447426, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &8359158497588073234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5341682179256921529}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b55231e5652004246ba823af4e73b697, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Acceleration: 20
+  MaxSpeed: 20
+  AngularAcceleration: 20
+  AngularMaxSpeed: 20
