@@ -39,7 +39,9 @@ public class NumberInputField : MonoBehaviour
         validColour = inputImage.color;
         IsValid = true;
         ValidStateChanged = false;
-        LastValidValue = float.Parse(input.text);
+        float lastValidValue;
+        float.TryParse(input.text, out lastValidValue);
+        LastValidValue = lastValidValue;
     }
 
     public bool IsDirty(object cleanValue)

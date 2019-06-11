@@ -6952,7 +6952,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &875533797
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6972,8 +6972,8 @@ MonoBehaviour:
   MaxShips: 1
   SpawnRatePerSecond: 500
   SpawnSpread:
-    x: 100
-    y: 20
+    x: 0
+    y: 0
     z: 0
 --- !u!114 &875533798
 MonoBehaviour:
@@ -12299,8 +12299,8 @@ MonoBehaviour:
   MaxShips: 1
   SpawnRatePerSecond: 500
   SpawnSpread:
-    x: 100
-    y: 20
+    x: 0
+    y: 0
     z: 0
 --- !u!114 &1741158130
 MonoBehaviour:
@@ -12757,7 +12757,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1813004060
 MonoBehaviour:
   m_ObjectHideFlags: 0

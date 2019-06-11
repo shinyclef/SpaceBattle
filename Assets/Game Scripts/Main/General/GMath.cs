@@ -15,24 +15,9 @@ public static class gmath
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float QuaternionToHeading(quaternion q)
-    {
-        float4 v = q.value;
-        float siny_cosp = 2.0f * (v.w * v.z + v.x * v.y);
-        float cosy_cosp = 1.0f - 2.0f * (v.y * v.y + v.z * v.z);
-        return ToAngleRange360(-degrees(atan2(siny_cosp, cosy_cosp)));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float DirectionToHeading(float2 dir)
-    {
-        return ToAngleRange360(degrees(atan2(dir.x, dir.y)));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float2 HeadingToFloat2(float heading)
     {
-        return Unity.Mathematics.quaternion.EulerXYZ(0f, 0f, radians(heading)).Up().xy;
+        return Unity.Mathematics.quaternion.EulerXYZ(0f, 0f, radians(-heading)).Up().xy;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

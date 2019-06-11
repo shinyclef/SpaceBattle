@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 5917063259637586277}
   - component: {fileID: 8161561447836266484}
   - component: {fileID: 7563628909285009086}
+  - component: {fileID: 8359158497588073234}
   - component: {fileID: 6204970610823509874}
   - component: {fileID: 279122834050534173}
   - component: {fileID: 2003471660708500241}
@@ -27,7 +28,6 @@ GameObject:
   - component: {fileID: 150960301214975645}
   - component: {fileID: 3252467797196541155}
   - component: {fileID: 7949361866144093023}
-  - component: {fileID: 8359158497588073234}
   m_Layer: 0
   m_Name: Ship
   m_TagString: Untagged
@@ -120,10 +120,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccea9ea98e38942e0b0938c27ed1903e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_MotionType: 1
-  m_Mass: 100
-  m_LinearDamping: 0.5
-  m_AngularDamping: 0.1
+  m_MotionType: 0
+  m_Mass: 1
+  m_LinearDamping: 0.1
+  m_AngularDamping: 2
   m_InitialLinearVelocity:
     x: 0
     y: 0
@@ -214,6 +214,22 @@ MonoBehaviour:
     m_CustomFlags:
       m_Override: 0
       m_Value: 0000000000000000
+--- !u!114 &8359158497588073234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5341682179256921529}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b55231e5652004246ba823af4e73b697, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Acceleration: 10
+  MaxSpeed: 15
+  AngularAcceleration: 4
+  AngularMaxSpeed: 5
 --- !u!114 &6204970610823509874
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -381,19 +397,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 242f7b7e06984244cb6f345644447426, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &8359158497588073234
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5341682179256921529}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b55231e5652004246ba823af4e73b697, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Acceleration: 20
-  MaxSpeed: 20
-  AngularAcceleration: 20
-  AngularMaxSpeed: 20

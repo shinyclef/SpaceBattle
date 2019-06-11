@@ -1,29 +1,31 @@
 ﻿using NUnit.Framework;
 using System.Collections.Generic;
-using Unity.Collections;
 using Unity.Mathematics;
 
 namespace Tests
 {
-    public class HeadingUtilsTest : AssertionHelper
+    public class HeavingVsFloat2 : AssertionHelper
     {
         [Test]
         public void KeysTest()
         {
-            var pairs = new Dictionary<float, float2>
+            var headings = new List<float>()
             {
-                { 0f, new float2(0f, 1f) },
-                { 90f, new float2(-1f, 0f) },
-                { 180f, new float2(0f, -1f) },
-                { 270f, new float2(1f, 0f) },
-                { 360f, new float2(0f, 1f) },
+                0f,
+                90f,
+                180f,
+                270f,
+                360f
             };
 
-            foreach (var pair in pairs)
+            Logger.Msg("-----------------");
+            Logger.Msg("Heading to Float2");
+            Logger.Msg("-----------------");
+            foreach (var h in headings)
             {
-                float2 res = gmath.HeadingToFloat2(pair.Key);
-                Expect(res.x == pair.Value.x, $"heading: {pair.Key}, vector: {res}, expected: {pair.Value}");
-                Expect(res.y == pair.Value.y, $"heading: {pair.Key}, vector: {res}, expected: {pair.Value}");
+                float2 res = gmath.HeadingToFloat2(h);
+                float backAgain = math.round(gmath.Float2ToHeading(res) * 100f) / 100f;
+                Logger.Msg($"{h} -> {math.round(res * 100f) / 100f} -> {backAgain}");
             }
         }
     }
