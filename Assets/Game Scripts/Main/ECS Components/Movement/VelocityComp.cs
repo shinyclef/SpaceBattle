@@ -6,8 +6,8 @@ using UnityEngine;
 [Serializable]
 public struct Velocity : IComponentData
 {
-    public float2 Value;
     public float Speed;
+    public float2 Value;
 }
 
 public class VelocityComp : MonoBehaviour, IConvertGameObjectToEntity

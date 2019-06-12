@@ -1,8 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
 using Unity.Mathematics;
-using static Unity.Mathematics.math;
+using m = Unity.Mathematics.math;
 
-public static class gmath
+public struct gmath
 {
     private static float3 forward = new float3(0, 0, 1);
     private static float3 up = new float3(0, 1, 0);
@@ -11,14 +11,25 @@ public static class gmath
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Float2ToHeading(float2 dir)
     {
-        return ToAngleRange360(degrees(atan2(dir.x, dir.y)));
+        return ToAngleRange360(m.degrees(m.atan2(dir.x, dir.y)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float2 HeadingToFloat2(float heading)
     {
-        return Unity.Mathematics.quaternion.EulerXYZ(0f, 0f, radians(-heading)).Up().xy;
+        heading = m.radians(heading);
+        return new float2(m.sin(heading), m.cos(heading));
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float QuaternionToHeading(quaternion q)
+    {
+        float4 v = q.value;
+        float siny_cosp = 2.0f * (v.w * v.z + v.x * v.y);
+        float cosy_cosp = 1.0f - 2.0f * (v.y * v.y + v.z * v.z);
+        return -m.degrees(m.atan2(siny_cosp, cosy_cosp));
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float SignedInnerAngle(float from, float to)
@@ -31,7 +42,7 @@ public static class gmath
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Magnitude(float2 v)
     {
-        return sqrt(v.x * v.x + v.y * v.y);
+        return m.sqrt(v.x * v.x + v.y * v.y);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -43,7 +54,7 @@ public static class gmath
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float MathMod(float x, float n)
     {
-        return x - floor(x / n) * n;
+        return x - m.floor(x / n) * n;
     }
 
     /// <summary>

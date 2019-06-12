@@ -6,10 +6,8 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[DisableAutoCreation]
 [UpdateInGroup(typeof(MainGameGroup))]
-[UpdateAfter(typeof(RotationSysDeprecated))]
-public class MovementSysDeprecated : JobComponentSystem
+public class MovementSys : JobComponentSystem
 {
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {

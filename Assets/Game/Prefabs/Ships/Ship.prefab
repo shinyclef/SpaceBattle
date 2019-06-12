@@ -24,7 +24,6 @@ GameObject:
   - component: {fileID: 1877101153095096233}
   - component: {fileID: 7009076720088332688}
   - component: {fileID: 5468421705742004189}
-  - component: {fileID: 4719083850618633891}
   - component: {fileID: 150960301214975645}
   - component: {fileID: 3252467797196541155}
   - component: {fileID: 7949361866144093023}
@@ -122,8 +121,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_MotionType: 0
   m_Mass: 1
-  m_LinearDamping: 0.1
-  m_AngularDamping: 2
+  m_LinearDamping: 0.2
+  m_AngularDamping: 8
   m_InitialLinearVelocity:
     x: 0
     y: 0
@@ -226,10 +225,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b55231e5652004246ba823af4e73b697, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Acceleration: 10
-  MaxSpeed: 15
-  AngularAcceleration: 4
-  AngularMaxSpeed: 5
+  Acceleration: 40
+  MaxSpeed: 25
+  AngularAcceleration: 40
+  AngularMaxSpeed: 30
 --- !u!114 &6204970610823509874
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -347,18 +346,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: aa3d7d7b8353c554fa013e0065a192f5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &4719083850618633891
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5341682179256921529}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b39dd80934ffff4f80f683108db29f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &150960301214975645

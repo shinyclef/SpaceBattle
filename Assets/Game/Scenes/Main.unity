@@ -38,13 +38,13 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.0010926536, g: -0.0005153499, b: 0.018573537, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 11
-  m_GIWorkflowMode: 0
+  m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -6969,11 +6969,11 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 1779965215723008332, guid: 226f7a2bc172211499316757943251a2,
     type: 3}
-  MaxShips: 1
+  MaxShips: 100
   SpawnRatePerSecond: 500
   SpawnSpread:
-    x: 0
-    y: 0
+    x: 100
+    y: 20
     z: 0
 --- !u!114 &875533798
 MonoBehaviour:
@@ -12296,11 +12296,11 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 2944533906311966927, guid: 19d1abca87912fc44b88ab83a16449aa,
     type: 3}
-  MaxShips: 1
+  MaxShips: 100
   SpawnRatePerSecond: 500
   SpawnSpread:
-    x: 0
-    y: 0
+    x: 100
+    y: 20
     z: 0
 --- !u!114 &1741158130
 MonoBehaviour:
@@ -12757,7 +12757,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1813004060
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12774,7 +12774,7 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 4903339397265122764, guid: d6ed2930c3712744caaf13322c21c6ff,
     type: 3}
-  MaxShips: 1
+  MaxShips: 100
   SpawnRatePerSecond: 500
   SpawnSpread:
     x: 100

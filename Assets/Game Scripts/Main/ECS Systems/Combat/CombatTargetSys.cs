@@ -51,7 +51,7 @@ public class CombatTargetSys : JobComponentSystem
             {
                 LocalToWorld targetL2W = L2WComps[target.Entity];
                 target.Pos = targetL2W.Position.xy;
-                target.Heading = Heading.FromFloat2(targetL2W.Up.xy);
+                target.Heading = gmath.Float2ToHeading(targetL2W.Up.xy);
             }
             else
             {

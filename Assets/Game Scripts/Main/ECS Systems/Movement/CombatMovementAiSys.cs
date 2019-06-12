@@ -55,7 +55,7 @@ public class CombatMovementAiSys : JobComponentSystem
     }
 
     [BurstCompile]
-    private struct Job : IJobForEachWithEntity<CombatTarget, LocalToWorld, MoveDestination, CombatMovement, Heading>
+    private struct Job : IJobForEachWithEntity<CombatTarget, LocalToWorld, MoveDestination, CombatMovement>
     {
         [NativeDisableContainerSafetyRestriction] public NativeArray<Random> Rngs;
         [NativeDisableParallelForRestriction] public BufferFromEntity<UtilityScoreBuf> UtilityScoreBufs;
@@ -80,8 +80,7 @@ public class CombatMovementAiSys : JobComponentSystem
             [ReadOnly] ref CombatTarget target,
             [ReadOnly] ref LocalToWorld l2w,
             ref MoveDestination dest,
-            ref CombatMovement cm,
-            ref Heading heading)
+            ref CombatMovement cm)
         {
             //eId = entity.Index;
             if (target.Entity != Entity.Null)
@@ -129,9 +128,12 @@ public class CombatMovementAiSys : JobComponentSystem
                                 if (!hasAngle)
                                 {
                                     hasAngle = true;
-                                    float headingToEnemy = Heading.FromFloat2(math.normalize(targetPos - l2w.Position.xy));
+                                    float2 dirToEnemy = math.normalize(targetPos - l2w.Position.xy);
+                                    float2 travelDir = l2w.Up.xy;
+                                    float dot = math.dot(dirToEnemy, travelDir);
+                                    angle = (1 - ((dot + 1f) / 2f)) * 180f;
                                     //angle = math.abs(gmath.SignedInnerAngle(heading.CurrentHeading, headingToEnemy));
-                                    angle = math.abs(gmath.SignedInnerAngle(l2w.Up.z, headingToEnemy)); // TODO: Confirm this is the same as the above commented out line
+                                    //angle = math.abs(gmath.SignedInnerAngle(l2w.Up.z, dirToEnemy)); // TODO: Confirm this is the same as the above commented out line
                                 }
 
                                 factValue = angle;

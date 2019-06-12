@@ -19,13 +19,7 @@ public class PhysicsGameGroup : ComponentSystemGroup
 public class MainGameGroup : ComponentSystemGroup
 {
     LifeTimeExpireSys LifeTimeExpireSys;
-    HeadingSys HeadingSys;
-    
-    //Deprecated
-    //RotationSys RotationSys;
-    //VelocitySys VelocitySys;
-    //MovementSys MovementSys;
-
+    MovementSys MovementSys;
     CombatTargetSys CombatTargetSys;
     CombatMovementAiSys CombatMovementAiSys;
     DamageHealthOnTriggerSys DamageHealthOnTriggerSys;

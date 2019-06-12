@@ -75,8 +75,7 @@ public class ShipSpawnerSpawnSys : JobComponentSystem
             ActiveShipCounts[(int)faction.Value] = spawner.ActiveShipCount;
 
             float3 ss = spawner.SpawnSpread;
-            float heading = Heading.FromQuaternion(rot.Value);
-            float2 moveDest = tran.Value.xy + gmath.HeadingToFloat2(heading);
+            float2 moveDest = tran.Value.xy + rot.Value.Up().xy;
             for (int i = 0; i < spawnCount; i++)
             {
                 float3 pos = math.transform(l2w.Value, new float3(Rand.NextFloat(-ss.x, ss.x),
@@ -85,7 +84,7 @@ public class ShipSpawnerSpawnSys : JobComponentSystem
 
                 Entity ship = CommandBuffer.Instantiate(spawner.ShipPrefab);
                 CommandBuffer.SetComponent(ship, new Translation { Value = pos });
-                CommandBuffer.SetComponent(ship, new Heading(heading));
+                CommandBuffer.SetComponent(ship, new Rotation { Value = rot.Value });
                 CommandBuffer.SetComponent(ship, new MoveDestination(moveDest, false));
                 CommandBuffer.SetComponent(ship, new SpawnTime(Time));
                 CommandBuffer.SetComponent(ship, new CombatMovement(Rand.NextFloat()));
