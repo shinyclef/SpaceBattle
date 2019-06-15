@@ -35,25 +35,20 @@ public class Config : MonoBehaviour
     private static void SetupPaths()
     {
         // setup the paths
+        const string Sep = @"\";
         RootPath = Directory.GetParent(Application.dataPath).FullName + @"\";
 
-        ScreenshotsPathRelative = @"Screenshots\";
+        ScreenshotsPathRelative = $"Screenshots{Sep}";
         ScreenshotsPath = RootPath + ScreenshotsPathRelative;
 
-        SettingsPathRelative = @"Settings\";
+        SettingsPathRelative = $"Settings{Sep}";
         SettingsPath = RootPath + SettingsPathRelative;
 
-        AiPathRelative = @"AI.json";
+        AiPathRelative = "AI.json";
         AiPath = RootPath + SettingsPathRelative + AiPathRelative;
 
-        PlayerSettingsPathRelative = @"PlayerSettings.json";
+        PlayerSettingsPathRelative = "PlayerSettings.json";
         PlayerSettingsPath = RootPath + SettingsPathRelative + PlayerSettingsPathRelative;
-
-        // create the folders if they don't exist
-        if (!Directory.Exists(ScreenshotsPath))
-        {
-            Directory.CreateDirectory(ScreenshotsPath);
-        }
 
         // create the folders if they don't exist
         if (!Directory.Exists(ScreenshotsPath))

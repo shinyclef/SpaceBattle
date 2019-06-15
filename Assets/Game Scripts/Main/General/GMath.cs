@@ -9,6 +9,27 @@ public struct gmath
     private static float3 right = new float3(1, 0, 0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float AngleBetweenVectors(float2 a, float2 b)
+    {
+        return (1 - ((m.dot(a, b) + 1f) / 2f)) * 180f;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float AngleBetweenVectorsSigned(float2 from, float2 to)
+    {
+        return m.degrees(m.atan2(to.x * from.y - to.y * from.x, to.x * from.x + to.y * from.y));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float2 RotateVector(float2 v, float degrees)
+    {
+        float r = m.radians(-degrees);
+        var c = m.cos(r);
+        var s = m.sin(r);
+        return new float2(c * v.x - s * v.y, s * v.x + c * v.y);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Float2ToHeading(float2 dir)
     {
         return ToAngleRange360(m.degrees(m.atan2(dir.x, dir.y)));
@@ -29,7 +50,6 @@ public struct gmath
         float cosy_cosp = 1.0f - 2.0f * (v.y * v.y + v.z * v.z);
         return -m.degrees(m.atan2(siny_cosp, cosy_cosp));
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float SignedInnerAngle(float from, float to)

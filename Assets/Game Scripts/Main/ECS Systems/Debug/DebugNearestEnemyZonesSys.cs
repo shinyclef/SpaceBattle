@@ -33,8 +33,24 @@ public class DebugNearestEnemyZonesSys : JobComponentSystem
 
         for (int i = 0; i < keys.Length; i++)
         {
-            Entity e = bufs[vals[i]][0];
-            Debug.DrawLine(new float3(keys[i].xy, 0), l2ws[e].Position, cols[keys[i].z - 1], 0.01f);
+            if (keys[i].z != 3)
+            {
+                continue;
+            }
+
+            DynamicBuffer<NearbyEnemyBuf> buf = bufs[vals[i]];
+            for (int j = 0; j < buf.Length; j++)
+            {
+                Entity e = buf[j];
+                if (e == Entity.Null)
+                {
+                    break;
+                }
+
+                Debug.DrawLine(new float3(keys[i].xy, 0), l2ws[e].Position, cols[keys[i].z - 1], 0.01f);
+            }
+
+            break;
         }
 
         return inputDeps;

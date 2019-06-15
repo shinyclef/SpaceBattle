@@ -89,7 +89,7 @@ public class CombatMovementAiSys : JobComponentSystem
                 float2 targetPos = target.Pos;
                 Random rand = Rngs[threadId];
                 ChoiceType selectedChoice;
-                if (Time - cm.LastEvalTime < 0.3f)
+                if (Time - cm.LastEvalTime < 0.0f)
                 {
                     selectedChoice = cm.CurrentChoice;
                 }
@@ -128,12 +128,8 @@ public class CombatMovementAiSys : JobComponentSystem
                                 if (!hasAngle)
                                 {
                                     hasAngle = true;
-                                    float2 dirToEnemy = math.normalize(targetPos - l2w.Position.xy);
-                                    float2 travelDir = l2w.Up.xy;
-                                    float dot = math.dot(dirToEnemy, travelDir);
-                                    angle = (1 - ((dot + 1f) / 2f)) * 180f;
-                                    //angle = math.abs(gmath.SignedInnerAngle(heading.CurrentHeading, headingToEnemy));
-                                    //angle = math.abs(gmath.SignedInnerAngle(l2w.Up.z, dirToEnemy)); // TODO: Confirm this is the same as the above commented out line
+                                    float2 dirToEnemy = math.normalizesafe(targetPos - l2w.Position.xy);
+                                    angle = gmath.AngleBetweenVectors(dirToEnemy, l2w.Up.xy);
                                 }
 
                                 factValue = angle;

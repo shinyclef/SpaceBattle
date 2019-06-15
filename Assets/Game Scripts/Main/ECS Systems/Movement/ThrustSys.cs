@@ -38,10 +38,14 @@ public class ThrustSys : JobComponentSystem
             /* -- Angular -- */
             /* ------------- */
 
+            const float MaxCorrectionAngle = 20f;
+
             // calculate the desired thrust vector
             float currentH = gmath.Float2ToHeading(l2w.Up.xy);
-            float2 relativeDir = math.normalize(dest.Value - l2w.Position.xy);
-            float targetH = gmath.Float2ToHeading(relativeDir);
+            float2 targetDir = math.normalizesafe(dest.Value - l2w.Position.xy);
+            float degDelta = math.clamp(gmath.AngleBetweenVectorsSigned(math.normalizesafe(vel.Linear.xy), targetDir), -MaxCorrectionAngle, MaxCorrectionAngle);
+            targetDir = gmath.RotateVector(targetDir, degDelta);
+            float targetH = gmath.Float2ToHeading(targetDir);
 
             // rotate towards it by applying angular force
             float signedInnerAngle = gmath.SignedInnerAngle(currentH, targetH);
@@ -51,7 +55,7 @@ public class ThrustSys : JobComponentSystem
             const float slowDownDist = 90f;
             float absAngle = math.abs(signedInnerAngle);
             float normDistance = math.clamp(absAngle / slowDownDist, 0f, 1f);
-            float slowDownMultiplier = -1 * math.pow(normDistance - 1f, 2f) + 1f; // utility = Slope * pow((input - XShift), E) + YShift
+            float slowDownMultiplier = -1 * (normDistance - 1f) * (normDistance - 1f) + 1f; // utility = Slope * pow((input - XShift), E) + YShift
 
             // get added force and apply to velocity
             float addedAForce = thrust.AngularAcceleration * Dt * sign * slowDownMultiplier;
@@ -63,13 +67,12 @@ public class ThrustSys : JobComponentSystem
                 vel.ApplyAngularImpulse(mass, compensationForce);
             }
 
-
             /* ------------ */
             /* -- Linear -- */
             /* ------------ */
 
-            // thrust if we are rotated nearly the right way. This modifies physics velocity.
-            float2 addedForce = gmath.HeadingToFloat2(currentH) * thrust.Acceleration * Dt * (1 - slowDownMultiplier);
+            // thrust if we are rotated nearly the right way. This modifies physics velocity
+            float2 addedForce = gmath.HeadingToFloat2(currentH) * thrust.Acceleration * Dt;// * (1 - (slowDownMultiplier / 5f));
             vel.ApplyLinearImpulse(mass, new float3 (addedForce, 0f));
             float2 speedLimitCorrection = math.max(0f, gmath.Magnitude(vel.Linear.xy) - thrust.MaxSpeed) * -math.normalize(vel.Linear.xy);
             vel.ApplyLinearImpulse(mass, new float3(speedLimitCorrection, 0f));

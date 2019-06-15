@@ -7,6 +7,7 @@ using Unity.Physics;
 using Unity.Physics.Systems;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 [UpdateInGroup(typeof(MainGameGroup))]
 [AlwaysUpdateSystem]
@@ -37,7 +38,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
         nearestEnemiesBufferEntitiesMap = new NativeHashMap<int3, Entity>(1, Allocator.Persistent);
         activeZones = new NativeHashMap<int3, float>(1, Allocator.Persistent);
         keys = new NativeList<int3>(Allocator.Persistent);
-        EnsureMinimumCapacity(4);
+        EnsureMinimumCapacity(1024);
 
         buildPhysicsWorldSys = World.GetOrCreateSystem<BuildPhysicsWorld>();
         stepPhysicsWorldSys = World.GetOrCreateSystem<StepPhysicsWorld>();
@@ -56,22 +57,23 @@ public class NearestEnemyRequestSys : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        int count = nearestEnemyReceiversQuery.CalculateLength();
-        EnsureMinimumCapacity(count);
-        PrepareQueriedZonesMap(count);
+        int queriedZonesCount = nearestEnemyReceiversQuery.CalculateLength();
+        EnsureMinimumCapacity(queriedZonesCount);
+        PrepareQueriedZonesMap(queriedZonesCount);
 
         // 1. Populate queriedZones, parallel
         inputDeps = new PopulateQueriedZonesJob()
         {
-            QueriedZones = queriedZones.ToConcurrent(),
+            QueriedZones = this.queriedZones.ToConcurrent(),
         }.Schedule(this, inputDeps);
 
         // 2. Update activeZones, single thread
         inputDeps = new UpdateActiveZonesMapJob()
         {
+            FRAME = Time.frameCount,
             Time = Time.time,
             ActiveZones = activeZones,
-            QueriedZones = queriedZones,
+            QueriedZones = this.queriedZones,
             NearestEnemiesBufferEntitiesMap = nearestEnemiesBufferEntitiesMap,
             BufferEntityPool = bufferEntityPool,
             NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(false),
@@ -130,15 +132,11 @@ public class NearestEnemyRequestSys : JobComponentSystem
 
     private void EnsureMinimumCapacity(int minCount)
     {
-        if (activeZones.Capacity < minCount)
+        // Guarantee there are enough nearby enemy buffer entitites
+        int newBufferEntityCount = minCount - bufferEntityPool.Count;
+        if (newBufferEntityCount > 0)
         {
-            int newLen = math.max(activeZones.Length * 2, 1);
-            while (newLen < minCount)
-            {
-                newLen *= 2;
-            }
-
-            var newPoolEntities = new NativeArray<Entity>(newLen - activeZones.Capacity, Allocator.TempJob);
+            var newPoolEntities = new NativeArray<Entity>(newBufferEntityCount, Allocator.TempJob);
             EntityManager.CreateEntity(archetype, newPoolEntities);
             for (int i = 0; i < newPoolEntities.Length; i++)
             {
@@ -146,6 +144,16 @@ public class NearestEnemyRequestSys : JobComponentSystem
             }
 
             newPoolEntities.Dispose();
+        }
+        
+        // increase capacity of other collections
+        if (activeZones.Capacity < minCount)
+        {
+            int newLen = math.max(activeZones.Length * 2, 1);
+            while (newLen < minCount)
+            {
+                newLen *= 2;
+            }
 
             var newZoneTargetBuffers = new NativeHashMap<int3, Entity>(newLen, Allocator.Persistent);
             NativeArray<int3> oldKeys = nearestEnemiesBufferEntitiesMap.GetKeyArray(Allocator.TempJob);
@@ -193,6 +201,8 @@ public class NearestEnemyRequestSys : JobComponentSystem
     [BurstCompile]
     private struct UpdateActiveZonesMapJob : IJob
     {
+        public int FRAME;
+
         public float Time;
         public NativeHashMap<int3, float> ActiveZones;
         [ReadOnly] public NativeHashMap<int3, byte> QueriedZones;
@@ -218,6 +228,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
                     NearestEnemiesBufferEntitiesMap.TryGetValue(bucket, out Entity e);
                     {
                         BufferEntityPool.Enqueue(e);
+                        //Logger.Log($"{FRAME}: Enqueue A. Len {BufferEntityPool.Count}");
                     }
 
                     NearestEnemiesBufferEntitiesMap.Remove(bucket);
@@ -240,9 +251,8 @@ public class NearestEnemyRequestSys : JobComponentSystem
                     {
                         // in this case I need to return the buffer to pool
                         NearestEnemiesBufferEntitiesMap.TryGetValue(bucket, out Entity e);
-                        {
-                            BufferEntityPool.Enqueue(e);
-                        }
+                        BufferEntityPool.Enqueue(e);
+                        //Logger.Log($"{FRAME}: Enqueue B. Len {BufferEntityPool.Count}");
 
                         NearestEnemiesBufferEntitiesMap.Remove(bucket);
                         ActiveZones.Remove(bucket);
@@ -260,9 +270,11 @@ public class NearestEnemyRequestSys : JobComponentSystem
                 if (!ActiveZones.TryGetValue(bucket, out _))
                 {
                     // add nearest enemy buffer and activeZones
+                    //Logger.Log($"{FRAME}: {bucket} Dequeue.  Len {BufferEntityPool.Count}");
                     NearestEnemiesBufferEntitiesMap.TryAdd(bucket, BufferEntityPool.Dequeue());
                     ActiveZones.TryAdd(bucket, float.MinValue);
-                    //Logger.Log($"{FRAME}: Adding {bucket} after pass1: {pass1}, pass2: {pass2}, len: {ActiveZones.Length}");
+                    //Logger.Log($"{FRAME}: Adding {bucket} len: {ActiveZones.Length}");
+                    
                 }
             }
 
@@ -287,7 +299,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
         }
     }
 
-    [BurstCompile]
+    //[BurstCompile]
     private struct ScanForEnemiesJob : IJobParallelForDefer
     {
         private const float ScanRange = 700f;
@@ -320,12 +332,163 @@ public class NearestEnemyRequestSys : JobComponentSystem
                     }
                 };
 
-                DistanceHit hit;
-                if (CollisionWorld.CalculateDistance(pointInput, out hit))
+
+                NativeList<DistanceHit> hits = new NativeList<DistanceHit>(5, Allocator.Temp);
+                var collector = new ClosestHitsCollector<DistanceHit>(pointInput.MaxDistance, hits);
+                //var collector = new AllHitsCollector<DistanceHit>(pointInput.MaxDistance, ref hits); // works fine
+                if (CollisionWorld.CalculateDistance(pointInput, ref collector))
                 {
-                    buf.Add(CollisionWorld.Bodies[hit.RigidBodyIndex].Entity);
+                    for (int i = 0; i < hits.Length; i++)
+                    {
+                        buf.Add(CollisionWorld.Bodies[hits[i].RigidBodyIndex].Entity);
+                    }
                 }
+
+
+                //DistanceHit hit;
+                //NativeList<DistanceHit> hits = new NativeList<DistanceHit>(5, Allocator.Temp);
+                //if (CollisionWorld.CalculateDistance(pointInput, ref hits))
+                //{
+                //    for (int i = 0; i < hits.Length; i++)
+                //    {
+                //        buf.Add(CollisionWorld.Bodies[hits[i].RigidBodyIndex].Entity);
+                //    }
+                //}
+
+
+                //DistanceHit hit;
+                //if (CollisionWorld.CalculateDistance(pointInput, out hit))
+                //{
+                //    buf.Add(CollisionWorld.Bodies[hit.RigidBodyIndex].Entity);
+                //}
             }
         }
+    }
+
+    public struct ClosestHitsCollector<T> : ICollector<T> where T : struct, IQueryResult
+    {
+        public NativeList<T> ClosestHits;
+
+        public bool EarlyOutOnFirstHit => false;
+
+        public float MaxFraction { get; private set; }
+
+        public int NumHits => ClosestHits.Length;
+
+        public ClosestHitsCollector(float maxFraction, NativeList<T> closestHits)
+        {
+            Assert.IsTrue(closestHits.Capacity > 1);
+            MaxFraction = maxFraction;
+            ClosestHits = closestHits;
+        }
+
+        #region ICollector
+
+        public bool AddHit(T hit)
+        {
+            Assert.IsTrue(hit.Fraction <= MaxFraction);
+            if (NumHits < ClosestHits.Capacity)
+            {
+                ClosestHits.Add(hit);
+            }
+            else // if I comment out this whole else block, at least the filter is respected. Why isn't it respected if I leave it in?
+            {
+                // replace existing furthest hit
+                int furthestIndex = 0;
+                float furthest = ClosestHits[0].Fraction;
+                MaxFraction = -1;
+                for (int i = 1; i < NumHits; i++)
+                {
+                    float frac = ClosestHits[i].Fraction;
+                    if (frac > MaxFraction)
+                    {
+                        if (frac > furthest)
+                        {
+                            MaxFraction = furthest;
+                            furthest = frac;
+                            furthestIndex = i;
+                        }
+                        else
+                        {
+                            MaxFraction = frac;
+                        }
+                    }
+                }
+
+                ClosestHits.RemoveAtSwapBack(furthestIndex);
+                ClosestHits.Add(hit);
+                MaxFraction = math.max(hit.Fraction, MaxFraction);
+            }
+
+            return true;
+        }
+
+        public void TransformNewHits(int oldNumHits, float oldFraction, Math.MTransform transform, uint numSubKeyBits, uint subKey)
+        {
+            for (int i = oldNumHits; i < NumHits; i++)
+            {
+                T hit = ClosestHits[i];
+                hit.Transform(transform, numSubKeyBits, subKey);
+                ClosestHits[i] = hit;
+            }
+        }
+
+        public void TransformNewHits(int oldNumHits, float oldFraction, Math.MTransform transform, int rigidBodyIndex)
+        {
+            for (int i = oldNumHits; i < NumHits; i++)
+            {
+                T hit = ClosestHits[i];
+                hit.Transform(transform, rigidBodyIndex);
+                ClosestHits[i] = hit;
+            }
+        }
+
+        #endregion
+    }
+
+    public struct AllHitsCollector<T> : ICollector<T> where T : struct, IQueryResult
+    {
+        public bool EarlyOutOnFirstHit => false;
+        public float MaxFraction { get; }
+        public int NumHits => AllHits.Length;
+
+        public NativeList<T> AllHits;
+
+        public AllHitsCollector(float maxFraction, ref NativeList<T> allHits)
+        {
+            MaxFraction = maxFraction;
+            AllHits = allHits;
+        }
+
+        #region
+
+        public bool AddHit(T hit)
+        {
+            Assert.IsTrue(hit.Fraction < MaxFraction);
+            AllHits.Add(hit);
+            return true;
+        }
+
+        public void TransformNewHits(int oldNumHits, float oldFraction, Math.MTransform transform, uint numSubKeyBits, uint subKey)
+        {
+            for (int i = oldNumHits; i < NumHits; i++)
+            {
+                T hit = AllHits[i];
+                hit.Transform(transform, numSubKeyBits, subKey);
+                AllHits[i] = hit;
+            }
+        }
+
+        public void TransformNewHits(int oldNumHits, float oldFraction, Math.MTransform transform, int rigidBodyIndex)
+        {
+            for (int i = oldNumHits; i < NumHits; i++)
+            {
+                T hit = AllHits[i];
+                hit.Transform(transform, rigidBodyIndex);
+                AllHits[i] = hit;
+            }
+        }
+
+        #endregion
     }
 }

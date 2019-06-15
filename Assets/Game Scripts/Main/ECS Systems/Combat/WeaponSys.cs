@@ -1,5 +1,4 @@
-﻿using Unity.Burst;
-using Unity.Collections;
+﻿using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -57,7 +56,7 @@ public class WeaponSys : JobComponentSystem
     }
 
     //[BurstCompile]
-    private struct FireWeaponJob : IJobForEachWithEntity<MoveDestination, LocalToWorld, Rotation, CombatTarget, Weapon>
+    private struct FireWeaponJob : IJobForEachWithEntity<MoveDestination, LocalToWorld, CombatTarget, PhysicsVelocity, Weapon>
     {
         public NativeQueue<ProjectileSpawnData>.Concurrent Projectiles;
         [ReadOnly] public ComponentDataFromEntity<PhysicsVelocity> PhysicsVelocityData;
@@ -68,8 +67,8 @@ public class WeaponSys : JobComponentSystem
         public void Execute(Entity entity, int index,
             [ReadOnly] ref MoveDestination moveDest,
             [ReadOnly] ref LocalToWorld l2w,
-            [ReadOnly] ref Rotation rot,
             [ReadOnly] ref CombatTarget target,
+            [ReadOnly] ref PhysicsVelocity vel,
             ref Weapon wep)
         {
             if (wep.CooldownEnd == 0)
@@ -103,7 +102,7 @@ public class WeaponSys : JobComponentSystem
             {
                 float2 targetDir = math.normalize(target.Pos - l2w.Position.xy);
                 float2 forwardDir = l2w.Up.xy;
-                if (math.dot(targetDir, forwardDir) > 0.995f)
+                if (math.dot(targetDir, forwardDir) > 0.998f)
                 {
                     float2 projectedEnemyPos = moveDest.Value + PhysicsVelocityData[target.Entity].Linear.xy * (wep.projectileLifeTime * 0.9f);
                     if (math.distance(l2w.Position.xy, projectedEnemyPos) < wep.projectileRange)
@@ -124,13 +123,13 @@ public class WeaponSys : JobComponentSystem
 
             if (fire)
             {
-                float3 pos = l2w.Position + wep.SpawnOffset.LocalToWorldPos(rot.Value);
+                float3 pos = l2w.Position + l2w.Up;
                 ProjectileSpawnData data = new ProjectileSpawnData
                 {
                     PrefabEntity = wep.ProjectilePrefab,
                     Pos = pos.xy,
-                    Rot = rot.Value,
-                    Speed = VelocityData[wep.ProjectilePrefab].Speed
+                    Rot = quaternion.EulerXYZ(l2w.Up),
+                    Velocity = l2w.Up.xy * VelocityData[wep.ProjectilePrefab].Speed + vel.Linear.xy
                 };
 
                 Projectiles.Enqueue(data);
@@ -152,7 +151,7 @@ public class WeaponSys : JobComponentSystem
                 BeginSimCB.SetComponent(proj, new Translation { Value = new float3(data.Pos, 0f) });
                 BeginSimCB.SetComponent(proj, new Rotation { Value = data.Rot });
                 BeginSimCB.SetComponent(proj, new SpawnTime { Value = Time });
-                BeginSimCB.SetComponent(proj, new Velocity { Value = data.Rot.Up().xy * data.Speed });
+                BeginSimCB.SetComponent(proj, new Velocity { Value = data.Velocity });
             }
         }
     }
@@ -162,6 +161,6 @@ public class WeaponSys : JobComponentSystem
         public Entity PrefabEntity;
         public float2 Pos;
         public quaternion Rot;
-        public float Speed;
+        public float2 Velocity;
     }
 }

@@ -18,6 +18,8 @@ public class Game : MonoBehaviour
         MainCam = Camera.main;
         I = this;
 
+        Application.targetFrameRate = 60;
+
         if (updateCallbacks == null)
         {
             updateCallbacks = new List<Action>();
