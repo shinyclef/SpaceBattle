@@ -5,6 +5,7 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
+using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine;
 using Random = Unity.Mathematics.Random;
@@ -39,7 +40,8 @@ public class CombatMovementAiSys : JobComponentSystem
         var job = new Job()
         {
             Rngs = rngs,
-            UtilityScoreBufs = GetBufferFromEntity<UtilityScoreBuf>(),
+            UtilityScoreBufs = GetBufferFromEntity<UtilityScoreBuf>(false),
+            PhysicsVelocityComps = GetComponentDataFromEntity<PhysicsVelocity>(true),
             Decisions = AiDataSys.NativeData.Decisions,
             Choices = AiDataSys.NativeData.Choices,
             Considerations = AiDataSys.NativeData.Considerations,
@@ -55,10 +57,11 @@ public class CombatMovementAiSys : JobComponentSystem
     }
 
     [BurstCompile]
-    private struct Job : IJobForEachWithEntity<CombatTarget, LocalToWorld, MoveDestination, CombatMovement>
+    private struct Job : IJobForEachWithEntity<CombatTarget, LocalToWorld, PhysicsVelocity, Weapon, MoveDestination, CombatMovement>
     {
         [NativeDisableContainerSafetyRestriction] public NativeArray<Random> Rngs;
         [NativeDisableParallelForRestriction] public BufferFromEntity<UtilityScoreBuf> UtilityScoreBufs;
+        [ReadOnly] public ComponentDataFromEntity<PhysicsVelocity> PhysicsVelocityComps;
         [ReadOnly] public NativeArray<Decision> Decisions;
         [ReadOnly] public NativeArray<Choice> Choices;
         [ReadOnly] public NativeArray<Consideration> Considerations;
@@ -79,6 +82,8 @@ public class CombatMovementAiSys : JobComponentSystem
         public void Execute(Entity entity, int index,
             [ReadOnly] ref CombatTarget target,
             [ReadOnly] ref LocalToWorld l2w,
+            [ReadOnly] ref PhysicsVelocity vel,
+            [ReadOnly] ref Weapon wep,
             ref MoveDestination dest,
             ref CombatMovement cm)
         {
@@ -89,7 +94,7 @@ public class CombatMovementAiSys : JobComponentSystem
                 float2 targetPos = target.Pos;
                 Random rand = Rngs[threadId];
                 ChoiceType selectedChoice;
-                if (Time - cm.LastEvalTime < 0.0f)
+                if (Time - cm.LastEvalTime < 0.3f)
                 {
                     selectedChoice = cm.CurrentChoice;
                 }
@@ -164,7 +169,16 @@ public class CombatMovementAiSys : JobComponentSystem
                 switch (selectedChoice)
                 {
                     case ChoiceType.FlyTowardsEnemy:
-                        dest.Value = targetPos;
+
+                        // target pos + velocity
+
+                        float2 targetVel = PhysicsVelocityComps[target.Entity].Linear.xy;
+                        float2 leadPos = TargetLeadHelper.FirstOrderIntercept(l2w.Position.xy, vel.Linear.xy, targetPos, targetVel, wep.projectileSpeed);
+                        float maxLeadDistance = gmath.Magnitude(targetVel) * wep.projectileLifeTime * 0.9f; // TODO: get delta time stuff right?
+                        float leadPosDist = math.distance(leadPos, l2w.Position.xy);
+                        leadPos = targetPos + math.normalizesafe(leadPos - targetPos) * math.min(maxLeadDistance, leadPosDist);
+
+                        dest.Value = leadPos;
                         dest.IsCombatTarget = true;
                         break;
 

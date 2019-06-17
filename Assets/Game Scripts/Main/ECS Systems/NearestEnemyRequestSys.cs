@@ -299,7 +299,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
         }
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     private struct ScanForEnemiesJob : IJobParallelForDefer
     {
         private const float ScanRange = 700f;
@@ -333,16 +333,16 @@ public class NearestEnemyRequestSys : JobComponentSystem
                 };
 
 
-                NativeList<DistanceHit> hits = new NativeList<DistanceHit>(5, Allocator.Temp);
-                var collector = new ClosestHitsCollector<DistanceHit>(pointInput.MaxDistance, hits);
-                //var collector = new AllHitsCollector<DistanceHit>(pointInput.MaxDistance, ref hits); // works fine
-                if (CollisionWorld.CalculateDistance(pointInput, ref collector))
-                {
-                    for (int i = 0; i < hits.Length; i++)
-                    {
-                        buf.Add(CollisionWorld.Bodies[hits[i].RigidBodyIndex].Entity);
-                    }
-                }
+                //NativeList<DistanceHit> hits = new NativeList<DistanceHit>(5, Allocator.Temp);
+                //var collector = new ClosestHitsCollector<DistanceHit>(pointInput.MaxDistance, hits);
+                ////var collector = new AllHitsCollector<DistanceHit>(pointInput.MaxDistance, ref hits); // works fine
+                //if (CollisionWorld.CalculateDistance(pointInput, ref collector))
+                //{
+                //    for (int i = 0; i < hits.Length; i++)
+                //    {
+                //        buf.Add(CollisionWorld.Bodies[hits[i].RigidBodyIndex].Entity);
+                //    }
+                //}
 
 
                 //DistanceHit hit;
@@ -356,11 +356,11 @@ public class NearestEnemyRequestSys : JobComponentSystem
                 //}
 
 
-                //DistanceHit hit;
-                //if (CollisionWorld.CalculateDistance(pointInput, out hit))
-                //{
-                //    buf.Add(CollisionWorld.Bodies[hit.RigidBodyIndex].Entity);
-                //}
+                DistanceHit hit;
+                if (CollisionWorld.CalculateDistance(pointInput, out hit))
+                {
+                    buf.Add(CollisionWorld.Bodies[hit.RigidBodyIndex].Entity);
+                }
             }
         }
     }

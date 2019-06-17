@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -55,7 +56,7 @@ public class WeaponSys : JobComponentSystem
         return inputDeps;
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     private struct FireWeaponJob : IJobForEachWithEntity<MoveDestination, LocalToWorld, CombatTarget, PhysicsVelocity, Weapon>
     {
         public NativeQueue<ProjectileSpawnData>.Concurrent Projectiles;
@@ -100,17 +101,20 @@ public class WeaponSys : JobComponentSystem
             bool fire = false;
             if (!isBursting)
             {
-                float2 targetDir = math.normalize(target.Pos - l2w.Position.xy);
-                float2 forwardDir = l2w.Up.xy;
-                if (math.dot(targetDir, forwardDir) > 0.998f)
+                if (vel.Angular.z < 1f)
                 {
-                    float2 projectedEnemyPos = moveDest.Value + PhysicsVelocityData[target.Entity].Linear.xy * (wep.projectileLifeTime * 0.9f);
-                    if (math.distance(l2w.Position.xy, projectedEnemyPos) < wep.projectileRange)
+                    float2 targetDir = math.normalize(target.Pos - l2w.Position.xy);
+                    float2 forwardDir = l2w.Up.xy;
+                    if (math.dot(targetDir, forwardDir) > 0.998f)
                     {
-                        wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireMajorInterval, Time + wep.FireMajorInterval - 0.1f);
-                        wep.BurstShotCooldownEnd = math.max(wep.BurstShotCooldownEnd + wep.FireMinorInterval, Time + wep.FireMinorInterval - 0.01f);
-                        wep.LastBurstShot = 1;
-                        fire = true;
+                        float2 projectedEnemyPos = moveDest.Value + PhysicsVelocityData[target.Entity].Linear.xy * (wep.projectileLifeTime * 0.9f);
+                        if (math.distance(l2w.Position.xy, projectedEnemyPos) < wep.projectileRange)
+                        {
+                            wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireMajorInterval, Time + wep.FireMajorInterval - 0.1f);
+                            wep.BurstShotCooldownEnd = math.max(wep.BurstShotCooldownEnd + wep.FireMinorInterval, Time + wep.FireMinorInterval - 0.01f);
+                            wep.LastBurstShot = 1;
+                            fire = true;
+                        }
                     }
                 }
             }

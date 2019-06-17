@@ -66,6 +66,12 @@ public struct gmath
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float MagnitudeSqr(float2 v)
+    {
+        return v.x * v.x + v.y * v.y;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float ToAngleRange360(float a)
     {
         return (a + 360f) % 360f;
