@@ -85,7 +85,7 @@ public class WeaponSys : JobComponentSystem
                 return;
             }
 
-            bool isBursting = wep.LastBurstShot > 0 && Time < wep.CooldownEnd;
+            bool isBursting = wep.FireBurstCount > 0 && wep.LastBurstShot > 0 && Time < wep.CooldownEnd;
             if (!isBursting)
             {
                 if (Time < wep.CooldownEnd)
@@ -101,11 +101,11 @@ public class WeaponSys : JobComponentSystem
             bool fire = false;
             if (!isBursting)
             {
-                if (vel.Angular.z < 1f)
+                if (vel.Angular.z < 0.7f * FixedDt)
                 {
                     float2 targetDir = math.normalize(target.Pos - l2w.Position.xy);
                     float2 forwardDir = l2w.Up.xy;
-                    if (math.dot(targetDir, forwardDir) > 0.998f)
+                    if (math.dot(targetDir, forwardDir) > 0.997f)
                     {
                         float2 projectedEnemyPos = moveDest.Value + PhysicsVelocityData[target.Entity].Linear.xy * (wep.projectileLifeTime * 0.9f);
                         if (math.distance(l2w.Position.xy, projectedEnemyPos) < wep.projectileRange)

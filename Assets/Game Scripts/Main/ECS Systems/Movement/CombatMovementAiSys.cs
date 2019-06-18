@@ -42,6 +42,7 @@ public class CombatMovementAiSys : JobComponentSystem
             Rngs = rngs,
             UtilityScoreBufs = GetBufferFromEntity<UtilityScoreBuf>(false),
             PhysicsVelocityComps = GetComponentDataFromEntity<PhysicsVelocity>(true),
+            ThrustComps = GetComponentDataFromEntity<Thrust>(true),
             Decisions = AiDataSys.NativeData.Decisions,
             Choices = AiDataSys.NativeData.Choices,
             Considerations = AiDataSys.NativeData.Considerations,
@@ -56,12 +57,13 @@ public class CombatMovementAiSys : JobComponentSystem
         return jh;
     }
 
-    [BurstCompile]
+    //[BurstCompile]
     private struct Job : IJobForEachWithEntity<CombatTarget, LocalToWorld, PhysicsVelocity, Weapon, MoveDestination, CombatMovement>
     {
         [NativeDisableContainerSafetyRestriction] public NativeArray<Random> Rngs;
         [NativeDisableParallelForRestriction] public BufferFromEntity<UtilityScoreBuf> UtilityScoreBufs;
         [ReadOnly] public ComponentDataFromEntity<PhysicsVelocity> PhysicsVelocityComps;
+        [ReadOnly] public ComponentDataFromEntity<Thrust> ThrustComps;
         [ReadOnly] public NativeArray<Decision> Decisions;
         [ReadOnly] public NativeArray<Choice> Choices;
         [ReadOnly] public NativeArray<Consideration> Considerations;
@@ -91,7 +93,7 @@ public class CombatMovementAiSys : JobComponentSystem
             if (target.Entity != Entity.Null)
             {
                 //eId = entity.Index;
-                float2 targetPos = target.Pos;
+                float2 targPos = target.Pos;
                 Random rand = Rngs[threadId];
                 ChoiceType selectedChoice;
                 if (Time - cm.LastEvalTime < 0.3f)
@@ -123,7 +125,7 @@ public class CombatMovementAiSys : JobComponentSystem
                                 if (!hasDistance)
                                 {
                                     hasDistance = true;
-                                    distance = math.distance(l2w.Position.xy, targetPos);
+                                    distance = math.distance(l2w.Position.xy, targPos);
                                 }
 
                                 factValue = distance;
@@ -133,7 +135,7 @@ public class CombatMovementAiSys : JobComponentSystem
                                 if (!hasAngle)
                                 {
                                     hasAngle = true;
-                                    float2 dirToEnemy = math.normalizesafe(targetPos - l2w.Position.xy);
+                                    float2 dirToEnemy = math.normalizesafe(targPos - l2w.Position.xy);
                                     angle = gmath.AngleBetweenVectors(dirToEnemy, l2w.Up.xy);
                                 }
 
@@ -172,11 +174,26 @@ public class CombatMovementAiSys : JobComponentSystem
 
                         // target pos + velocity
 
-                        float2 targetVel = PhysicsVelocityComps[target.Entity].Linear.xy;
-                        float2 leadPos = TargetLeadHelper.FirstOrderIntercept(l2w.Position.xy, vel.Linear.xy, targetPos, targetVel, wep.projectileSpeed);
-                        float maxLeadDistance = gmath.Magnitude(targetVel) * wep.projectileLifeTime * 0.9f; // TODO: get delta time stuff right?
+                        float2 targVel = PhysicsVelocityComps[target.Entity].Linear.xy;
+                        float2 targAccel = ThrustComps[target.Entity].CurrentAcceleration;
+                        float2 leadPos;
+
+                        float distSq = math.distancesq(targPos, l2w.Position.xy);
+                        if (distSq > wep.projectileRange * wep.projectileRange * 1.5f)
+                        {
+                            leadPos = targPos + targVel * wep.projectileLifeTime;
+                        }
+                        else
+                        {
+                            leadPos = TargetLeadHelper.GetTargetLeadHitPosIterative(l2w.Position.xy, vel.Linear.xy, targPos, targVel, targAccel, wep.projectileSpeed);
+                        }
+
+                        float dot01 = math.clamp(math.dot(vel.Linear.xy, targVel) * 8f - 8f, 0f, 1f); // I only want the top small percentage of this range, cause we usually want to lead
+                        leadPos = math.lerp(leadPos, targPos, dot01); // this is so we stay fixed when behind them without wobbling around
+
+                        float maxLeadDistance = gmath.Magnitude(targVel) * wep.projectileLifeTime * 0.9f; // TODO: get delta time stuff right?
                         float leadPosDist = math.distance(leadPos, l2w.Position.xy);
-                        leadPos = targetPos + math.normalizesafe(leadPos - targetPos) * math.min(maxLeadDistance, leadPosDist);
+                        leadPos = targPos + math.normalizesafe(leadPos - targPos) * math.min(maxLeadDistance, leadPosDist);
 
                         dest.Value = leadPos;
                         dest.IsCombatTarget = true;
@@ -187,18 +204,14 @@ public class CombatMovementAiSys : JobComponentSystem
                         {
                             // we start by choosing to go left or right
                             float2 offset = (rand.NextBool() ? l2w.Right.xy : -l2w.Right.xy) * 0.3f;
-                            targetPos += offset;
-                            
-                            dest.Value = targetPos;
-                            
-                            //cm.LastHeading = Heading.FromFloat2(targetPos - l2w.Position.xy);
-                            //Logger.LogIf(entity.Index == 9, "Head: " + Heading.ToFloat2(cm.LastHeading));
+                            targPos += offset;
+                            dest.Value = targPos;
                         }
                         else
                         {
                             // draw a line from target, through a point a few units in front of the ship, and on for a few units beyond that
                             float2 inFrontOfShip = l2w.Position.xy + l2w.Up.xy * 5;
-                            float2 offset = math.normalize(inFrontOfShip - targetPos) * 10;
+                            float2 offset = math.normalize(inFrontOfShip - targPos) * 10;
                             float2 desiredDestination = inFrontOfShip + offset;
 
                             // we do this lerp so that the original left/right decision is respected

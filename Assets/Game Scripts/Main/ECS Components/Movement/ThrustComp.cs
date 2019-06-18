@@ -10,6 +10,7 @@ public struct Thrust : IComponentData
     public half MaxSpeed;
     public half AngularAcceleration;
     public half AngularMaxSpeed;
+    public float2 CurrentAcceleration;
 
     public Thrust(half acceleration, half maxSpeed, half angularAcceleration, half angularMaxSpeed)
     {
@@ -17,6 +18,7 @@ public struct Thrust : IComponentData
         MaxSpeed = maxSpeed;
         AngularAcceleration = angularAcceleration;
         AngularMaxSpeed = angularMaxSpeed;
+        CurrentAcceleration = float2.zero;
     }
 }
 

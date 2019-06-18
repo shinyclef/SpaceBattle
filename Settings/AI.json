@@ -7,7 +7,7 @@
                 {
                     "ChoiceType": "FlyTowardsEnemy",
                     "Weight": 1.0,
-                    "Momentum": 0.0,
+                    "Momentum": 0.20000000298023225,
                     "Considerations": [
                         {
                             "FactType": "DistanceFromTarget",

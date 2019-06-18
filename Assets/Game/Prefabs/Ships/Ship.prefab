@@ -247,9 +247,9 @@ MonoBehaviour:
     x: 0
     y: 2.25
     z: 0
-  FireMajorInterval: 3
+  FireMajorInterval: 1
   FireMinorInterval: 0.08
-  FireBurstCount: 3
+  FireBurstCount: 0
 --- !u!114 &279122834050534173
 MonoBehaviour:
   m_ObjectHideFlags: 0

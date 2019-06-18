@@ -113,4 +113,29 @@ public struct TargetLeadHelper
         }
     }
 
+
+    //---------------//
+    //-- Iterative --//
+    //---------------//
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float2 GetTargetLeadHitPosIterative(float2 pos, float2 vel, float2 targetPos, float2 targetVel, float2 targetAccel, float projSpeed)
+    {
+        const float Epsilon = 0.05f;
+        float t = math.distance(pos, targetPos) / projSpeed;
+        float oldT = 0f;
+        float2 tPos = targetPos;
+        int i = 0;
+        while (math.abs(t - oldT) > Epsilon)
+        {
+            oldT = t;
+            tPos = targetPos + (targetVel - vel) * t + (0.5f * targetAccel * (t * t));
+            t = math.distance(pos, tPos) / projSpeed;
+            i++;
+        }
+
+        Logger.LogIf(i > 2, $"{i} iterations");
+
+        return tPos;
+    }
 }
