@@ -11,7 +11,7 @@ public struct gmath
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float AngleBetweenVectors(float2 a, float2 b)
     {
-        return (1 - ((m.dot(a, b) + 1f) / 2f)) * 180f;
+        return m.degrees(m.acos(m.dot(a, b)));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

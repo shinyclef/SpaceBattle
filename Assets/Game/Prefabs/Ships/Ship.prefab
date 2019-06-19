@@ -227,7 +227,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Acceleration: 40
   MaxSpeed: 25
-  AngularAcceleration: 40
+  AngularAcceleration: 35
   AngularMaxSpeed: 30
 --- !u!114 &6204970610823509874
 MonoBehaviour:
@@ -247,9 +247,10 @@ MonoBehaviour:
     x: 0
     y: 2.25
     z: 0
-  FireMajorInterval: 1
+  FireMajorInterval: 3
   FireMinorInterval: 0.08
-  FireBurstCount: 0
+  FireBurstCount: 3
+  FireArcDegreesFromCenter: 15
 --- !u!114 &279122834050534173
 MonoBehaviour:
   m_ObjectHideFlags: 0

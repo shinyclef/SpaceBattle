@@ -49,7 +49,7 @@ public class CombatMovementAiSys : JobComponentSystem
             RecordedScores = AiDataSys.NativeData.RecordedScores,
             RecordedDecision = AiInspector.RecordedDecision,
             Time = Time.time,
-            DeltaTime = Time.deltaTime,
+            Dt = Time.deltaTime,
             RecordedEntity = SelectionSys.SelectedEntity
         };
 
@@ -57,7 +57,7 @@ public class CombatMovementAiSys : JobComponentSystem
         return jh;
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     private struct Job : IJobForEachWithEntity<CombatTarget, LocalToWorld, PhysicsVelocity, Weapon, MoveDestination, CombatMovement>
     {
         [NativeDisableContainerSafetyRestriction] public NativeArray<Random> Rngs;
@@ -71,7 +71,7 @@ public class CombatMovementAiSys : JobComponentSystem
         public DecisionType RecordedDecision;
 
         public float Time;
-        public float DeltaTime;
+        public float Dt;
         public Entity RecordedEntity;
 
         #pragma warning disable 0649
@@ -171,28 +171,23 @@ public class CombatMovementAiSys : JobComponentSystem
                 switch (selectedChoice)
                 {
                     case ChoiceType.FlyTowardsEnemy:
-
-                        // target pos + velocity
-
                         float2 targVel = PhysicsVelocityComps[target.Entity].Linear.xy;
                         float2 targAccel = ThrustComps[target.Entity].CurrentAcceleration;
                         float2 leadPos;
 
                         float distSq = math.distancesq(targPos, l2w.Position.xy);
-                        if (distSq > wep.projectileRange * wep.projectileRange * 1.5f)
+                        if (distSq > wep.ProjectileRange * wep.ProjectileRange * 2f && false)
                         {
-                            leadPos = targPos + targVel * wep.projectileLifeTime;
+                            //leadPos = targPos + targVel * wep.ProjectileLifeTime;
+                            leadPos = TargetLeadHelper.GetTargetLeadHitPosIterativeRough(l2w.Position.xy, vel.Linear.xy, targPos, targVel, targAccel, wep.ProjectileSpeed);
                         }
                         else
                         {
-                            leadPos = TargetLeadHelper.GetTargetLeadHitPosIterative(l2w.Position.xy, vel.Linear.xy, targPos, targVel, targAccel, wep.projectileSpeed);
+                            leadPos = TargetLeadHelper.GetTargetLeadHitPosIterative(l2w.Position.xy, vel.Linear.xy, targPos, targVel, targAccel, wep.ProjectileSpeed);
                         }
 
-                        float dot01 = math.clamp(math.dot(vel.Linear.xy, targVel) * 8f - 8f, 0f, 1f); // I only want the top small percentage of this range, cause we usually want to lead
-                        leadPos = math.lerp(leadPos, targPos, dot01); // this is so we stay fixed when behind them without wobbling around
-
-                        float maxLeadDistance = gmath.Magnitude(targVel) * wep.projectileLifeTime * 0.9f; // TODO: get delta time stuff right?
-                        float leadPosDist = math.distance(leadPos, l2w.Position.xy);
+                        float maxLeadDistance = gmath.Magnitude(targVel) * wep.ProjectileLifeTime; // TODO: get delta time stuff right?
+                        float leadPosDist = math.distance(targPos, leadPos);
                         leadPos = targPos + math.normalizesafe(leadPos - targPos) * math.min(maxLeadDistance, leadPosDist);
 
                         dest.Value = leadPos;
@@ -215,7 +210,7 @@ public class CombatMovementAiSys : JobComponentSystem
                             float2 desiredDestination = inFrontOfShip + offset;
 
                             // we do this lerp so that the original left/right decision is respected
-                            dest.Value = math.lerp(dest.Value, desiredDestination, DeltaTime * 5);
+                            dest.Value = math.lerp(dest.Value, desiredDestination, Dt * 5);
                         }
 
                         dest.IsCombatTarget = false;

@@ -18,7 +18,7 @@ public class Game : MonoBehaviour
         MainCam = Camera.main;
         I = this;
 
-        Application.targetFrameRate = 60;
+        Application.targetFrameRate = 50;
 
         if (updateCallbacks == null)
         {

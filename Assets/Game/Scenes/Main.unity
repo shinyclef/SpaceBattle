@@ -6983,7 +6983,7 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 1779965215723008332, guid: 226f7a2bc172211499316757943251a2,
     type: 3}
-  MaxShips: 2
+  MaxShips: 10
   SpawnRatePerSecond: 200
   SpawnSpread:
     x: 100
@@ -9482,7 +9482,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b193aaccb5eb8f43920c3ff8341c8ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  EnableDebug: 1
+  EnableDebug: 0
 --- !u!114 &1221549087
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12326,7 +12326,7 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 2944533906311966927, guid: 19d1abca87912fc44b88ab83a16449aa,
     type: 3}
-  MaxShips: 2
+  MaxShips: 10
   SpawnRatePerSecond: 200
   SpawnSpread:
     x: 100
@@ -12807,7 +12807,7 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 4903339397265122764, guid: d6ed2930c3712744caaf13322c21c6ff,
     type: 3}
-  MaxShips: 2
+  MaxShips: 10
   SpawnRatePerSecond: 200
   SpawnSpread:
     x: 100

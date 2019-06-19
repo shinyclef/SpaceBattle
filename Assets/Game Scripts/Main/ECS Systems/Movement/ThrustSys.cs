@@ -76,7 +76,7 @@ public class ThrustSys : JobComponentSystem
             vel.ApplyLinearImpulse(mass, new float3 (addedForce, 0f));
             float2 speedLimitCorrection = math.max(0f, gmath.Magnitude(vel.Linear.xy) - thrust.MaxSpeed) * -math.normalize(vel.Linear.xy);
             vel.ApplyLinearImpulse(mass, new float3(speedLimitCorrection, 0f));
-            thrust.CurrentAcceleration = addedForce + speedLimitCorrection;
+            thrust.CurrentAcceleration = (addedForce + speedLimitCorrection);
         }
     }
 }

@@ -14,12 +14,13 @@ public struct Weapon : IComponentData
     public float FireMinorInterval;
     public int FireBurstCount;
     public float CooldownEnd;
-    public float projectileLifeTime;
-    public float projectileSpeed;
+    public float ProjectileLifeTime;
+    public float ProjectileSpeed;
+    public half FireArcDegreesFromCenter;
     public int LastBurstShot;
     public float BurstShotCooldownEnd;
 
-    public float projectileRange { get { return projectileLifeTime * projectileSpeed; } }
+    public float ProjectileRange { get { return ProjectileLifeTime * ProjectileSpeed; } }
 }
 
 [RequiresEntityConversion]
@@ -30,6 +31,7 @@ public class WeaponComp : MonoBehaviour, IConvertGameObjectToEntity
     public float FireMajorInterval;
     public float FireMinorInterval;
     public int FireBurstCount;
+    public float FireArcDegreesFromCenter;
 
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
@@ -46,8 +48,9 @@ public class WeaponComp : MonoBehaviour, IConvertGameObjectToEntity
             FireMinorInterval = FireMinorInterval,
             FireBurstCount = FireBurstCount,
             CooldownEnd = 0f,
-            projectileLifeTime = lifeTime,
-            projectileSpeed = speed
+            ProjectileLifeTime = lifeTime,
+            ProjectileSpeed = speed,
+            FireArcDegreesFromCenter = new half(FireArcDegreesFromCenter),
         };
 
         dstManager.AddComponentData(entity, weapon);

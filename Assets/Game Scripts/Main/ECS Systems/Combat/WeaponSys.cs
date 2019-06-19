@@ -101,20 +101,15 @@ public class WeaponSys : JobComponentSystem
             bool fire = false;
             if (!isBursting)
             {
-                if (vel.Angular.z < 0.7f * FixedDt)
+                float2 targetDir = math.normalize(target.Pos - l2w.Position.xy);
+                if (gmath.AngleBetweenVectors(targetDir, l2w.Up.xy) < wep.FireArcDegreesFromCenter)
                 {
-                    float2 targetDir = math.normalize(target.Pos - l2w.Position.xy);
-                    float2 forwardDir = l2w.Up.xy;
-                    if (math.dot(targetDir, forwardDir) > 0.997f)
+                    if (math.distance(l2w.Position.xy, moveDest.Value) < wep.ProjectileRange * 0.9f)
                     {
-                        float2 projectedEnemyPos = moveDest.Value + PhysicsVelocityData[target.Entity].Linear.xy * (wep.projectileLifeTime * 0.9f);
-                        if (math.distance(l2w.Position.xy, projectedEnemyPos) < wep.projectileRange)
-                        {
-                            wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireMajorInterval, Time + wep.FireMajorInterval - 0.1f);
-                            wep.BurstShotCooldownEnd = math.max(wep.BurstShotCooldownEnd + wep.FireMinorInterval, Time + wep.FireMinorInterval - 0.01f);
-                            wep.LastBurstShot = 1;
-                            fire = true;
-                        }
+                        wep.CooldownEnd = math.max(wep.CooldownEnd + wep.FireMajorInterval, Time + wep.FireMajorInterval - 0.1f);
+                        wep.BurstShotCooldownEnd = math.max(wep.BurstShotCooldownEnd + wep.FireMinorInterval, Time + wep.FireMinorInterval - 0.01f);
+                        wep.LastBurstShot = 1;
+                        fire = true;
                     }
                 }
             }
@@ -128,12 +123,19 @@ public class WeaponSys : JobComponentSystem
             if (fire)
             {
                 float3 pos = l2w.Position + l2w.Up;
+                float2 dir = math.normalizesafe(moveDest.Value - l2w.Position.xy);
+                float angleToTarg = gmath.AngleBetweenVectorsSigned(l2w.Up.xy, dir);
+                if (math.abs(angleToTarg) > wep.FireArcDegreesFromCenter)
+                {
+                    dir = gmath.RotateVector(l2w.Up.xy, wep.FireArcDegreesFromCenter * math.sign(angleToTarg));
+                }
+
                 ProjectileSpawnData data = new ProjectileSpawnData
                 {
                     PrefabEntity = wep.ProjectilePrefab,
                     Pos = pos.xy,
-                    Rot = quaternion.EulerXYZ(l2w.Up),
-                    Velocity = l2w.Up.xy * VelocityData[wep.ProjectilePrefab].Speed + vel.Linear.xy
+                    Rot = quaternion.EulerXYZ(new float3(dir, 0)),
+                    Velocity = dir.xy * VelocityData[wep.ProjectilePrefab].Speed + vel.Linear.xy
                 };
 
                 Projectiles.Enqueue(data);
