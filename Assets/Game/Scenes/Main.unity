@@ -6983,7 +6983,7 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 1779965215723008332, guid: 226f7a2bc172211499316757943251a2,
     type: 3}
-  MaxShips: 10
+  MaxShips: 100
   SpawnRatePerSecond: 200
   SpawnSpread:
     x: 100
@@ -12326,7 +12326,7 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 2944533906311966927, guid: 19d1abca87912fc44b88ab83a16449aa,
     type: 3}
-  MaxShips: 10
+  MaxShips: 100
   SpawnRatePerSecond: 200
   SpawnSpread:
     x: 100
@@ -12807,7 +12807,7 @@ MonoBehaviour:
     type: 3}
   ProjectilePrefab: {fileID: 4903339397265122764, guid: d6ed2930c3712744caaf13322c21c6ff,
     type: 3}
-  MaxShips: 10
+  MaxShips: 100
   SpawnRatePerSecond: 200
   SpawnSpread:
     x: 100

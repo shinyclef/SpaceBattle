@@ -332,35 +332,21 @@ public class NearestEnemyRequestSys : JobComponentSystem
                     }
                 };
 
-
-                //NativeList<DistanceHit> hits = new NativeList<DistanceHit>(5, Allocator.Temp);
-                //var collector = new ClosestHitsCollector<DistanceHit>(pointInput.MaxDistance, hits);
-                ////var collector = new AllHitsCollector<DistanceHit>(pointInput.MaxDistance, ref hits); // works fine
-                //if (CollisionWorld.CalculateDistance(pointInput, ref collector))
-                //{
-                //    for (int i = 0; i < hits.Length; i++)
-                //    {
-                //        buf.Add(CollisionWorld.Bodies[hits[i].RigidBodyIndex].Entity);
-                //    }
-                //}
-
+                NativeList<DistanceHit> hits = new NativeList<DistanceHit>(5, Allocator.Temp);
+                var collector = new ClosestHitsCollector<DistanceHit>(pointInput.MaxDistance, hits);
+                if (CollisionWorld.CalculateDistance(pointInput, ref collector))
+                {
+                    for (int i = 0; i < hits.Length; i++)
+                    {
+                        buf.Add(CollisionWorld.Bodies[hits[i].RigidBodyIndex].Entity);
+                    }
+                }
 
                 //DistanceHit hit;
-                //NativeList<DistanceHit> hits = new NativeList<DistanceHit>(5, Allocator.Temp);
-                //if (CollisionWorld.CalculateDistance(pointInput, ref hits))
+                //if (CollisionWorld.CalculateDistance(pointInput, out hit))
                 //{
-                //    for (int i = 0; i < hits.Length; i++)
-                //    {
-                //        buf.Add(CollisionWorld.Bodies[hits[i].RigidBodyIndex].Entity);
-                //    }
+                //    buf.Add(CollisionWorld.Bodies[hit.RigidBodyIndex].Entity);
                 //}
-
-
-                DistanceHit hit;
-                if (CollisionWorld.CalculateDistance(pointInput, out hit))
-                {
-                    buf.Add(CollisionWorld.Bodies[hit.RigidBodyIndex].Entity);
-                }
             }
         }
     }
@@ -391,7 +377,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
             {
                 ClosestHits.Add(hit);
             }
-            else // if I comment out this whole else block, at least the filter is respected. Why isn't it respected if I leave it in?
+            else
             {
                 // replace existing furthest hit
                 int furthestIndex = 0;
@@ -425,7 +411,8 @@ public class NearestEnemyRequestSys : JobComponentSystem
 
         public void TransformNewHits(int oldNumHits, float oldFraction, Math.MTransform transform, uint numSubKeyBits, uint subKey)
         {
-            for (int i = oldNumHits; i < NumHits; i++)
+            int start = math.min(oldNumHits, NumHits - 1);
+            for (int i = start; i < NumHits; i++)
             {
                 T hit = ClosestHits[i];
                 hit.Transform(transform, numSubKeyBits, subKey);
@@ -435,7 +422,8 @@ public class NearestEnemyRequestSys : JobComponentSystem
 
         public void TransformNewHits(int oldNumHits, float oldFraction, Math.MTransform transform, int rigidBodyIndex)
         {
-            for (int i = oldNumHits; i < NumHits; i++)
+            int start = math.min(oldNumHits, NumHits - 1);
+            for (int i = start; i < NumHits; i++)
             {
                 T hit = ClosestHits[i];
                 hit.Transform(transform, rigidBodyIndex);

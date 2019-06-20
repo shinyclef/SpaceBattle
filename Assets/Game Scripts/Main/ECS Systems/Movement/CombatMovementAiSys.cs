@@ -178,7 +178,6 @@ public class CombatMovementAiSys : JobComponentSystem
                         float distSq = math.distancesq(targPos, l2w.Position.xy);
                         if (distSq > wep.ProjectileRange * wep.ProjectileRange * 2f && false)
                         {
-                            //leadPos = targPos + targVel * wep.ProjectileLifeTime;
                             leadPos = TargetLeadHelper.GetTargetLeadHitPosIterativeRough(l2w.Position.xy, vel.Linear.xy, targPos, targVel, targAccel, wep.ProjectileSpeed);
                         }
                         else
