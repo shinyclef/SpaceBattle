@@ -8,25 +8,32 @@ using UnityEngine.UI.Extensions;
 
 public class ChoiceUi : MonoBehaviour
 {
+    private const float MultiChoiceReorderButtonsHeight = 37f;
+
     [SerializeField] private TextMeshProUGUI choiceLabel = default;
     [SerializeField] private TextMeshProUGUI totalScoreLabel = default;
+    [SerializeField] private TextMeshProUGUI[] totalScoreLabelMulti = default;
     [SerializeField] private Image selectedIcon = default;
     [SerializeField] private TMP_InputField weightInput = default;
     [SerializeField] private TMP_InputField momentumInput = default;
     [SerializeField] private RectTransform considerationList = default;
     [SerializeField] private RectTransform choiceInfoPanel = default;
     [SerializeField] private RectTransform reorderPanel = default;
+    [SerializeField] private RectTransform[] reorderButtons = default;
+    [SerializeField] private GameObject multiScorePanel = default;
     [SerializeField] private RectTransform inputsPanel = default;
     [SerializeField] private RectTransform graph = default;
+    [SerializeField] private float choiceInfoCollapsedHeight = default;
     [SerializeField] private float choiceInfoExpandedHeight = default;
+    [SerializeField] private float choiceInfoExpandedMultiHeight = default;
     [SerializeField] private GameObject considerationPrefab = default;
     [SerializeField] private GameObject graphLinePrefab = default;
 
+    private bool isMultiTarget;
     private DecisionDto decision;
     private List<ConsiderationUi> considerations;
     private LayoutElement layoutElement;
     private float considerationCollapsedHeight;
-    private float choiceInfoCollapsedHeight;
     private bool choiceInfoExpanded;
     private int recordedDataIndex;
     private bool heightChangeEventScheduled;
@@ -36,7 +43,8 @@ public class ChoiceUi : MonoBehaviour
     public int ConsiderationsCount => Dto.Considerations.Length;
     public float Score { get; private set; }
 
-    private float ChoiceInfoPanelHeight { get { return choiceInfoExpanded ? choiceInfoExpandedHeight : choiceInfoCollapsedHeight; } }
+    private float ChoiceInfoPanelCurrentHeight { get { return choiceInfoExpanded ? ChoiceInfoPanelExpandedHeight : choiceInfoCollapsedHeight; } }
+    private float ChoiceInfoPanelExpandedHeight { get { return isMultiTarget ? choiceInfoExpandedMultiHeight : choiceInfoExpandedHeight; } }
 
     #region Events
 
@@ -118,7 +126,7 @@ public class ChoiceUi : MonoBehaviour
             heightChangeEventScheduled = false;
         });
     }
-
+    
     #endregion
 
     private void Awake()
@@ -126,9 +134,14 @@ public class ChoiceUi : MonoBehaviour
         considerations = new List<ConsiderationUi>();
         layoutElement = GetComponent<LayoutElement>();
         considerationCollapsedHeight = considerationPrefab.GetComponent<LayoutElement>().preferredHeight;
-        choiceInfoCollapsedHeight = choiceInfoPanel.sizeDelta.y;
+
+        Vector2 size = choiceInfoPanel.sizeDelta;
+        size.y = choiceInfoCollapsedHeight;
+        choiceInfoPanel.sizeDelta = size;
+
         choiceInfoExpanded = false;
         heightChangeEventScheduled = false;
+        isMultiTarget = false;
     }
 
     public void Setup(ChoiceDto dto, DecisionDto decision)
@@ -141,6 +154,17 @@ public class ChoiceUi : MonoBehaviour
         inputsPanel.gameObject.SetActive(true); // force awake to be called
         inputsPanel.gameObject.SetActive(false);
 
+        if (dto.IsMultiTarget)
+        {
+            isMultiTarget = true;
+            for (int i = 0; i < reorderButtons.Length; i++)
+            {
+                Vector2 size = reorderButtons[i].sizeDelta;
+                size.y = MultiChoiceReorderButtonsHeight;
+                reorderButtons[i].sizeDelta = size;
+            }
+        }
+        
         UpdateValuesFromDto();
         PopulateConsiderations();
     }
@@ -173,17 +197,18 @@ public class ChoiceUi : MonoBehaviour
         {
             choiceInfoExpanded = !choiceInfoExpanded;
             inputsPanel.gameObject.SetActive(choiceInfoExpanded);
+            multiScorePanel.SetActive(isMultiTarget && choiceInfoExpanded);
             reorderPanel.gameObject.SetActive(choiceInfoExpanded);
 
             Vector2 size = choiceInfoPanel.sizeDelta;
-            size.y = ChoiceInfoPanelHeight;
+            size.y = ChoiceInfoPanelCurrentHeight;
             choiceInfoPanel.sizeDelta = size;
 
             Vector2 anchoredPos = considerationList.anchoredPosition;
-            anchoredPos.y = -ChoiceInfoPanelHeight;
+            anchoredPos.y = -ChoiceInfoPanelCurrentHeight;
             considerationList.anchoredPosition = anchoredPos;
 
-            ChangeHeight((choiceInfoExpandedHeight - choiceInfoCollapsedHeight) * (choiceInfoExpanded ? 1f : -1f));
+            ChangeHeight((ChoiceInfoPanelExpandedHeight - choiceInfoCollapsedHeight) * (choiceInfoExpanded ? 1f : -1f));
         }
     }
 

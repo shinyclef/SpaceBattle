@@ -4,6 +4,7 @@ using Unity.Mathematics;
 public struct Consideration : IComponentData
 {
     public FactType FactType;
+    public bool IsMultiTarget;
     public GraphType GraphType;
     public float Slope;
     public float Exp;

@@ -6,11 +6,13 @@
             "Choices": [
                 {
                     "ChoiceType": "FlyTowardsEnemy",
+					"IsMultiTarget": true,
                     "Weight": 1.0,
                     "Momentum": 0.20000000298023225,
                     "Considerations": [
                         {
                             "FactType": "DistanceFromTarget",
+							"IsMultiTarget": true,
                             "GraphType": "Exponential",
                             "Slope": -0.75,
                             "Exp": 4.0,
@@ -21,6 +23,7 @@
                         },
                         {
                             "FactType": "AngleFromTarget",
+							"IsMultiTarget": true,
                             "GraphType": "Exponential",
                             "Slope": 0.4000000059604645,
                             "Exp": 6.0,
