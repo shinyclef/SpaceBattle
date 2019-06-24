@@ -185,7 +185,7 @@ public class ConsiderationUi : MonoBehaviour
         inputsPanel.gameObject.SetActive(true);
         inputsPanel.gameObject.SetActive(false);
 
-        if (dto.IsMultiTarget)
+        if (dto.TargetCount > 1)
         {
             isMultiTarget = true;
             for (int i = 0; i < reorderButtons.Length; i++)

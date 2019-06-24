@@ -2,13 +2,7 @@
 using Unity.Entities;
 using UnityEngine;
 
-//[Serializable]
-//public struct UtilityScore : IComponentData
-//{
-//    public float Score;
-//}
-
-[InternalBufferCapacity(5)]
+[InternalBufferCapacity(6)]
 public struct UtilityScoreBuf : IBufferElementData
 {
     public static implicit operator float(UtilityScoreBuf e) { return e.Value; }

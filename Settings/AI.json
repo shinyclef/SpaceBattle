@@ -5,14 +5,12 @@
             "MinimumRequiredOfBest": 0.800000011920929,
             "Choices": [
                 {
-                    "ChoiceType": "FlyTowardsEnemy",
-					"IsMultiTarget": true,
+                    "ChoiceType": "FlyTowardsEnemyMulti",
                     "Weight": 1.0,
                     "Momentum": 0.20000000298023225,
                     "Considerations": [
                         {
-                            "FactType": "DistanceFromTarget",
-							"IsMultiTarget": true,
+                            "FactType": "DistanceFromTargetMulti",
                             "GraphType": "Exponential",
                             "Slope": -0.75,
                             "Exp": 4.0,
@@ -22,8 +20,7 @@
                             "InputMax": 200.0
                         },
                         {
-                            "FactType": "AngleFromTarget",
-							"IsMultiTarget": true,
+                            "FactType": "AngleFromTargetMulti",
                             "GraphType": "Exponential",
                             "Slope": 0.4000000059604645,
                             "Exp": 6.0,

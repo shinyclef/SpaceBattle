@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine.Assertions;
 
@@ -129,15 +128,15 @@ public class DecisionDto : IEquatable<DecisionDto>
 public class ChoiceDto : IEquatable<ChoiceDto>
 {
     public string ChoiceType;
-    public bool  IsMultiTarget;
     public float Weight;
     public float Momentum;
     public ConsiderationDto[] Considerations;
 
+    public int TargetCount { get { return MultiTargetCounts.GetChoiceTypeCount(ChoiceType); } }
+
     public bool Equals(ChoiceDto other)
     {
         if (ChoiceType != other.ChoiceType ||
-            IsMultiTarget != other.IsMultiTarget ||
             Weight != other.Weight ||
             Momentum != other.Momentum ||
             Considerations.Length != other.Considerations.Length)
@@ -167,7 +166,6 @@ public class ChoiceDto : IEquatable<ChoiceDto>
         return new ChoiceDto
         {
             ChoiceType = ChoiceType,
-            IsMultiTarget = IsMultiTarget,
             Weight = Weight,
             Momentum = Momentum,
             Considerations = considerations
@@ -183,7 +181,6 @@ public class ChoiceDto : IEquatable<ChoiceDto>
         }
 
         ChoiceType = other.ChoiceType;
-        IsMultiTarget = other.IsMultiTarget;
         Weight = other.Weight;
         Momentum = other.Momentum;
         for (int i = 0; i < Considerations.Length; i++)
@@ -197,7 +194,6 @@ public class ChoiceDto : IEquatable<ChoiceDto>
         return new Choice
         {
             ChoiceType = (ChoiceType)Enum.Parse(typeof(ChoiceType), ChoiceType),
-            IsMultiTarget = IsMultiTarget,
             ConsiderationIndexStart = considerationIndexStart,
             Weight = Weight,
             MomentumFactor = Momentum
@@ -209,7 +205,6 @@ public class ChoiceDto : IEquatable<ChoiceDto>
 public class ConsiderationDto : IEquatable<ConsiderationDto>
 {
     public string FactType;
-    public bool IsMultiTarget;
     public string GraphType;
     public float Slope;
     public float Exp;
@@ -218,12 +213,13 @@ public class ConsiderationDto : IEquatable<ConsiderationDto>
     public float InputMin;
     public float InputMax;
 
+    public int TargetCount { get { return MultiTargetCounts.GetFactTypeCount(FactType); } }
+
     public static ConsiderationDto GetDefault()
     {
         return new ConsiderationDto
         {
             FactType = "Constant",
-            IsMultiTarget = false,
             GraphType = "Constant",
             Slope = 0,
             Exp = 0,
@@ -237,7 +233,6 @@ public class ConsiderationDto : IEquatable<ConsiderationDto>
     public bool Equals(ConsiderationDto other)
     {
         return FactType == other.FactType &&
-            IsMultiTarget == other.IsMultiTarget &&
             GraphType == other.GraphType &&
             Slope == other.Slope &&
             Exp == other.Exp &&
@@ -252,7 +247,6 @@ public class ConsiderationDto : IEquatable<ConsiderationDto>
         return new ConsiderationDto
         {
             FactType = FactType,
-            IsMultiTarget = IsMultiTarget,
             GraphType = GraphType,
             Slope = Slope,
             Exp = Exp,
@@ -266,7 +260,6 @@ public class ConsiderationDto : IEquatable<ConsiderationDto>
     public void CopyValuesFrom(ConsiderationDto other)
     {
         FactType = other.FactType;
-        IsMultiTarget = other.IsMultiTarget;
         GraphType = other.GraphType;
         Slope = other.Slope;
         Exp = other.Exp;
@@ -281,7 +274,6 @@ public class ConsiderationDto : IEquatable<ConsiderationDto>
         return new Consideration
         {
             FactType = (FactType)Enum.Parse(typeof(FactType), FactType),
-            IsMultiTarget = IsMultiTarget,
             GraphType = (GraphType)Enum.Parse(typeof(GraphType), GraphType),
             Slope = Slope,
             Exp = Exp,

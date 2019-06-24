@@ -121,7 +121,7 @@ public class CombatMovementAiSys : JobComponentSystem
                         float factValue;
                         switch (requiredFact)
                         {
-                            case FactType.DistanceFromTarget:
+                            case FactType.DistanceFromTargetMulti:
                                 if (!hasDistance)
                                 {
                                     hasDistance = true;
@@ -131,7 +131,7 @@ public class CombatMovementAiSys : JobComponentSystem
                                 factValue = distance;
                                 break;
 
-                            case FactType.AngleFromTarget:
+                            case FactType.AngleFromTargetMulti:
                                 if (!hasAngle)
                                 {
                                     hasAngle = true;
@@ -170,7 +170,7 @@ public class CombatMovementAiSys : JobComponentSystem
 
                 switch (selectedChoice)
                 {
-                    case ChoiceType.FlyTowardsEnemy:
+                    case ChoiceType.FlyTowardsEnemyMulti:
                         float2 targVel = PhysicsVelocityComps[target.Entity].Linear.xy;
                         float2 targAccel = ThrustComps[target.Entity].CurrentAcceleration;
                         float2 leadPos;

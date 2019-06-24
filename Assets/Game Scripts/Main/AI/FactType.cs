@@ -2,8 +2,8 @@
 {
     Constant,
     Noise,
-    DistanceFromTarget,
-    AngleFromTarget,
+    DistanceFromTargetMulti,
+    AngleFromTargetMulti,
     TimeSinceLastChoiceSelection,
     TimeSinceThisChoiceSelection
 }

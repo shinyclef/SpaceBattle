@@ -154,7 +154,7 @@ public class ChoiceUi : MonoBehaviour
         inputsPanel.gameObject.SetActive(true); // force awake to be called
         inputsPanel.gameObject.SetActive(false);
 
-        if (dto.IsMultiTarget)
+        if (dto.TargetCount > 1)
         {
             isMultiTarget = true;
             for (int i = 0; i < reorderButtons.Length; i++)
