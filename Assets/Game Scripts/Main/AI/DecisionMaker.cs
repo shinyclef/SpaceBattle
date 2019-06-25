@@ -15,8 +15,7 @@ public struct DecisionMaker
     private bool RecordedEntity;
 
     private float minRequiredChoiceScore;
-    private float grandTotalScore;
-    private float currentChoiceScore;
+    private NativeArray<float> currentChoiceScores;
     private float bestChoiceScore;
     private Decision decision;
     private Choice choice;
@@ -52,8 +51,9 @@ public struct DecisionMaker
     public ChoiceType CurrentlyEvaluatedChoice { get; private set; }
 
     public ChoiceType SelectedChoice { get; private set; }
+    public int SelectedTarget { get; private set; }
 
-    public bool PrepareDecision(DecisionType decisionType, ref Random rand)
+    public bool PrepareDecision(DecisionType decisionType)
     {
         if (Decisions.Length == 0)
         {
@@ -68,7 +68,6 @@ public struct DecisionMaker
         }
 
         choiceIndex = choiceIndexFrom;
-        grandTotalScore = 0f;
         bestChoiceScore = 0f;
         decision = Decisions[(int)decisionType];
         minRequiredChoiceScore = 0f;
@@ -81,8 +80,11 @@ public struct DecisionMaker
             if (record)
             {
                 // still need to record the skipped choice
-                RecordedScores[recordIndex] = currentChoiceScore;
-                recordIndex++;
+                for (int i = 0; i < currentChoiceScores.Length; i++)
+                {
+                    RecordedScores[recordIndex] = 0f;
+                    recordIndex++;
+                }
             }
 
             if (!FinaliseChoiceAndMoveToNext())
@@ -96,56 +98,73 @@ public struct DecisionMaker
         return true;
     }
 
-    public bool EvaluateNextConsideration(float factValueRaw, ref Random rand)
+    public bool EvaluateNextConsideration(NativeArray<float> factValues)
     {
         // evluate the considertion and multiply the result with the factValue
         Consideration consideration = Considerations[considerationIndex];
 
-        // normalize input
-        float factValue = consideration.GetNormalizedInput(factValueRaw, Time);
-        float score = consideration.Evaluate(factValue);
-        if (record)
+        for (int i = 0; i < factValues.Length; i++)
         {
-            RecordedScores[recordIndex] = score;
-            RecordedScores[recordIndex + 1] = factValue;
-            recordIndex += 2;
+            // normalize input
+            float factValue = consideration.GetNormalizedInput(factValues[i], Time);
+            float score = consideration.Evaluate(factValue);
+            if (record)
+            {
+                RecordedScores[recordIndex] = score;
+                RecordedScores[recordIndex + 1] = factValue;
+                recordIndex += 2;
+            }
+
+            float makeUpValue = (1 - score) * modificationFactor;
+            //Logger.Log($"factValue: {factValue} ({factValueRaw}), score: {score}, makeUpValue: {makeUpValue}");
+            score += makeUpValue * score;
+            currentChoiceScores[i] *= score;
         }
 
-        float makeUpValue = (1 - score) * modificationFactor;
-        //Logger.Log($"factValue: {factValue} ({factValueRaw}), score: {score}, makeUpValue: {makeUpValue}");
-        score += makeUpValue * score;
-        currentChoiceScore *= score;
-        
         // if this is the last last consideration of the choice, or we're below minRequiredChoiceScore, move on the next choice.
-        if (currentChoiceScore < minRequiredChoiceScore)
+        bool allChoiceScoresBelowMin = AllChoiceScoresAreBelowThreshold(minRequiredChoiceScore);
+        if (allChoiceScoresBelowMin)
         {
             if (record)
             {
                 if (considerationIndex == considerationIndexTo - 1)
                 {
-                    RecordedScores[recordIndex] = currentChoiceScore;
-                    recordIndex++;
+                    // we've finished recording all considerations, now record the final choice scores
+                    for (int i = 0; i < currentChoiceScores.Length; i++)
+                    {
+                        RecordedScores[recordIndex] = currentChoiceScores[i];
+                        recordIndex++;
+                    }
                 }
             }
             else
             {
                 considerationIndex = (ushort)(considerationIndexTo - 1); // move to the next choice by saying we just finished the final choice
             }
-            
+
             //Logger.Log($"Score cutooff. currentChoiceScore: {currentChoiceScore}, minRequiredChoiceScore: {minRequiredChoiceScore}");
-            currentChoiceScore = 0f;
+            SetAllCurrentChoiceVals(0f);
         }
 
         considerationIndex++;
         if (considerationIndex == considerationIndexTo)
         {
-            if (record && currentChoiceScore >= minRequiredChoiceScore)
+            // we have completed all considerations
+
+            if (record && !allChoiceScoresBelowMin)
             {
-                RecordedScores[recordIndex] = currentChoiceScore;
-                recordIndex++;
+                for (int i = 0; i < currentChoiceScores.Length; i++)
+                {
+                    RecordedScores[recordIndex] = currentChoiceScores[i];
+                    recordIndex++;
+                }
             }
 
-            bestChoiceScore = math.max(currentChoiceScore, bestChoiceScore);
+            for (int i = 0; i < currentChoiceScores.Length; i++)
+            {
+                bestChoiceScore = math.max(currentChoiceScores[i], bestChoiceScore);
+            }
+
             minRequiredChoiceScore = bestChoiceScore * decision.MinimumRequiredOfBest;
 
             // we've completed this consideration, let's score it and look at the next choice
@@ -163,7 +182,6 @@ public struct DecisionMaker
 
     private bool PrepareChoiceVariables()
     {
-        currentChoiceScore = 0;
         choice = Choices[choiceIndex];
         considerationIndexFrom = choice.ConsiderationIndexStart;
         considerationIndexTo = choiceIndex < Choices.Length - 1 ? Choices[choiceIndex + 1].ConsiderationIndexStart : (ushort)Considerations.Length;
@@ -174,15 +192,19 @@ public struct DecisionMaker
 
         considerationIndex = considerationIndexFrom;
         modificationFactor = 1f - (1f / (considerationIndexTo - considerationIndexFrom));
-        currentChoiceScore = choice.Weight + math.select(0f, choice.MomentumFactor, choice.ChoiceType == CurrentChoice);
+
+        currentChoiceScores = new NativeArray<float>(choice.TargetCount, Allocator.Temp);
+        SetAllCurrentChoiceVals(choice.Weight + math.select(0f, choice.MomentumFactor, choice.ChoiceType == CurrentChoice));
         return true;
     }
 
     private bool FinaliseChoiceAndMoveToNext()
     {
         // finalise choice
-        UtilityScores.Add(currentChoiceScore);
-        grandTotalScore += currentChoiceScore;
+        for (int i = 0; i < currentChoiceScores.Length; i++)
+        {
+            UtilityScores.Add(currentChoiceScores[i]);
+        }
 
         // move to next choice
         choiceIndex++;
@@ -196,9 +218,12 @@ public struct DecisionMaker
             // we're skipping this choice
             if (record)
             {
-                // still need to recorded the skipped choice
-                RecordedScores[recordIndex] = currentChoiceScore;
-                recordIndex++;
+                // still need to record the skipped choice
+                for (int i = 0; i < currentChoiceScores.Length; i++)
+                {
+                    RecordedScores[recordIndex] = 0f;
+                    recordIndex++;
+                }
             }
 
             return FinaliseChoiceAndMoveToNext();
@@ -207,15 +232,50 @@ public struct DecisionMaker
         return true;
     }
 
+    private void SetAllCurrentChoiceVals(float val)
+    {
+        for (int i = 0; i < currentChoiceScores.Length; i++)
+        {
+            currentChoiceScores[i] = val;
+        }
+    }
+
+    private bool AllChoiceScoresAreBelowThreshold(float threshold)
+    {
+        for (int i = 0; i < currentChoiceScores.Length; i++)
+        {
+            if (currentChoiceScores[i] >= threshold)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private void SelectChoiceHighestScore()
     {
+        int currentChoiceIndex = choiceIndexFrom;
+        choice = Choices[currentChoiceIndex];
+        SelectedTarget = -1;
+
         float max = 0;
         for (int i = 0; i < UtilityScores.Length; i++)
         {
+            if (SelectedTarget == choice.TargetCount - 1)
+            {
+                currentChoiceIndex++;
+                SelectedTarget = 0;
+            }
+            else
+            {
+                SelectedTarget++;
+            }
+
             if (UtilityScores[i].Value > max)
             {
                 max = UtilityScores[i].Value;
-                SelectedChoice = Choices[choiceIndexFrom + i].ChoiceType;
+                SelectedChoice = Choices[currentChoiceIndex].ChoiceType;
             }
         }
 
@@ -224,63 +284,5 @@ public struct DecisionMaker
             //Logger.Log($"Heads up, I'm selecting default choice! Max was {max}.");
             SelectedChoice = ChoiceType.None;
         }
-    }
-
-    private void SelectChoiceNoiseOffset(half noiseSeed, half noiseWaveLen)
-    {
-        float max = float.MinValue;
-        for (int i = 0; i < UtilityScores.Length; i++)
-        {
-            float noiseOffset = noise.snoise(new float2(noiseSeed, Time * noiseWaveLen));
-            if (UtilityScores[i].Value + noiseOffset > max)
-            {
-                max = UtilityScores[i].Value + noiseOffset;
-                SelectedChoice = Choices[choiceIndexFrom + i].ChoiceType;
-            }
-        }
-
-        if (max == float.MinValue)
-        {
-            //Logger.Log($"Heads up, I'm selecting default choice! Max was {max}.");
-            SelectedChoice = ChoiceType.None;
-        }
-    }
-
-    private void SelectChoiceRandomVariance(ref Random rand)
-    {
-        float max = -100;
-        for (int i = 0; i < UtilityScores.Length; i++)
-        {
-            float randVariance = 0.5f;
-            float randOffset = rand.NextFloat() * randVariance - (0.5f * randVariance);
-            if (UtilityScores[i].Value + randOffset > max)
-            {
-                max = UtilityScores[i].Value + randOffset;
-                SelectedChoice = Choices[choiceIndexFrom + i].ChoiceType;
-            }
-        }
-
-        if (max == -100)
-        {
-            //Logger.Log($"Heads up, I'm selecting default choice! Max was {max}.");
-            SelectedChoice = ChoiceType.None;
-        }
-    }
-
-    private void SelectChoiceWeightedRandom(ref Random rand)
-    {
-        float max = 0;
-        for (int i = 0; i < UtilityScores.Length; i++)
-        {
-            max += UtilityScores[i].Value / grandTotalScore;
-            if (rand.NextFloat() < max)
-            {
-                SelectedChoice = Choices[choiceIndexFrom + i].ChoiceType;
-                return;
-            }
-        }
-
-        //Logger.Log($"Heads up, I'm selecting default choice! Max was {max}.");
-        SelectedChoice = ChoiceType.None;
     }
 }

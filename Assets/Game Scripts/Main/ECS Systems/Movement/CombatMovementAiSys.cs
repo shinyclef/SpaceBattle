@@ -57,7 +57,7 @@ public class CombatMovementAiSys : JobComponentSystem
         return jh;
     }
 
-    [BurstCompile]
+    //[BurstCompile]
     private struct Job : IJobForEachWithEntity<CombatTarget, LocalToWorld, PhysicsVelocity, Weapon, MoveDestination, CombatMovement>
     {
         [NativeDisableContainerSafetyRestriction] public NativeArray<Random> Rngs;
@@ -96,7 +96,8 @@ public class CombatMovementAiSys : JobComponentSystem
                 float2 targPos = target.Pos;
                 Random rand = Rngs[threadId];
                 ChoiceType selectedChoice;
-                if (Time - cm.LastEvalTime < 0.3f)
+                int selectedTarget;
+                if (Time - cm.LastEvalTime < 0.0f) // TODO: 0.3
                 {
                     selectedChoice = cm.CurrentChoice;
                 }
@@ -113,12 +114,12 @@ public class CombatMovementAiSys : JobComponentSystem
                     utilityScores = UtilityScoreBufs[entity];
                     DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores, Time,
                         cm.CurrentChoice, ref RecordedScores, RecordedDecision, entity == RecordedEntity);
-                    bool hasNext = dm.PrepareDecision(DecisionType.CombatMovement, ref rand);
+                    bool hasNext = dm.PrepareDecision(DecisionType.CombatMovement);
                     while (hasNext)
                     {
                         FactType requiredFact = dm.NextRequiredFactType;
                         // Logger.LogIf(entity.Index == 9, $"Required Fact: {requiredFact}");
-                        float factValue;
+                        NativeArray<float> factValue;
                         switch (requiredFact)
                         {
                             case FactType.DistanceFromTargetMulti:
@@ -128,7 +129,8 @@ public class CombatMovementAiSys : JobComponentSystem
                                     distance = math.distance(l2w.Position.xy, targPos);
                                 }
 
-                                factValue = distance;
+                                factValue = new NativeArray<float>(1, Allocator.Temp);
+                                factValue[0] = distance;
                                 break;
 
                             case FactType.AngleFromTargetMulti:
@@ -139,32 +141,38 @@ public class CombatMovementAiSys : JobComponentSystem
                                     angle = gmath.AngleBetweenVectors(dirToEnemy, l2w.Up.xy);
                                 }
 
-                                factValue = angle;
+                                factValue = new NativeArray<float>(1, Allocator.Temp);
+                                factValue[0] = angle;
                                 break;
 
                             case FactType.Noise:
-                                factValue = cm.NoiseSeed;
+                                factValue = new NativeArray<float>(1, Allocator.Temp);
+                                factValue[0] = cm.NoiseSeed;
                                 break;
 
                             case FactType.TimeSinceLastChoiceSelection:
-                                factValue = Time - cm.ChoiceSelectedTime;
+                                factValue = new NativeArray<float>(1, Allocator.Temp);
+                                factValue[0] = Time - cm.ChoiceSelectedTime;
                                 break;
 
                             case FactType.TimeSinceThisChoiceSelection:
-                                factValue = dm.CurrentlyEvaluatedChoice == cm.CurrentChoice ? Time - cm.ChoiceSelectedTime : 0f;
+                                factValue = new NativeArray<float>(1, Allocator.Temp);
+                                factValue[0] = dm.CurrentlyEvaluatedChoice == cm.CurrentChoice ? Time - cm.ChoiceSelectedTime : 0f;
                                 break;
 
                             default:
                                 //Logger.LogIf(entity.Index == 9, $"I'm unable to provide FactType: {requiredFact}");
-                                factValue = 0f;
+                                factValue = new NativeArray<float>(1, Allocator.Temp);
+                                factValue[0] = 0f;
                                 break;
                         }
 
-                        hasNext = dm.EvaluateNextConsideration(factValue, ref rand);
+                        hasNext = dm.EvaluateNextConsideration(factValue);
                     }
 
                     selectedChoice = dm.SelectedChoice;
-                    //Logger.LogIf(entity.Index == 9, $"selectedChoice was: {selectedChoice}");
+                    selectedTarget = dm.SelectedTarget;
+                    Logger.LogIf(entity.Index == 1032, $"selectedChoice was: {selectedChoice}. Target: {selectedTarget}");
                     utilityScores.Clear();
                 }
 

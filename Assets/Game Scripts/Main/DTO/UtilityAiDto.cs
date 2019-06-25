@@ -194,6 +194,7 @@ public class ChoiceDto : IEquatable<ChoiceDto>
         return new Choice
         {
             ChoiceType = (ChoiceType)Enum.Parse(typeof(ChoiceType), ChoiceType),
+            TargetCount = (ushort)TargetCount,
             ConsiderationIndexStart = considerationIndexStart,
             Weight = Weight,
             MomentumFactor = Momentum

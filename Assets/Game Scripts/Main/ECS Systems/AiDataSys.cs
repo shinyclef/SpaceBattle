@@ -180,8 +180,8 @@ public class AiDataSys : ComponentSystem
             // add the choices from this decision to the choices array
             for (int j = 0; j < d.Choices.Length; j++)
             {
-                scoresToRecord++;
                 ChoiceDto cd = d.Choices[j];
+                scoresToRecord += cd.TargetCount;
 
                 // populate choices
                 nativeData.Choices[nextChoiceStartIndex + j] = cd.ToChoice(nextConsiderationStartIndex);
@@ -189,7 +189,7 @@ public class AiDataSys : ComponentSystem
                 // add the considerations for this choice to the considerations array
                 for (int k = 0; k < cd.Considerations.Length; k++)
                 {
-                    scoresToRecord += 2; // one for the score, one for the input value
+                    scoresToRecord += cd.TargetCount * 2; // one for the score, one for the input value
                     ConsiderationDto con = cd.Considerations[k];
                     nativeData.Considerations[nextConsiderationStartIndex + k] = con.ToConsideration();
                 }
