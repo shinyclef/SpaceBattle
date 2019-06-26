@@ -59,14 +59,14 @@ public class NearestEnemySys : JobComponentSystem
                 DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[bufEntity];
                 if (buf.Length > 0)
                 {
-                    enemy.Entity = buf[0];
+                    enemy.BufferEntity = bufEntity;
                     enemy.LastUpdatedTime = Time;
                     enemy.UpdatePending = false;
                     return;
                 }
             }
 
-            enemy.Entity = Entity.Null;
+            enemy.BufferEntity = Entity.Null;
         }
     }
 }

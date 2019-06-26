@@ -9,9 +9,6 @@ public struct CombatTarget : IComponentData
     // Note: Check if Entity is Entity.Null before trying to use the other properties.
     public Entity Entity;
     public float2 Pos;
-    public float Heading;
-    public float AcquiredTime;
-    public float RequestedTime;
 }
 
 public class CombatTargetComp : MonoBehaviour, IConvertGameObjectToEntity

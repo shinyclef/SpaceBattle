@@ -5,6 +5,7 @@ using Unity.Jobs;
 using Unity.Transforms;
 using UnityEngine;
 
+[DisableAutoCreation]
 [UpdateInGroup(typeof(MainGameGroup))]
 [UpdateAfter(typeof(NearestEnemySys))]
 public class CombatTargetSys : JobComponentSystem
@@ -16,6 +17,7 @@ public class CombatTargetSys : JobComponentSystem
         var job = new Job
         {
             L2WComps = GetComponentDataFromEntity<LocalToWorld>(true),
+            NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(true),
             Time = Time.time
         };
 
@@ -26,32 +28,37 @@ public class CombatTargetSys : JobComponentSystem
     [BurstCompile]
     private struct Job : IJobForEachWithEntity<NearestEnemy, CombatTarget>
     {
-        [ReadOnly] public ComponentDataFromEntity<LocalToWorld> L2WComps;
         public float Time;
+        [ReadOnly] public ComponentDataFromEntity<LocalToWorld> L2WComps;
+        [ReadOnly] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
+
         public void Execute(Entity entity, int index, [ReadOnly] ref NearestEnemy nearestEnemy, ref CombatTarget target)
         {
             bool targetExists = target.Entity != Entity.Null && L2WComps.Exists(target.Entity);
-            bool newTargetRequired = !targetExists || Time - target.AcquiredTime > CommitToTargetTime;
+            bool newTargetRequired = !targetExists || Time - nearestEnemy.LastUpdatedTime > CommitToTargetTime;
             
             if (newTargetRequired)
             {
                 if (nearestEnemy.LastUpdatedTime == Time)
                 {
-                    target.Entity = nearestEnemy.Entity;
-                    target.AcquiredTime = Time;
+                    //target.Entity = nearestEnemy.BufferEntity;
                 }
-                else if (!nearestEnemy.UpdatePending)
+                else
                 {
-                    nearestEnemy.UpdatePending = true;
+                    // check if all candidates are gone and we need new candidates
+                    DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[nearestEnemy.BufferEntity];
+                    if (buf.Length == 0 && !nearestEnemy.UpdatePending)
+                    {
+                        nearestEnemy.UpdatePending = true;
+                    }
                 }
             }
 
             targetExists = target.Entity != Entity.Null && L2WComps.Exists(target.Entity);
             if (targetExists)
             {
-                LocalToWorld targetL2W = L2WComps[target.Entity];
-                target.Pos = targetL2W.Position.xy;
-                target.Heading = gmath.Float2ToHeading(targetL2W.Up.xy);
+                //LocalToWorld targetL2W = L2WComps[target.Entity];
+                //target.Pos = targetL2W.Position.xy;
             }
             else
             {

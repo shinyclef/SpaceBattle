@@ -7,13 +7,6 @@ using UnityEngine;
 public struct MoveDestination : IComponentData
 {
     public float2 Value;
-    public bool IsCombatTarget;
-
-    public MoveDestination(float2 value, bool isCombatTarget)
-    {
-        Value = value;
-        IsCombatTarget = isCombatTarget;
-    }
 }
 
 public class MoveDestinationComp : MonoBehaviour, IConvertGameObjectToEntity

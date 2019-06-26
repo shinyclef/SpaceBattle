@@ -21,7 +21,8 @@ public class MainGameGroup : ComponentSystemGroup
     LifeTimeExpireSys LifeTimeExpireSys;
     MovementSys MovementSys;
     CombatTargetSys CombatTargetSys;
-    CombatMovementAiSys CombatMovementAiSys;
+    CombatAiSys CombatAiSys;
+    CombatMovementSys CombatMovementSys;
     DamageHealthOnTriggerSys DamageHealthOnTriggerSys;
     WeaponSys WeaponSys;
     NearestEnemySys NearestEnemySys;

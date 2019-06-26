@@ -242,7 +242,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
                     {
                         if (!L2Ws.Exists(buf[j]))
                         {
-                            buf.RemoveAt(j);
+                            buf.RemoveAt(j); // remove destroyed entities so we can provide a reliable buffer
                             //Logger.Log($"{FRAME}: Remove {bucket} at {j}");
                         }
                     }

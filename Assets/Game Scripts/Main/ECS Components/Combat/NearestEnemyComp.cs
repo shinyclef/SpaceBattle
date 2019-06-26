@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public struct NearestEnemy : IComponentData
 {
-    public Entity Entity;
+    public Entity BufferEntity;
     public bool UpdatePending;
     public float LastUpdatedTime;
 }

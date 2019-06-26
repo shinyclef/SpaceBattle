@@ -85,9 +85,9 @@ public class ShipSpawnerSpawnSys : JobComponentSystem
                 Entity ship = CommandBuffer.Instantiate(spawner.ShipPrefab);
                 CommandBuffer.SetComponent(ship, new Translation { Value = pos });
                 CommandBuffer.SetComponent(ship, new Rotation { Value = rot.Value });
-                CommandBuffer.SetComponent(ship, new MoveDestination(moveDest, false));
+                CommandBuffer.SetComponent(ship, new MoveDestination { Value = moveDest });
                 CommandBuffer.SetComponent(ship, new SpawnTime(Time));
-                CommandBuffer.SetComponent(ship, new CombatMovement(Rand.NextFloat()));
+                CommandBuffer.SetComponent(ship, new CombatAi(Rand.NextFloat()));
                 CommandBuffer.AddSharedComponent(ship, new ShipSpawnerOwnerSsShC(entity.Index, entity.Version));
             }
         }
