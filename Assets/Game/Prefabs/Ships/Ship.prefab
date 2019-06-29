@@ -247,7 +247,7 @@ MonoBehaviour:
     x: 0
     y: 2.25
     z: 0
-  FireMajorInterval: 2
+  FireMajorInterval: 3
   FireMinorInterval: 0.08
   FireBurstCount: 3
   FireArcDegreesFromCenter: 15

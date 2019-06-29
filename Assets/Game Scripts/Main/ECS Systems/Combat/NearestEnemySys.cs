@@ -43,10 +43,19 @@ public class NearestEnemySys : JobComponentSystem
         [ReadOnly] public NativeHashMap<int3, Entity> ZoneTargetBuffers;
         [ReadOnly] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
 
-        public void Execute([ReadOnly] ref LocalToWorld l2w, [ReadOnly] ref Faction faction, ref NearestEnemy enemy)
+        public void Execute([ReadOnly] ref LocalToWorld l2w, [ReadOnly] ref Faction faction, ref NearestEnemy nearestEnemy)
         {
-            if (!enemy.UpdatePending)
+            if (!nearestEnemy.UpdateRequired)
             {
+                if (nearestEnemy.BufferEntity != Entity.Null)
+                {
+                    DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[nearestEnemy.BufferEntity];
+                    if (buf.Length == 0)
+                    {
+                        nearestEnemy.BufferEntity = Entity.Null;
+                    }
+                }
+
                 return;
             }
 
@@ -59,14 +68,14 @@ public class NearestEnemySys : JobComponentSystem
                 DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[bufEntity];
                 if (buf.Length > 0)
                 {
-                    enemy.BufferEntity = bufEntity;
-                    enemy.LastUpdatedTime = Time;
-                    enemy.UpdatePending = false;
+                    nearestEnemy.BufferEntity = bufEntity;
+                    nearestEnemy.LastUpdatedTime = Time;
+                    nearestEnemy.UpdateRequired = false;
                     return;
                 }
             }
 
-            enemy.BufferEntity = Entity.Null;
+            nearestEnemy.BufferEntity = Entity.Null;
         }
     }
 }

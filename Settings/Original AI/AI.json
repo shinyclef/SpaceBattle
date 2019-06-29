@@ -1,62 +1,70 @@
 {
     "Decisions": [
         {
-            "DecisionType": 0,
-            "MinimumRequiredOfBest": 0.10000000149011612,
+            "DecisionType": "CombatMovement",
+            "MinimumRequiredOfBest": 0.800000011920929,
             "Choices": [
                 {
-                    "ChoiceType": 1,
-                    "ChoiceName": "",
+                    "ChoiceType": "FlyTowardsEnemyMulti",
                     "Weight": 1.0,
-                    "Momentum": 0.0,
+                    "Momentum": 0.20000000298023225,
                     "Considerations": [
                         {
-                            "FactType": 1,
-                            "GraphType": 2,
-                            "Slope": -0.6000000238418579,
-                            "Exp": 6.0,
+                            "FactType": "DistanceFromTargetMulti",
+                            "GraphType": "Exponential",
+                            "Slope": -0.75,
+                            "Exp": 4.0,
                             "XShift": 1.0,
-                            "YShift": 0.800000011920929,
-                            "InputMin": 5.0,
-                            "InputMax": 20.0
+                            "YShift": 1.0,
+                            "InputMin": 10.0,
+                            "InputMax": 200.0
                         },
                         {
-                            "FactType": 2,
-                            "GraphType": 2,
-                            "Slope": 0.6000000238418579,
+                            "FactType": "AngleFromTargetMulti",
+                            "GraphType": "Exponential",
+                            "Slope": 0.4000000059604645,
                             "Exp": 6.0,
                             "XShift": 1.0,
-                            "YShift": 0.20000000298023225,
+                            "YShift": 0.5,
                             "InputMin": 0.0,
                             "InputMax": 180.0
+                        },
+                        {
+                            "FactType": "Noise",
+                            "GraphType": "Linear",
+                            "Slope": 0.5,
+                            "Exp": 0.0,
+                            "XShift": 0.0,
+                            "YShift": 0.5,
+                            "InputMin": 1.5,
+                            "InputMax": 1.0
                         }
                     ]
                 },
                 {
-                    "ChoiceType": 2,
-                    "ChoiceName": "",
+                    "ChoiceType": "FlyAwayFromEnemy",
                     "Weight": 1.0,
                     "Momentum": 0.0,
                     "Considerations": [
                         {
-                            "FactType": 1,
-                            "GraphType": 2,
-                            "Slope": 0.6000000238418579,
-                            "Exp": 6.0,
-                            "XShift": 1.0,
-                            "YShift": 0.20000000298023225,
-                            "InputMin": 5.0,
-                            "InputMax": 20.0
+                            "FactType": "Constant",
+                            "GraphType": "Constant",
+                            "Slope": 0.0,
+                            "Exp": 0.0,
+                            "XShift": 0.0,
+                            "YShift": 0.4000000059604645,
+                            "InputMin": 0.0,
+                            "InputMax": 0.0
                         },
                         {
-                            "FactType": 2,
-                            "GraphType": 2,
-                            "Slope": -0.6000000238418579,
-                            "Exp": 6.0,
-                            "XShift": 1.0,
-                            "YShift": 0.800000011920929,
+                            "FactType": "TimeSinceThisChoiceSelection",
+                            "GraphType": "Exponential",
+                            "Slope": -0.4000000059604645,
+                            "Exp": 2.0,
+                            "XShift": 0.0,
+                            "YShift": 1.0,
                             "InputMin": 0.0,
-                            "InputMax": 180.0
+                            "InputMax": 5.0
                         }
                     ]
                 }

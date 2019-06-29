@@ -47,9 +47,9 @@ public class CombatTargetSys : JobComponentSystem
                 {
                     // check if all candidates are gone and we need new candidates
                     DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[nearestEnemy.BufferEntity];
-                    if (buf.Length == 0 && !nearestEnemy.UpdatePending)
+                    if (buf.Length == 0 && !nearestEnemy.UpdateRequired)
                     {
-                        nearestEnemy.UpdatePending = true;
+                        nearestEnemy.UpdateRequired = true;
                     }
                 }
             }

@@ -1,34 +1,73 @@
 ﻿#define LOG
 
 using System;
-using System.Reflection;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-public static class Logger
+public class Logger : MonoBehaviour
 {
     private const bool VerboseLog = true;
+    private static List<string> frameLogs = new List<string>();
+    private static int lastLoggedFrame = 0;
+    private static bool handleLogs = true;
+    private static int frameCount;
+
+    private void Update()
+    {
+        frameCount = Time.frameCount;
+    }
+
+    private void OnEnable()
+    {
+        Application.logMessageReceived += HandleLog;
+        Application.logMessageReceivedThreaded += HandleLog;
+    }
+
+    private void OnDisable()
+    {
+        Application.logMessageReceived -= HandleLog;
+        Application.logMessageReceivedThreaded -= HandleLog;
+        frameLogs.Clear();
+    }
+
+    public static void HandleLog(string logString, string stackTrace, UnityEngine.LogType type)
+    {
+        if (type == UnityEngine.LogType.Exception && handleLogs)
+        {
+            handleLogs = false;
+            lock (frameLogs)
+            {
+                foreach (string msg in frameLogs)
+                {
+                    Debug.Log(msg);
+                }
+
+                frameLogs.Clear();
+            }
+
+            handleLogs = true;
+        }
+    }
 
     public static void Log(object msg)
     {
-        #if (LOG)
+#if (LOG)
         Debug.Log(msg);
-        #endif
+#endif
     }
 
-    public static void Msg(object msg)
+    public static void OnError(object msg)
     {
-        Application.SetStackTraceLogType(UnityEngine.LogType.Log, StackTraceLogType.None);
-        Debug.Log(msg);
-        Application.SetStackTraceLogType(UnityEngine.LogType.Log, StackTraceLogType.ScriptOnly);
-    }
-
-    public static void MsgIf(bool condition, object msg)
-    {
-        if (condition)
+#if (LOG)
+        if (frameCount > lastLoggedFrame)
         {
-            Msg(msg);
+            lastLoggedFrame = frameCount;
+            frameLogs.Clear();
         }
+
+        frameLogs.Add(msg.ToString());
+#endif
     }
 
     public static void LogVerbose(object msg, string tag, bool stackTrace = false)

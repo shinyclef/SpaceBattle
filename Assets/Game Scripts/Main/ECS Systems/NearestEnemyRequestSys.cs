@@ -64,7 +64,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
         // 1. Populate queriedZones, parallel
         inputDeps = new PopulateQueriedZonesJob()
         {
-            QueriedZones = this.queriedZones.ToConcurrent(),
+            QueriedZones = queriedZones.ToConcurrent(),
         }.Schedule(this, inputDeps);
 
         // 2. Update activeZones, single thread
@@ -73,7 +73,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
             FRAME = Time.frameCount,
             Time = Time.time,
             ActiveZones = activeZones,
-            QueriedZones = this.queriedZones,
+            QueriedZones = queriedZones,
             NearestEnemiesBufferEntitiesMap = nearestEnemiesBufferEntitiesMap,
             BufferEntityPool = bufferEntityPool,
             NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(false),
@@ -188,7 +188,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
 
         public void Execute([ReadOnly] ref LocalToWorld l2w, [ReadOnly] ref Faction faction, [ReadOnly] ref NearestEnemy nearestEnemy)
         {
-            if (nearestEnemy.UpdatePending)
+            if (nearestEnemy.UpdateRequired)
             {
                 int2 zone = SpatialPartitionUtil.ToSpatialPartition(l2w.Position.xy);
                 int factionInt = (int)faction.Value;
@@ -240,10 +240,10 @@ public class NearestEnemyRequestSys : JobComponentSystem
                     DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[NearestEnemiesBufferEntitiesMap[bucket]];
                     for (int j = buf.Length - 1; j >= 0; j--)
                     {
-                        if (!L2Ws.Exists(buf[j]))
+                        if (!L2Ws.Exists(buf[j].Enemy))
                         {
+                            //Logger.OnError($"{FRAME}: Remove {bucket} at {j} (len: {buf.Length}): Entity {buf[j].Enemy}");
                             buf.RemoveAt(j); // remove destroyed entities so we can provide a reliable buffer
-                            //Logger.Log($"{FRAME}: Remove {bucket} at {j}");
                         }
                     }
 

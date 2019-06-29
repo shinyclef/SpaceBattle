@@ -11,12 +11,16 @@ using UnityEngine;
 [UpdateAfter(typeof(NearestEnemySys))]
 public class CombatAiSys : JobComponentSystem
 {
+    private const float RefreshNearestEnemiesInterval = 1f;
+
     public bool EnableDebugRays;
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
         inputDeps = new Job()
         {
+            NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(true),
+            L2WComps = GetComponentDataFromEntity<LocalToWorld>(true),
             UtilityScoreBufs = GetBufferFromEntity<UtilityScoreBuf>(false),
             Decisions = AiDataSys.NativeData.Decisions,
             Choices = AiDataSys.NativeData.Choices,
@@ -30,9 +34,11 @@ public class CombatAiSys : JobComponentSystem
         return inputDeps;
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     private struct Job : IJobForEachWithEntity<NearestEnemy, CombatTarget, LocalToWorld, CombatAi>
     {
+        [ReadOnly] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
+        [ReadOnly] public ComponentDataFromEntity<LocalToWorld> L2WComps;
         [NativeDisableParallelForRestriction] public BufferFromEntity<UtilityScoreBuf> UtilityScoreBufs;
         [ReadOnly] public NativeArray<Decision> Decisions;
         [ReadOnly] public NativeArray<Choice> Choices;
@@ -53,42 +59,37 @@ public class CombatAiSys : JobComponentSystem
             [ReadOnly] ref LocalToWorld l2w,
             ref CombatAi ai)
         {
-            if (Time - ai.LastEvalTime < 0.3f)
+            // if I have no target candidates available, request nearest enemies refresh
+            if (nearestEnemy.BufferEntity == Entity.Null)
+            {
+                nearestEnemy.UpdateRequired = true;
+                if (ai.ActiveChoice != ChoiceType.None)
+                {
+                    ai.ActiveChoice = ChoiceType.None;
+                    ai.ChoiceSelectedTime = Time;
+                    target.Entity = Entity.Null;
+                }
+
+                return;
+            }
+
+            if (Time - ai.LastEvalTime < 0.3f && L2WComps.Exists(target.Entity))
             {
                 return;
             }
 
-            // if I have no target candidates available, or I haven't refreshed targets in a while, I should consider requesting a nearest enemies refresh
-            
-            
-            //bool newTargetRequired = nearestEnemy.BufferEntity == Entity.Null;
-            //if (newTargetRequired)
-            //{
-            //    if (nearestEnemy.LastUpdatedTime == Time)
-            //    {
-            //        //target.Entity = nearestEnemy.BufferEntity;
-            //    }
-            //    else
-            //    {
-            //        // check if all candidates are gone and we need new candidates
-            //        DynamicBuffer<NearbyEnemyBuf> buf = NearbyEnemyBufs[nearestEnemy.BufferEntity];
-            //        if (buf.Length == 0 && !nearestEnemy.UpdatePending)
-            //        {
-            //            nearestEnemy.UpdatePending = true;
-            //        }
-            //    }
-            //}
+            // I haven't refreshed targets in a while, request nearest enemies refresh
+            if (Time - nearestEnemy.LastUpdatedTime > RefreshNearestEnemiesInterval)
+            {
+                nearestEnemy.UpdateRequired = true;
+            }
 
-
-
+            NativeArray<NearbyEnemyBuf> enemies = NearbyEnemyBufs[nearestEnemy.BufferEntity].AsNativeArray();
 
             //eId = entity.Index;
             ai.LastEvalTime = Time;
 
-            float2 targPos = target.Pos;
-            ChoiceType selectedChoice;
-            int selectedTarget;
-
+            //float2 targPos = target.Pos;
             float distance = 0f;
             bool hasDistance = false;
             float angle = 0f;
@@ -110,7 +111,7 @@ public class CombatAiSys : JobComponentSystem
                         if (!hasDistance)
                         {
                             hasDistance = true;
-                            distance = math.distance(l2w.Position.xy, targPos);
+                            distance = math.distance(l2w.Position.xy, L2WComps[enemies[0]].Position.xy);
                         }
 
                         factValue[0] = distance;
@@ -120,7 +121,7 @@ public class CombatAiSys : JobComponentSystem
                         if (!hasAngle)
                         {
                             hasAngle = true;
-                            float2 dirToEnemy = math.normalizesafe(targPos - l2w.Position.xy);
+                            float2 dirToEnemy = math.normalizesafe(L2WComps[enemies[0]].Position.xy - l2w.Position.xy);
                             angle = gmath.AngleBetweenVectors(dirToEnemy, l2w.Up.xy);
                         }
 
@@ -148,11 +149,20 @@ public class CombatAiSys : JobComponentSystem
                 hasNext = dm.EvaluateNextConsideration(factValue);
             }
 
-            selectedChoice = dm.SelectedChoice;
-            selectedTarget = dm.SelectedTarget;
+            ChoiceType selectedChoice = dm.SelectedChoice;
+            if (selectedChoice == ChoiceType.None)
+            {
+                target.Entity = Entity.Null;
+            }
+            else
+            {
+                target.Entity = enemies[dm.SelectedTarget];
+                target.Pos = L2WComps[enemies[0]].Position.xy;
+            }
+
             utilityScores.Clear();
 
-            Logger.LogIf(entity.Index == 1032, $"selectedChoice was: {selectedChoice}. Target: {selectedTarget}");
+            //Logger.LogIf(entity.Index == 1032, $"selectedChoice was: {selectedChoice}. Target: {dm.SelectedTarget}");
 
             if (ai.ActiveChoice != selectedChoice)
             {

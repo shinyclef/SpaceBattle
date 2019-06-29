@@ -5,7 +5,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 [UpdateInGroup(typeof(MainGameGroup))]
-[UpdateAfter(typeof(CombatTargetSys))]
+[UpdateAfter(typeof(CombatMovementSys))]
 public class DebugRaysSys : ComponentSystem
 {
     public static DebugRaysSys I;

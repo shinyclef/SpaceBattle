@@ -6,7 +6,7 @@ using UnityEngine;
 public struct NearestEnemy : IComponentData
 {
     public Entity BufferEntity;
-    public bool UpdatePending;
+    public bool UpdateRequired;
     public float LastUpdatedTime;
 }
 

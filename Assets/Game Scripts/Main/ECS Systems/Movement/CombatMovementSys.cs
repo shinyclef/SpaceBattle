@@ -48,7 +48,7 @@ public class CombatMovementSys : JobComponentSystem
         return inputDeps;
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     private struct Job : IJobForEach<CombatTarget, LocalToWorld, PhysicsVelocity, Weapon, CombatAi, MoveDestination>
     {
         [NativeDisableContainerSafetyRestriction] public NativeArray<Random> Rngs;
@@ -80,7 +80,7 @@ public class CombatMovementSys : JobComponentSystem
 
             float2 targPos = target.Pos;
             Random rand = Rngs[threadId];
-
+            //Logger.Log($"ai.ActiveChoice {ai.ActiveChoice}");
             switch (ai.ActiveChoice)
             {
                 case ChoiceType.FlyTowardsEnemyMulti:

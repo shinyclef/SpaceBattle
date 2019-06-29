@@ -18,14 +18,14 @@ namespace Tests
                 360f
             };
 
-            Logger.Msg("-----------------");
-            Logger.Msg("Heading to Float2");
-            Logger.Msg("-----------------");
+            Logger.Log("-----------------");
+            Logger.Log("Heading to Float2");
+            Logger.Log("-----------------");
             foreach (var h in headings)
             {
                 float2 res = gmath.HeadingToFloat2(h);
                 float backAgain = math.round(gmath.Float2ToHeading(res) * 100f) / 100f;
-                Logger.Msg($"{h} -> {math.round(res * 100f) / 100f} -> {backAgain}");
+                Logger.Log($"{h} -> {math.round(res * 100f) / 100f} -> {backAgain}");
             }
         }
     }
