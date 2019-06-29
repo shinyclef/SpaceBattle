@@ -201,7 +201,7 @@ public class AiDataSys : ComponentSystem
             maxScoresToRecord = math.max(scoresToRecord, maxScoresToRecord);
         }
 
-        nativeData.RecordedScores = new NativeArray<float>(maxScoresToRecord, Allocator.Persistent);
+        nativeData.RecordedScores = new NativeHashMap<int, float>(maxScoresToRecord, Allocator.Persistent);
         NativeData = nativeData;
         Messenger.Global.Post(Msg.AiNativeArrayssGenerated);
     }

@@ -12,7 +12,6 @@ using UnityEngine;
 public class CombatAiSys : JobComponentSystem
 {
     private const float RefreshNearestEnemiesInterval = 1f;
-
     public bool EnableDebugRays;
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
@@ -43,7 +42,7 @@ public class CombatAiSys : JobComponentSystem
         [ReadOnly] public NativeArray<Decision> Decisions;
         [ReadOnly] public NativeArray<Choice> Choices;
         [ReadOnly] public NativeArray<Consideration> Considerations;
-        [NativeDisableParallelForRestriction] [WriteOnly] public NativeArray<float> RecordedScores;
+        [NativeDisableParallelForRestriction] [WriteOnly] public NativeHashMap<int, float> RecordedScores;
         public DecisionType RecordedDecision;
 
         public float Time;
@@ -73,8 +72,9 @@ public class CombatAiSys : JobComponentSystem
                 return;
             }
 
-            if (Time - ai.LastEvalTime < 0.3f && L2WComps.Exists(target.Entity))
+            if (Time - ai.LastEvalTime < 0.0f && L2WComps.Exists(target.Entity)) // TODO: 0.3
             {
+                target.Pos = L2WComps[target.Entity].Position.xy;
                 return;
             }
 
@@ -84,69 +84,62 @@ public class CombatAiSys : JobComponentSystem
                 nearestEnemy.UpdateRequired = true;
             }
 
+            ai.LastEvalTime = Time;
+            RecordedScores.Clear();
+            utilityScores = UtilityScoreBufs[entity];
+            NativeArray<float> factValues;
             NativeArray<NearbyEnemyBuf> enemies = NearbyEnemyBufs[nearestEnemy.BufferEntity].AsNativeArray();
 
-            //eId = entity.Index;
-            ai.LastEvalTime = Time;
-
-            //float2 targPos = target.Pos;
-            float distance = 0f;
-            bool hasDistance = false;
-            float angle = 0f;
-            bool hasAngle = false;
-
-            // make decision
-            utilityScores = UtilityScoreBufs[entity];
             DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores, Time,
                 ai.ActiveChoice, ref RecordedScores, RecordedDecision, entity == RecordedEntity);
             bool hasNext = dm.PrepareDecision(DecisionType.CombatMovement);
+            
             while (hasNext)
             {
                 FactType requiredFact = dm.NextRequiredFactType;
-                // Logger.LogIf(entity.Index == 9, $"Required Fact: {requiredFact}");
-                NativeArray<float> factValue = new NativeArray<float>(1, Allocator.Temp);
                 switch (requiredFact)
                 {
                     case FactType.DistanceFromTargetMulti:
-                        if (!hasDistance)
+                        factValues = new NativeArray<float>(enemies.Length, Allocator.Temp);
+                        for (int i = 0; i < enemies.Length; i++)
                         {
-                            hasDistance = true;
-                            distance = math.distance(l2w.Position.xy, L2WComps[enemies[0]].Position.xy);
+                            factValues[i] = math.distance(l2w.Position.xy, L2WComps[enemies[i]].Position.xy);
                         }
-
-                        factValue[0] = distance;
+                        
                         break;
 
                     case FactType.AngleFromTargetMulti:
-                        if (!hasAngle)
+                        factValues = new NativeArray<float>(enemies.Length, Allocator.Temp);
+                        for (int i = 0; i < enemies.Length; i++)
                         {
-                            hasAngle = true;
-                            float2 dirToEnemy = math.normalizesafe(L2WComps[enemies[0]].Position.xy - l2w.Position.xy);
-                            angle = gmath.AngleBetweenVectors(dirToEnemy, l2w.Up.xy);
+                            float2 dirToEnemy = math.normalizesafe(L2WComps[enemies[i]].Position.xy - l2w.Position.xy);
+                            factValues[i] = gmath.AngleBetweenVectors(dirToEnemy, l2w.Up.xy);
                         }
 
-                        factValue[0] = angle;
                         break;
 
                     case FactType.Noise:
-                        factValue[0] = ai.NoiseSeed;
+                        factValues = new NativeArray<float>(1, Allocator.Temp);
+                        factValues[0] = ai.NoiseSeed;
                         break;
 
                     case FactType.TimeSinceLastChoiceSelection:
-                        factValue[0] = Time - ai.ChoiceSelectedTime;
+                        factValues = new NativeArray<float>(1, Allocator.Temp);
+                        factValues[0] = Time - ai.ChoiceSelectedTime;
                         break;
 
                     case FactType.TimeSinceThisChoiceSelection:
-                        factValue[0] = dm.CurrentlyEvaluatedChoice == ai.ActiveChoice ? Time - ai.ChoiceSelectedTime : 0f;
+                        factValues = new NativeArray<float>(1, Allocator.Temp);
+                        factValues[0] = dm.CurrentlyEvaluatedChoice == ai.ActiveChoice ? Time - ai.ChoiceSelectedTime : 0f;
                         break;
 
                     default:
-                        //Logger.LogIf(entity.Index == 9, $"I'm unable to provide FactType: {requiredFact}");
-                        factValue[0] = 0f;
+                        factValues = new NativeArray<float>(1, Allocator.Temp);
+                        factValues[0] = 0f;
                         break;
                 }
 
-                hasNext = dm.EvaluateNextConsideration(factValue);
+                hasNext = dm.EvaluateNextConsideration(factValues);
             }
 
             ChoiceType selectedChoice = dm.SelectedChoice;
@@ -157,16 +150,13 @@ public class CombatAiSys : JobComponentSystem
             else
             {
                 target.Entity = enemies[dm.SelectedTarget];
-                target.Pos = L2WComps[enemies[0]].Position.xy;
+                target.Pos = L2WComps[target.Entity].Position.xy;
             }
 
             utilityScores.Clear();
 
-            //Logger.LogIf(entity.Index == 1032, $"selectedChoice was: {selectedChoice}. Target: {dm.SelectedTarget}");
-
             if (ai.ActiveChoice != selectedChoice)
             {
-                //Logger.LogIf(entity.Index == 9, $"New Choice was: {selectedChoice}");
                 ai.ActiveChoice = selectedChoice;
                 ai.ChoiceSelectedTime = Time;
             }

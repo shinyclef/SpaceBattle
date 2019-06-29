@@ -29,6 +29,7 @@ public class ConsiderationUi : MonoBehaviour
     [SerializeField] private GameObject graphBallPrefab = default;
 
     private bool isMultiTarget;
+    private int maxTargets;
     private bool expanded;
     private ChoiceUi choice;
     private Image graphBall;
@@ -36,9 +37,10 @@ public class ConsiderationUi : MonoBehaviour
     private RectTransform graph;
     private UILineRenderer graphLine;
     
-    private int recordedDataIndex;
-    private float factInputValue;
-    private float scoreValue;
+    
+    private int recordedDataKey;
+    private float bestFactInputValue;
+    private float bestScoreValue;
 
     public ConsiderationDto Dto { get; private set; }
 
@@ -185,7 +187,7 @@ public class ConsiderationUi : MonoBehaviour
         inputsPanel.gameObject.SetActive(true);
         inputsPanel.gameObject.SetActive(false);
 
-        if (dto.TargetCount > 1)
+        if (dto.IsMultiTarget)
         {
             isMultiTarget = true;
             for (int i = 0; i < reorderButtons.Length; i++)
@@ -199,9 +201,10 @@ public class ConsiderationUi : MonoBehaviour
         UpdateValuesFromDto();
     }
 
-    public void SetRecordedDataIndecies(int recordedDataIndex)
+    public void SetRecordedDataKeys(int choiceTargets, int recordedDataKey)
     {
-        this.recordedDataIndex = recordedDataIndex;
+        maxTargets = MultiTargetUtil.IsMultiTargetFact(Dto.FactTypeEnum) ? math.min(choiceTargets, scoreLabelMulti.Length) : 1;
+        this.recordedDataKey = recordedDataKey;
     }
 
     public void UpdateValuesFromDto()
@@ -239,9 +242,29 @@ public class ConsiderationUi : MonoBehaviour
     {
         if (!AiInspector.RecordingPaused)
         {
-            scoreValue = AiDataSys.NativeData.RecordedScores[recordedDataIndex];
-            score.text = scoreValue.ToString(AiInspector.ScoreFormat);
-            factInputValue = AiDataSys.NativeData.RecordedScores[recordedDataIndex + 1];
+            bool noTargetsLeft = false;
+            for (int i = 0; i < maxTargets; i++)
+            {
+                float score = 0f;
+                scoreLabelMulti[i].enabled = true;
+                if (noTargetsLeft || !AiDataSys.NativeData.RecordedScores.TryGetValue(recordedDataKey + i * 10, out score))
+                {
+                    noTargetsLeft = true; // just to shortcut the rest of the loop
+                    score = 0f;
+                    scoreLabelMulti[i].enabled = false;
+                }
+
+                scoreLabelMulti[i].text = score.ToString(AiInspector.ScoreFormat);
+            }
+
+            for (int i = maxTargets; i < 8; i++)
+            {
+                scoreLabelMulti[i].enabled = false;
+            }
+
+            AiDataSys.NativeData.RecordedScores.TryGetValue(recordedDataKey + choice.BestScoreTargetIndex * 10, out bestScoreValue);
+            AiDataSys.NativeData.RecordedScores.TryGetValue(recordedDataKey + choice.BestScoreTargetIndex * 10 + 1, out bestFactInputValue);
+            score.text = bestScoreValue.ToString(AiInspector.ScoreFormat);
         }
         
         UpdateGraphBallPosition();
@@ -291,8 +314,8 @@ public class ConsiderationUi : MonoBehaviour
         float h = graph.rect.height;
 
         Vector2 pos = graphBall.rectTransform.anchoredPosition;
-        pos.x = factInputValue * w;
-        pos.y = scoreValue * h;
+        pos.x = bestFactInputValue * w;
+        pos.y = bestScoreValue * h;
         graphBall.rectTransform.anchoredPosition = pos;
     }
 }

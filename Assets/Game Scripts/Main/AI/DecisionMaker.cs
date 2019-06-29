@@ -10,7 +10,7 @@ public struct DecisionMaker
     public DynamicBuffer<UtilityScoreBuf> UtilityScores;
     public ChoiceType CurrentChoice;
     public float Time;
-    public NativeArray<float> RecordedScores;
+    public NativeHashMap<int, float> RecordedScores;
     public DecisionType RecordedDecision;
     private bool RecordedEntity;
 
@@ -30,10 +30,15 @@ public struct DecisionMaker
     private ushort considerationIndex;
 
     private bool record;
-    private int recordIndex;
+
+    private int ChoiceNum { get { return choiceIndex - choiceIndexFrom + 1; } }
+    private int ConsiderationNum { get { return considerationIndex - considerationIndexFrom + 1; } }
+    private int ChoiceRecordKey { get { return ChoiceNum * 100000; } }
+    private int ConsiderationRecordKey { get { return ChoiceNum * 100000 + ConsiderationNum * 1000; } }
 
     public DecisionMaker(ref NativeArray<Decision> decisions, ref NativeArray<Choice> choices, ref NativeArray<Consideration> considerations, 
-        ref DynamicBuffer<UtilityScoreBuf> utilityScores, float time, ChoiceType currentChoice, ref NativeArray<float> recordedScores, DecisionType recordedDecision, bool recordedEntity) : this()
+        ref DynamicBuffer<UtilityScoreBuf> utilityScores, float time, ChoiceType currentChoice, 
+        ref NativeHashMap<int, float> recordedScores, DecisionType recordedDecision, bool recordedEntity) : this()
     {
         Decisions = decisions;
         Choices = choices;
@@ -71,22 +76,10 @@ public struct DecisionMaker
         bestChoiceScore = 0f;
         decision = Decisions[(int)decisionType];
         minRequiredChoiceScore = 0f;
-        recordIndex = 0;
         record = RecordedEntity && decisionType == RecordedDecision;
 
         if (!PrepareChoiceVariables())
         {
-            // we're skipping this choice
-            if (record)
-            {
-                // still need to record the skipped choice
-                for (int i = 0; i < currentChoiceScores.Length; i++)
-                {
-                    RecordedScores[recordIndex] = 0f;
-                    recordIndex++;
-                }
-            }
-
             if (!FinaliseChoiceAndMoveToNext())
             {
                 return false;
@@ -110,15 +103,21 @@ public struct DecisionMaker
             float score = consideration.Evaluate(factValue);
             if (record)
             {
-                RecordedScores[recordIndex] = score;
-                RecordedScores[recordIndex + 1] = factValue;
-                recordIndex += 2;
+                RecordedScores.TryAdd(ConsiderationRecordKey + i * 10, score);
+                RecordedScores.TryAdd(ConsiderationRecordKey + i * 10 + 1, factValue);
             }
 
             float makeUpValue = (1 - score) * modificationFactor;
             //Logger.Log($"factValue: {factValue} ({factValueRaw}), score: {score}, makeUpValue: {makeUpValue}");
             score += makeUpValue * score;
             currentChoiceScores[i] *= score;
+            if (factValues.Length == 1)
+            {
+                for (int j = 1; j < choice.TargetCount; j++)
+                {
+                    currentChoiceScores[j] *= score;
+                }
+            }
         }
 
         // if this is the last last consideration of the choice, or we're below minRequiredChoiceScore, move on the next choice.
@@ -132,8 +131,7 @@ public struct DecisionMaker
                     // we've finished recording all considerations, now record the final choice scores
                     for (int i = 0; i < currentChoiceScores.Length; i++)
                     {
-                        RecordedScores[recordIndex] = currentChoiceScores[i];
-                        recordIndex++;
+                        RecordedScores.TryAdd(ChoiceRecordKey + i * 10, currentChoiceScores[i]);
                     }
                 }
             }
@@ -155,8 +153,7 @@ public struct DecisionMaker
             {
                 for (int i = 0; i < currentChoiceScores.Length; i++)
                 {
-                    RecordedScores[recordIndex] = currentChoiceScores[i];
-                    recordIndex++;
+                    RecordedScores.TryAdd(ChoiceRecordKey + i * 10, currentChoiceScores[i]);
                 }
             }
 
@@ -215,17 +212,6 @@ public struct DecisionMaker
 
         if (!PrepareChoiceVariables())
         {
-            // we're skipping this choice
-            if (record)
-            {
-                // still need to record the skipped choice
-                for (int i = 0; i < currentChoiceScores.Length; i++)
-                {
-                    RecordedScores[recordIndex] = 0f;
-                    recordIndex++;
-                }
-            }
-
             return FinaliseChoiceAndMoveToNext();
         }
 

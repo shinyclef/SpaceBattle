@@ -114,7 +114,7 @@ public class AiInspector : MonoBehaviour
 
     private void OnAiNativeArraysGenerated()
     {
-        SetRecordedDataIndecies();
+        SetRecordedDataKeys();
         RecordingPaused = false;
     }
     
@@ -150,18 +150,18 @@ public class AiInspector : MonoBehaviour
             return;
         }
 
-        float max = choices[0].Score;
+        float max = choices[0].BestScore;
         ChoiceUi bestChoice = choices[0];
         for (int i = 1; i < choices.Count; i++)
         {
-            if (choices[i].Score > max)
+            if (choices[i].BestScore > max)
             {
-                max = choices[i].Score;
+                max = choices[i].BestScore;
                 bestChoice = choices[i];
             }
         }
 
-        if (bestChoice.Score > 0)
+        if (bestChoice.BestScore > 0)
         {
             bestChoice.SetIsSelected(true);
         }
@@ -276,20 +276,18 @@ public class AiInspector : MonoBehaviour
             c.Setup(decisionDto.Choices[i], decisionDto);
         }
 
-        SetRecordedDataIndecies();
+        SetRecordedDataKeys();
         populating = false;
         SetDirtyState(AiDataSys.I.DataIsDirty);
         newChoiceButton.interactable = true;
     }
 
-    private void SetRecordedDataIndecies()
+    private void SetRecordedDataKeys()
     {
-        int recordedDataIndex = -1;
         for (int i = 0; i < choices.Count; i++)
         {
             ChoiceUi c = choices[i];
-            recordedDataIndex = recordedDataIndex + 1 + (c.ConsiderationsCount * 2);
-            c.SetRecordedDataIndecies(recordedDataIndex);
+            c.SetRecordedDataKeys((i + 1) * 100000);
         }
     }
 }

@@ -132,7 +132,8 @@ public class ChoiceDto : IEquatable<ChoiceDto>
     public float Momentum;
     public ConsiderationDto[] Considerations;
 
-    public int TargetCount { get { return MultiTargetCounts.GetChoiceTypeCount(ChoiceType); } }
+    public int TargetCount { get { return MultiTargetUtil.GetChoiceTypeCount((ChoiceType)Enum.Parse(typeof(ChoiceType), ChoiceType)); } }
+    public ChoiceType ChoiceTypeEnum { get { return (ChoiceType)Enum.Parse(typeof(ChoiceType), ChoiceType); } }
 
     public bool Equals(ChoiceDto other)
     {
@@ -193,7 +194,7 @@ public class ChoiceDto : IEquatable<ChoiceDto>
     {
         return new Choice
         {
-            ChoiceType = (ChoiceType)Enum.Parse(typeof(ChoiceType), ChoiceType),
+            ChoiceType = ChoiceTypeEnum,
             TargetCount = (ushort)TargetCount,
             ConsiderationIndexStart = considerationIndexStart,
             Weight = Weight,
@@ -214,7 +215,9 @@ public class ConsiderationDto : IEquatable<ConsiderationDto>
     public float InputMin;
     public float InputMax;
 
-    public int TargetCount { get { return MultiTargetCounts.GetFactTypeCount(FactType); } }
+    public bool IsMultiTarget { get { return FactType.EndsWith("Multi"); } }
+
+    public FactType FactTypeEnum { get { return (FactType)Enum.Parse(typeof(FactType), FactType); } }
 
     public static ConsiderationDto GetDefault()
     {

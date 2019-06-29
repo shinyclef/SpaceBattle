@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
@@ -35,13 +36,15 @@ public class ChoiceUi : MonoBehaviour
     private LayoutElement layoutElement;
     private float considerationCollapsedHeight;
     private bool choiceInfoExpanded;
-    private int recordedDataIndex;
+    private int recordedDataKey;
     private bool heightChangeEventScheduled;
+    private int maxTargets;
 
     public ChoiceDto Dto { get; private set; }
 
     public int ConsiderationsCount => Dto.Considerations.Length;
-    public float Score { get; private set; }
+    public float BestScore { get; private set; }
+    public int BestScoreTargetIndex { get; private set; }
 
     private float ChoiceInfoPanelCurrentHeight { get { return choiceInfoExpanded ? ChoiceInfoPanelExpandedHeight : choiceInfoCollapsedHeight; } }
     private float ChoiceInfoPanelExpandedHeight { get { return isMultiTarget ? choiceInfoExpandedMultiHeight : choiceInfoExpandedHeight; } }
@@ -169,13 +172,14 @@ public class ChoiceUi : MonoBehaviour
         PopulateConsiderations();
     }
 
-    public void SetRecordedDataIndecies(int recordedDataIndex)
+    public void SetRecordedDataKeys(int recordedDataKey)
     {
-        this.recordedDataIndex = recordedDataIndex;
+        this.recordedDataKey = recordedDataKey;
+        maxTargets = math.min(MultiTargetUtil.GetChoiceTypeCount(Dto.ChoiceTypeEnum), totalScoreLabelMulti.Length);
         for (int i = 0; i < considerations.Count; i++)
         {
             ConsiderationUi con = considerations[i];
-            con.SetRecordedDataIndecies(recordedDataIndex - (Dto.Considerations.Length * 2) + (i * 2));
+            con.SetRecordedDataKeys(maxTargets, recordedDataKey + (i + 1) * 1000);
         }
     }
 
@@ -184,10 +188,37 @@ public class ChoiceUi : MonoBehaviour
         SetIsSelected(false); // AiInspector will reselect if this is still the best choice
         if (!AiInspector.RecordingPaused)
         {
-            Score = AiDataSys.NativeData.RecordedScores[recordedDataIndex];
+            BestScore = 0f;
+            bool noTargetsLeft = false;
+            for (int i = 0; i < maxTargets; i++)
+            {
+                float score = 0f;
+                totalScoreLabelMulti[i].enabled = true;
+                if (noTargetsLeft || !AiDataSys.NativeData.RecordedScores.TryGetValue(recordedDataKey + i * 10, out score))
+                {
+                    noTargetsLeft = true; // just to shortcut the rest of the loop
+                    score = 0f;
+                    totalScoreLabelMulti[i].enabled = false;
+                }
+                else
+                {
+                    if (score >= BestScore)
+                    {
+                        BestScore = score;
+                        BestScoreTargetIndex = i;
+                    }
+                }
+
+                totalScoreLabelMulti[i].text = score.ToString(AiInspector.ScoreFormat);
+            }
+
+            for (int i = maxTargets; i < 8; i++)
+            {
+                totalScoreLabelMulti[i].enabled = false;
+            }
         }
         
-        totalScoreLabel.text = Score.ToString(AiInspector.ScoreFormat);
+        totalScoreLabel.text = BestScore.ToString(AiInspector.ScoreFormat);
         if (!GInput.AnyKeyActivity)
         {
             return;
