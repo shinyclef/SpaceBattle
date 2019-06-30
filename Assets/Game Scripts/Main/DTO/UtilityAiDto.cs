@@ -58,13 +58,11 @@ public class UtilityAiDto : IEquatable<UtilityAiDto>
 public class DecisionDto : IEquatable<DecisionDto>
 {
     public string DecisionType;
-    public float MinimumRequiredOfBest;
     public ChoiceDto[] Choices;
 
     public bool Equals(DecisionDto other)
     {
         if (DecisionType != other.DecisionType ||
-            MinimumRequiredOfBest != other.MinimumRequiredOfBest ||
             Choices.Length != other.Choices.Length)
         {
             return false;
@@ -92,7 +90,6 @@ public class DecisionDto : IEquatable<DecisionDto>
         return new DecisionDto
         {
             DecisionType = DecisionType,
-            MinimumRequiredOfBest = MinimumRequiredOfBest,
             Choices = choices
         };
     }
@@ -106,7 +103,6 @@ public class DecisionDto : IEquatable<DecisionDto>
         }
 
         DecisionType = other.DecisionType;
-        MinimumRequiredOfBest = other.MinimumRequiredOfBest;
         for (int i = 0; i < Choices.Length; i++)
         {
             Choices[i].CopyValuesFrom(other.Choices[i]);
@@ -119,7 +115,6 @@ public class DecisionDto : IEquatable<DecisionDto>
         {
             DecisionType = (DecisionType)Enum.Parse(typeof(DecisionType), DecisionType),
             ChoiceIndexStart = choiceIndexStart,
-            MinimumRequiredOfBest = new half(MinimumRequiredOfBest)
         };
     }
 }

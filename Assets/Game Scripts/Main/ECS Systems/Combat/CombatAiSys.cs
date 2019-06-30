@@ -33,7 +33,7 @@ public class CombatAiSys : JobComponentSystem
         return inputDeps;
     }
 
-    [BurstCompile]
+    //[BurstCompile]
     private struct Job : IJobForEachWithEntity<NearestEnemy, CombatTarget, LocalToWorld, CombatAi>
     {
         [ReadOnly] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
@@ -84,8 +84,12 @@ public class CombatAiSys : JobComponentSystem
                 nearestEnemy.UpdateRequired = true;
             }
 
+            if (entity == RecordedEntity)
+            {
+                RecordedScores.Clear();
+            }
+            
             ai.LastEvalTime = Time;
-            RecordedScores.Clear();
             utilityScores = UtilityScoreBufs[entity];
             NativeArray<float> factValues;
             NativeArray<NearbyEnemyBuf> enemies = NearbyEnemyBufs[nearestEnemy.BufferEntity].AsNativeArray();
@@ -93,9 +97,25 @@ public class CombatAiSys : JobComponentSystem
             DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores, Time,
                 ai.ActiveChoice, ref RecordedScores, RecordedDecision, entity == RecordedEntity);
             bool hasNext = dm.PrepareDecision(DecisionType.CombatMovement);
-            
+            ChoiceType lastChoice = ChoiceType.None;
+
             while (hasNext)
             {
+                if (dm.CurrentlyEvaluatedChoice != lastChoice)
+                {
+                    lastChoice = dm.CurrentlyEvaluatedChoice;
+                    switch (dm.CurrentlyEvaluatedChoice)
+                    {
+                        case ChoiceType.FlyTowardsEnemyMulti:
+                            dm.ChoiceTargetCount = enemies.Length;
+                            break;
+
+                        default:
+                            dm.ChoiceTargetCount = 1;
+                            break;
+                    }
+                }
+
                 FactType requiredFact = dm.NextRequiredFactType;
                 switch (requiredFact)
                 {
@@ -113,7 +133,7 @@ public class CombatAiSys : JobComponentSystem
                         for (int i = 0; i < enemies.Length; i++)
                         {
                             float2 dirToEnemy = math.normalizesafe(L2WComps[enemies[i]].Position.xy - l2w.Position.xy);
-                            factValues[i] = gmath.AngleBetweenVectors(dirToEnemy, l2w.Up.xy);
+                            factValues[i] = gmath.AngleBetweenVectors(dirToEnemy, math.normalize(l2w.Up.xy));
                         }
 
                         break;

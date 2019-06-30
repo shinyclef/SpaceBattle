@@ -14,7 +14,6 @@ public struct DecisionMaker
     public DecisionType RecordedDecision;
     private bool RecordedEntity;
 
-    private float minRequiredChoiceScore;
     private NativeArray<float> currentChoiceScores;
     private float bestChoiceScore;
     private Decision decision;
@@ -31,6 +30,11 @@ public struct DecisionMaker
 
     private bool record;
 
+    public int ChoiceTargetCount { get; set; }
+    public FactType NextRequiredFactType { get; private set; }
+    public ChoiceType CurrentlyEvaluatedChoice { get; private set; }
+    public ChoiceType SelectedChoice { get; private set; }
+    public int SelectedTarget { get; private set; }
     private int ChoiceNum { get { return choiceIndex - choiceIndexFrom + 1; } }
     private int ConsiderationNum { get { return considerationIndex - considerationIndexFrom + 1; } }
     private int ChoiceRecordKey { get { return ChoiceNum * 100000; } }
@@ -51,13 +55,6 @@ public struct DecisionMaker
         RecordedEntity = recordedEntity;
     }
 
-    public FactType NextRequiredFactType { get; private set; }
-
-    public ChoiceType CurrentlyEvaluatedChoice { get; private set; }
-
-    public ChoiceType SelectedChoice { get; private set; }
-    public int SelectedTarget { get; private set; }
-
     public bool PrepareDecision(DecisionType decisionType)
     {
         if (Decisions.Length == 0)
@@ -75,7 +72,6 @@ public struct DecisionMaker
         choiceIndex = choiceIndexFrom;
         bestChoiceScore = 0f;
         decision = Decisions[(int)decisionType];
-        minRequiredChoiceScore = 0f;
         record = RecordedEntity && decisionType == RecordedDecision;
 
         if (!PrepareChoiceVariables())
@@ -105,6 +101,14 @@ public struct DecisionMaker
             {
                 RecordedScores.TryAdd(ConsiderationRecordKey + i * 10, score);
                 RecordedScores.TryAdd(ConsiderationRecordKey + i * 10 + 1, factValue);
+                if (factValues.Length == 1)
+                {
+                    for (int j = 1; j < choice.TargetCount; j++)
+                    {
+                        RecordedScores.TryAdd(ConsiderationRecordKey + j * 10, score);
+                        RecordedScores.TryAdd(ConsiderationRecordKey + j * 10 + 1, factValue);
+                    }
+                }
             }
 
             float makeUpValue = (1 - score) * modificationFactor;
@@ -121,15 +125,15 @@ public struct DecisionMaker
         }
 
         // if this is the last last consideration of the choice, or we're below minRequiredChoiceScore, move on the next choice.
-        bool allChoiceScoresBelowMin = AllChoiceScoresAreBelowThreshold(minRequiredChoiceScore);
-        if (allChoiceScoresBelowMin)
+        bool allChoiceScoresBelowBest = AllChoiceScoresAreBelowThreshold(bestChoiceScore);
+        if (allChoiceScoresBelowBest)
         {
             if (record)
             {
                 if (considerationIndex == considerationIndexTo - 1)
                 {
                     // we've finished recording all considerations, now record the final choice scores
-                    for (int i = 0; i < currentChoiceScores.Length; i++)
+                    for (int i = 0; i < ChoiceTargetCount; i++)
                     {
                         RecordedScores.TryAdd(ChoiceRecordKey + i * 10, currentChoiceScores[i]);
                     }
@@ -137,11 +141,10 @@ public struct DecisionMaker
             }
             else
             {
-                considerationIndex = (ushort)(considerationIndexTo - 1); // move to the next choice by saying we just finished the final choice
+                considerationIndex = (ushort)(considerationIndexTo - 1); // move to the next choice by saying we just finished the final consideration
             }
 
             //Logger.Log($"Score cutooff. currentChoiceScore: {currentChoiceScore}, minRequiredChoiceScore: {minRequiredChoiceScore}");
-            SetAllCurrentChoiceVals(0f);
         }
 
         considerationIndex++;
@@ -149,9 +152,9 @@ public struct DecisionMaker
         {
             // we have completed all considerations
 
-            if (record && !allChoiceScoresBelowMin)
+            if (record && !allChoiceScoresBelowBest)
             {
-                for (int i = 0; i < currentChoiceScores.Length; i++)
+                for (int i = 0; i < ChoiceTargetCount; i++)
                 {
                     RecordedScores.TryAdd(ChoiceRecordKey + i * 10, currentChoiceScores[i]);
                 }
@@ -161,8 +164,6 @@ public struct DecisionMaker
             {
                 bestChoiceScore = math.max(currentChoiceScores[i], bestChoiceScore);
             }
-
-            minRequiredChoiceScore = bestChoiceScore * decision.MinimumRequiredOfBest;
 
             // we've completed this consideration, let's score it and look at the next choice
             if (!FinaliseChoiceAndMoveToNext())
@@ -191,7 +192,7 @@ public struct DecisionMaker
         modificationFactor = 1f - (1f / (considerationIndexTo - considerationIndexFrom));
 
         currentChoiceScores = new NativeArray<float>(choice.TargetCount, Allocator.Temp);
-        SetAllCurrentChoiceVals(choice.Weight + math.select(0f, choice.MomentumFactor, choice.ChoiceType == CurrentChoice));
+        SetAllCurrentChoiceVals(currentChoiceScores.Length, choice.Weight + math.select(0f, choice.MomentumFactor, choice.ChoiceType == CurrentChoice));
         return true;
     }
 
@@ -218,9 +219,9 @@ public struct DecisionMaker
         return true;
     }
 
-    private void SetAllCurrentChoiceVals(float val)
+    private void SetAllCurrentChoiceVals(int targetCount, float val)
     {
-        for (int i = 0; i < currentChoiceScores.Length; i++)
+        for (int i = 0; i < targetCount; i++)
         {
             currentChoiceScores[i] = val;
         }
@@ -228,7 +229,7 @@ public struct DecisionMaker
 
     private bool AllChoiceScoresAreBelowThreshold(float threshold)
     {
-        for (int i = 0; i < currentChoiceScores.Length; i++)
+        for (int i = 0; i < ChoiceTargetCount; i++)
         {
             if (currentChoiceScores[i] >= threshold)
             {

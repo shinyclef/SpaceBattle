@@ -2,7 +2,6 @@
     "Decisions": [
         {
             "DecisionType": "CombatMovement",
-            "MinimumRequiredOfBest": 0.800000011920929,
             "Choices": [
                 {
                     "ChoiceType": "FlyTowardsEnemyMulti",

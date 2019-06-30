@@ -4,5 +4,4 @@ public struct Decision
 {
     public DecisionType DecisionType;
     public ushort ChoiceIndexStart;
-    public half MinimumRequiredOfBest;
 }
