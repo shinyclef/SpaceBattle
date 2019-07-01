@@ -13,7 +13,7 @@ using UnityEngine.Assertions;
 [AlwaysUpdateSystem]
 public class NearestEnemyRequestSys : JobComponentSystem
 {
-    public const float UpdateInterval = 1f;
+    public const float UpdateInterval = 1.5f;
 
     private EntityArchetype archetype;
     private NativeQueue<Entity> bufferEntityPool;
@@ -70,7 +70,6 @@ public class NearestEnemyRequestSys : JobComponentSystem
         // 2. Update activeZones, single thread
         inputDeps = new UpdateActiveZonesMapJob()
         {
-            FRAME = Time.frameCount,
             Time = Time.time,
             ActiveZones = activeZones,
             QueriedZones = queriedZones,
@@ -201,8 +200,6 @@ public class NearestEnemyRequestSys : JobComponentSystem
     [BurstCompile]
     private struct UpdateActiveZonesMapJob : IJob
     {
-        public int FRAME;
-
         public float Time;
         public NativeHashMap<int3, float> ActiveZones;
         [ReadOnly] public NativeHashMap<int3, byte> QueriedZones;

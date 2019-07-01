@@ -11,7 +11,7 @@ using UnityEngine;
 [UpdateAfter(typeof(NearestEnemySys))]
 public class CombatAiSys : JobComponentSystem
 {
-    private const float RefreshNearestEnemiesInterval = 1f;
+    public const float RefreshNearestEnemiesInterval = 1f;
     public bool EnableDebugRays;
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
@@ -33,7 +33,7 @@ public class CombatAiSys : JobComponentSystem
         return inputDeps;
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     private struct Job : IJobForEachWithEntity<NearestEnemy, CombatTarget, LocalToWorld, CombatAi>
     {
         [ReadOnly] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
@@ -72,7 +72,7 @@ public class CombatAiSys : JobComponentSystem
                 return;
             }
 
-            if (Time - ai.LastEvalTime < 0.0f && L2WComps.Exists(target.Entity)) // TODO: 0.3
+            if (Time - ai.LastEvalTime < 0.3f && L2WComps.Exists(target.Entity)) // TODO: 0.3
             {
                 target.Pos = L2WComps[target.Entity].Position.xy;
                 return;

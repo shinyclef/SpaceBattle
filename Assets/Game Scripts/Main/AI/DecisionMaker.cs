@@ -16,7 +16,6 @@ public struct DecisionMaker
 
     private NativeArray<float> currentChoiceScores;
     private float bestChoiceScore;
-    private Decision decision;
     private Choice choice;
     private float modificationFactor;
 
@@ -71,7 +70,6 @@ public struct DecisionMaker
 
         choiceIndex = choiceIndexFrom;
         bestChoiceScore = 0f;
-        decision = Decisions[(int)decisionType];
         record = RecordedEntity && decisionType == RecordedDecision;
 
         if (!PrepareChoiceVariables())

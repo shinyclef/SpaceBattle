@@ -38,7 +38,7 @@ public class ThrustSys : JobComponentSystem
             /* -- Angular -- */
             /* ------------- */
 
-            const float MaxCorrectionAngle = 10f;
+            const float MaxCorrectionAngle = 15f;
 
             // calculate the desired thrust vector
             float currentH = gmath.Float2ToHeading(l2w.Up.xy);

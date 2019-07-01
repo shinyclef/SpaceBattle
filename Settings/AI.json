@@ -11,30 +11,40 @@
                         {
                             "FactType": "DistanceFromTargetMulti",
                             "GraphType": "Exponential",
-                            "Slope": -0.75,
-                            "Exp": 4.0,
+                            "Slope": -0.699999988079071,
+                            "Exp": 1.0,
+                            "XShift": 0.0,
+                            "YShift": 1.0,
+                            "InputMin": 20.0,
+                            "InputMax": 5000.0
+                        },
+                        {
+                            "FactType": "DistanceFromTargetMulti",
+                            "GraphType": "Exponential",
+                            "Slope": -1.0,
+                            "Exp": 2.0,
                             "XShift": 1.0,
                             "YShift": 1.0,
-                            "InputMin": 10.0,
-                            "InputMax": 200.0
+                            "InputMin": 0.0,
+                            "InputMax": 20.0
                         },
                         {
                             "FactType": "AngleFromTargetMulti",
                             "GraphType": "Exponential",
-                            "Slope": 0.4000000059604645,
+                            "Slope": 0.30000001192092898,
                             "Exp": 6.0,
                             "XShift": 1.0,
-                            "YShift": 0.5,
+                            "YShift": 0.75,
                             "InputMin": 0.0,
                             "InputMax": 180.0
                         },
                         {
                             "FactType": "Noise",
                             "GraphType": "Linear",
-                            "Slope": 0.5,
+                            "Slope": 0.30000001192092898,
                             "Exp": 0.0,
                             "XShift": 0.0,
-                            "YShift": 0.5,
+                            "YShift": 0.6000000238418579,
                             "InputMin": 1.5,
                             "InputMax": 1.0
                         }
@@ -43,7 +53,7 @@
                 {
                     "ChoiceType": "FlyAwayFromEnemy",
                     "Weight": 1.0,
-                    "Momentum": 0.0,
+                    "Momentum": 0.30000001192092898,
                     "Considerations": [
                         {
                             "FactType": "Constant",
@@ -51,19 +61,19 @@
                             "Slope": 0.0,
                             "Exp": 0.0,
                             "XShift": 0.0,
-                            "YShift": 0.4000000059604645,
+                            "YShift": 0.44999998807907107,
                             "InputMin": 0.0,
                             "InputMax": 0.0
                         },
                         {
                             "FactType": "TimeSinceThisChoiceSelection",
                             "GraphType": "Exponential",
-                            "Slope": -0.4000000059604645,
+                            "Slope": -1.0,
                             "Exp": 2.0,
                             "XShift": 0.0,
-                            "YShift": 1.0,
+                            "YShift": 0.800000011920929,
                             "InputMin": 0.0,
-                            "InputMax": 5.0
+                            "InputMax": 3.0
                         }
                     ]
                 }
