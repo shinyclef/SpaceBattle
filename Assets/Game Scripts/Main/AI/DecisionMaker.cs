@@ -8,6 +8,7 @@ public struct DecisionMaker
     public NativeArray<Choice> Choices;
     public NativeArray<Consideration> Considerations;
     public DynamicBuffer<UtilityScoreBuf> UtilityScores;
+    public NativeArray<int> ChoiceTargetCounts;
     public ChoiceType CurrentChoice;
     public float Time;
     public NativeHashMap<int, float> RecordedScores;
@@ -19,9 +20,9 @@ public struct DecisionMaker
     private Choice choice;
     private float modificationFactor;
 
-    private ushort choiceIndexFrom;
-    private ushort choiceIndexTo;
-    private ushort choiceIndex;
+    public ushort ChoiceIndexFrom;
+    public ushort ChoiceIndexTo;
+    public ushort ChoiceIndex;
 
     private ushort considerationIndexFrom;
     private ushort considerationIndexTo;
@@ -29,19 +30,19 @@ public struct DecisionMaker
 
     private bool record;
 
-    public int ChoiceTargetCount { get; set; }
+    public int CurrentChoiceTargetCount { get { return ChoiceTargetCounts[ChoiceIndex - ChoiceIndexFrom]; } }
     public FactType NextRequiredFactType { get; private set; }
     public ChoiceType CurrentlyEvaluatedChoice { get; private set; }
     public ChoiceType SelectedChoice { get; private set; }
     public int SelectedTarget { get; private set; }
-    private int ChoiceNum { get { return choiceIndex - choiceIndexFrom + 1; } }
+    private int ChoiceNum { get { return ChoiceIndex - ChoiceIndexFrom + 1; } }
     private int ConsiderationNum { get { return considerationIndex - considerationIndexFrom + 1; } }
     private int ChoiceRecordKey { get { return ChoiceNum * 100000; } }
     private int ConsiderationRecordKey { get { return ChoiceNum * 100000 + ConsiderationNum * 1000; } }
 
     public DecisionMaker(ref NativeArray<Decision> decisions, ref NativeArray<Choice> choices, ref NativeArray<Consideration> considerations, 
         ref DynamicBuffer<UtilityScoreBuf> utilityScores, float time, ChoiceType currentChoice, 
-        ref NativeHashMap<int, float> recordedScores, DecisionType recordedDecision, bool recordedEntity) : this()
+        ref NativeHashMap<int, float> recordedScores, DecisionType decisionType, DecisionType recordedDecision, bool recordedEntity) : this()
     {
         Decisions = decisions;
         Choices = choices;
@@ -52,23 +53,20 @@ public struct DecisionMaker
         RecordedScores = recordedScores;
         RecordedDecision = recordedDecision;
         RecordedEntity = recordedEntity;
+
+        ChoiceIndexFrom = Decisions[(int)decisionType].ChoiceIndexStart;
+        ChoiceIndexTo = (int)decisionType < Decisions.Length - 1 ? Decisions[(int)decisionType + 1].ChoiceIndexStart : (ushort)Choices.Length;
+        ChoiceIndex = ChoiceIndexFrom;
+        ChoiceTargetCounts = new NativeArray<int>(ChoiceIndexTo - ChoiceIndexFrom, Allocator.Temp);
     }
 
     public bool PrepareDecision(DecisionType decisionType)
     {
-        if (Decisions.Length == 0)
+        if (Decisions.Length == 0 || ChoiceIndexFrom == ChoiceIndexTo)
         {
             return false;
         }
 
-        choiceIndexFrom = Decisions[(int)decisionType].ChoiceIndexStart;
-        choiceIndexTo = (int)decisionType < Decisions.Length - 1 ? Decisions[(int)decisionType + 1].ChoiceIndexStart : (ushort)Choices.Length;
-        if (choiceIndexFrom == choiceIndexTo)
-        {
-            return false;
-        }
-
-        choiceIndex = choiceIndexFrom;
         bestChoiceScore = 0f;
         record = RecordedEntity && decisionType == RecordedDecision;
 
@@ -81,7 +79,7 @@ public struct DecisionMaker
         }
 
         NextRequiredFactType = Considerations[considerationIndex].FactType;
-        CurrentlyEvaluatedChoice = Choices[choiceIndex].ChoiceType;
+        CurrentlyEvaluatedChoice = Choices[ChoiceIndex].ChoiceType;
         return true;
     }
 
@@ -101,7 +99,7 @@ public struct DecisionMaker
                 RecordedScores.TryAdd(ConsiderationRecordKey + i * 10 + 1, factValue);
                 if (factValues.Length == 1)
                 {
-                    for (int j = 1; j < choice.TargetCount; j++)
+                    for (int j = 1; j < CurrentChoiceTargetCount; j++)
                     {
                         RecordedScores.TryAdd(ConsiderationRecordKey + j * 10, score);
                         RecordedScores.TryAdd(ConsiderationRecordKey + j * 10 + 1, factValue);
@@ -115,7 +113,7 @@ public struct DecisionMaker
             currentChoiceScores[i] *= score;
             if (factValues.Length == 1)
             {
-                for (int j = 1; j < choice.TargetCount; j++)
+                for (int j = 1; j < CurrentChoiceTargetCount; j++)
                 {
                     currentChoiceScores[j] *= score;
                 }
@@ -131,7 +129,7 @@ public struct DecisionMaker
                 if (considerationIndex == considerationIndexTo - 1)
                 {
                     // we've finished recording all considerations, now record the final choice scores
-                    for (int i = 0; i < ChoiceTargetCount; i++)
+                    for (int i = 0; i < CurrentChoiceTargetCount; i++)
                     {
                         RecordedScores.TryAdd(ChoiceRecordKey + i * 10, currentChoiceScores[i]);
                     }
@@ -152,7 +150,7 @@ public struct DecisionMaker
 
             if (record && !allChoiceScoresBelowBest)
             {
-                for (int i = 0; i < ChoiceTargetCount; i++)
+                for (int i = 0; i < CurrentChoiceTargetCount; i++)
                 {
                     RecordedScores.TryAdd(ChoiceRecordKey + i * 10, currentChoiceScores[i]);
                 }
@@ -172,15 +170,15 @@ public struct DecisionMaker
         }
 
         NextRequiredFactType = Considerations[considerationIndex].FactType;
-        CurrentlyEvaluatedChoice = Choices[choiceIndex].ChoiceType;
+        CurrentlyEvaluatedChoice = Choices[ChoiceIndex].ChoiceType;
         return true;
     }
 
     private bool PrepareChoiceVariables()
     {
-        choice = Choices[choiceIndex];
+        choice = Choices[ChoiceIndex];
         considerationIndexFrom = choice.ConsiderationIndexStart;
-        considerationIndexTo = choiceIndex < Choices.Length - 1 ? Choices[choiceIndex + 1].ConsiderationIndexStart : (ushort)Considerations.Length;
+        considerationIndexTo = ChoiceIndex < Choices.Length - 1 ? Choices[ChoiceIndex + 1].ConsiderationIndexStart : (ushort)Considerations.Length;
         if (considerationIndexFrom == considerationIndexTo)
         {
             return false;
@@ -189,7 +187,7 @@ public struct DecisionMaker
         considerationIndex = considerationIndexFrom;
         modificationFactor = 1f - (1f / (considerationIndexTo - considerationIndexFrom));
 
-        currentChoiceScores = new NativeArray<float>(choice.TargetCount, Allocator.Temp);
+        currentChoiceScores = new NativeArray<float>(CurrentChoiceTargetCount, Allocator.Temp);
         SetAllCurrentChoiceVals(currentChoiceScores.Length, choice.Weight + math.select(0f, choice.MomentumFactor, choice.ChoiceType == CurrentChoice));
         return true;
     }
@@ -203,8 +201,8 @@ public struct DecisionMaker
         }
 
         // move to next choice
-        choiceIndex++;
-        if (choiceIndex == choiceIndexTo)
+        ChoiceIndex++;
+        if (ChoiceIndex == ChoiceIndexTo)
         {
             return false; // there are no choices left to evaluate
         }
@@ -227,7 +225,7 @@ public struct DecisionMaker
 
     private bool AllChoiceScoresAreBelowThreshold(float threshold)
     {
-        for (int i = 0; i < ChoiceTargetCount; i++)
+        for (int i = 0; i < CurrentChoiceTargetCount; i++)
         {
             if (currentChoiceScores[i] >= threshold)
             {
@@ -240,27 +238,28 @@ public struct DecisionMaker
 
     private void SelectChoiceHighestScore()
     {
-        int currentChoiceIndex = choiceIndexFrom;
-        choice = Choices[currentChoiceIndex];
-        SelectedTarget = -1;
+        ChoiceIndex = ChoiceIndexFrom;
+        choice = Choices[ChoiceIndex];
+        int target = -1;
 
         float max = 0;
         for (int i = 0; i < UtilityScores.Length; i++)
         {
-            if (SelectedTarget == choice.TargetCount - 1)
+            if (target == CurrentChoiceTargetCount - 1)
             {
-                currentChoiceIndex++;
-                SelectedTarget = 0;
+                ChoiceIndex++;
+                target = 0;
             }
             else
             {
-                SelectedTarget++;
+                target++;
             }
 
             if (UtilityScores[i].Value > max)
             {
                 max = UtilityScores[i].Value;
-                SelectedChoice = Choices[currentChoiceIndex].ChoiceType;
+                SelectedChoice = Choices[ChoiceIndex].ChoiceType;
+                SelectedTarget = target;
             }
         }
 

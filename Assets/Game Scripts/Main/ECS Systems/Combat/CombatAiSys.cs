@@ -34,7 +34,7 @@ public class CombatAiSys : JobComponentSystem
     }
 
     [BurstCompile]
-    private struct Job : IJobForEachWithEntity<NearestEnemy, CombatTarget, LocalToWorld, CombatAi>
+    private struct Job : IJobForEachWithEntity<NearestEnemy, CombatTarget, LocalToWorld, CombatAi, Faction>
     {
         [ReadOnly] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
         [ReadOnly] public ComponentDataFromEntity<LocalToWorld> L2WComps;
@@ -56,7 +56,8 @@ public class CombatAiSys : JobComponentSystem
             [ReadOnly] ref NearestEnemy nearestEnemy,
             [ReadOnly] ref CombatTarget target,
             [ReadOnly] ref LocalToWorld l2w,
-            ref CombatAi ai)
+            ref CombatAi ai,
+            ref Faction f)
         {
             // if I have no target candidates available, request nearest enemies refresh
             if (nearestEnemy.BufferEntity == Entity.Null)
@@ -72,7 +73,7 @@ public class CombatAiSys : JobComponentSystem
                 return;
             }
 
-            if (Time - ai.LastEvalTime < 0.3f && L2WComps.Exists(target.Entity)) // TODO: 0.3
+            if (Time - ai.LastEvalTime < 0.0f && L2WComps.Exists(target.Entity)) // TODO: 0.3
             {
                 target.Pos = L2WComps[target.Entity].Position.xy;
                 return;
@@ -95,27 +96,25 @@ public class CombatAiSys : JobComponentSystem
             NativeArray<NearbyEnemyBuf> enemies = NearbyEnemyBufs[nearestEnemy.BufferEntity].AsNativeArray();
 
             DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores, Time,
-                ai.ActiveChoice, ref RecordedScores, RecordedDecision, entity == RecordedEntity);
-            bool hasNext = dm.PrepareDecision(DecisionType.CombatMovement);
-            ChoiceType lastChoice = ChoiceType.None;
+                ai.ActiveChoice, ref RecordedScores, DecisionType.CombatMovement, RecordedDecision, entity == RecordedEntity);
 
+            for (int i = 0; i < dm.ChoiceTargetCounts.Length; i++)
+            {
+                switch (Choices[dm.ChoiceIndexFrom + i].ChoiceType)
+                {
+                    case ChoiceType.FlyTowardsEnemyMulti:
+                        dm.ChoiceTargetCounts[i] = enemies.Length;
+                        break;
+
+                    default:
+                        dm.ChoiceTargetCounts[i] = 1;
+                        break;
+                }
+            }
+
+            bool hasNext = dm.PrepareDecision(DecisionType.CombatMovement);
             while (hasNext)
             {
-                if (dm.CurrentlyEvaluatedChoice != lastChoice)
-                {
-                    lastChoice = dm.CurrentlyEvaluatedChoice;
-                    switch (dm.CurrentlyEvaluatedChoice)
-                    {
-                        case ChoiceType.FlyTowardsEnemyMulti:
-                            dm.ChoiceTargetCount = enemies.Length;
-                            break;
-
-                        default:
-                            dm.ChoiceTargetCount = 1;
-                            break;
-                    }
-                }
-
                 FactType requiredFact = dm.NextRequiredFactType;
                 switch (requiredFact)
                 {
