@@ -111,6 +111,24 @@ public class ChoiceUi : MonoBehaviour
         AiInspector.I.ChangeChoiceIndex(this, index, index + 1);
     }
 
+    public void OnChoiceLabelButtonPressed()
+    {
+        choiceInfoExpanded = !choiceInfoExpanded;
+        inputsPanel.gameObject.SetActive(choiceInfoExpanded);
+        multiScorePanel.SetActive(isMultiTarget && choiceInfoExpanded);
+        reorderPanel.gameObject.SetActive(choiceInfoExpanded);
+
+        Vector2 size = choiceInfoPanel.sizeDelta;
+        size.y = ChoiceInfoPanelCurrentHeight;
+        choiceInfoPanel.sizeDelta = size;
+
+        Vector2 anchoredPos = considerationList.anchoredPosition;
+        anchoredPos.y = -ChoiceInfoPanelCurrentHeight;
+        considerationList.anchoredPosition = anchoredPos;
+
+        ChangeHeight((ChoiceInfoPanelExpandedHeight - choiceInfoCollapsedHeight) * (choiceInfoExpanded ? 1f : -1f));
+    }
+
     private void OnChoiceHeightChanged()
     {
         if (heightChangeEventScheduled)
@@ -130,6 +148,8 @@ public class ChoiceUi : MonoBehaviour
         });
     }
     
+
+
     #endregion
 
     private void Awake()
@@ -219,28 +239,6 @@ public class ChoiceUi : MonoBehaviour
         }
         
         totalScoreLabel.text = BestScore.ToString(AiInspector.ScoreFormat);
-        if (!GInput.AnyKeyActivity)
-        {
-            return;
-        }
-
-        if (GInput.GetMouseButtonUpQuick(0) && GInput.HitObjUiTop == choiceLabel.gameObject)
-        {
-            choiceInfoExpanded = !choiceInfoExpanded;
-            inputsPanel.gameObject.SetActive(choiceInfoExpanded);
-            multiScorePanel.SetActive(isMultiTarget && choiceInfoExpanded);
-            reorderPanel.gameObject.SetActive(choiceInfoExpanded);
-
-            Vector2 size = choiceInfoPanel.sizeDelta;
-            size.y = ChoiceInfoPanelCurrentHeight;
-            choiceInfoPanel.sizeDelta = size;
-
-            Vector2 anchoredPos = considerationList.anchoredPosition;
-            anchoredPos.y = -ChoiceInfoPanelCurrentHeight;
-            considerationList.anchoredPosition = anchoredPos;
-
-            ChangeHeight((ChoiceInfoPanelExpandedHeight - choiceInfoCollapsedHeight) * (choiceInfoExpanded ? 1f : -1f));
-        }
     }
 
     private void Remove()

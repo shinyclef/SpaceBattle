@@ -126,6 +126,16 @@ public class ConsiderationUi : MonoBehaviour
         graphBall.enabled = toggle.isOn;
     }
 
+    public void OnConsiderationLabelButtonPressed()
+    {
+        expanded = !inputsPanel.gameObject.activeSelf;
+        inputsPanel.gameObject.SetActive(expanded);
+        multiScorePanel.SetActive(isMultiTarget && expanded);
+        reorderPanel.gameObject.SetActive(expanded);
+        SetHeight(expanded ? ExpandedHeight : collapsedHeight);
+        choice.ChangeHeight((ExpandedHeight - collapsedHeight) * (expanded ? 1f : -1f));
+    }
+
     public void OnChoiceHeightChanged()
     {
         RedrawGraphLine();
@@ -268,20 +278,6 @@ public class ConsiderationUi : MonoBehaviour
         }
         
         UpdateGraphBallPosition();
-        if (!GInput.AnyKeyActivity)
-        {
-            return;
-        }
-
-        if (GInput.GetMouseButtonUpQuick(0) && GInput.HitObjUiTop == label.gameObject)
-        {
-            expanded = !inputsPanel.gameObject.activeSelf;
-            inputsPanel.gameObject.SetActive(expanded);
-            multiScorePanel.SetActive(isMultiTarget && expanded);
-            reorderPanel.gameObject.SetActive(expanded);
-            SetHeight(expanded ? ExpandedHeight : collapsedHeight);
-            choice.ChangeHeight((ExpandedHeight - collapsedHeight) * (expanded ? 1f : -1f));
-        }
     }
 
     private void SetHeight(float height)

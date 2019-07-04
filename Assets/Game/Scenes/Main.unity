@@ -4704,7 +4704,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58082ccc144788f418fd609c2fc8fbd3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  allowAnyDepth: 0
+  allowAnyDepth: 1
   activateOnMouseUpQuick: 1
   activateOnMouseDownLong: 1
   useRawMouseEvents: 1

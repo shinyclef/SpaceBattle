@@ -118,7 +118,6 @@ public class AiInspector : MonoBehaviour
         RecordingPaused = false;
     }
     
-
     #endregion
 
     private void Awake()
