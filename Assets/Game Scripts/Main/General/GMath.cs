@@ -66,9 +66,21 @@ public struct gmath
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Magnitude(float3 v)
+    {
+        return m.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float MagnitudeSqr(float2 v)
     {
         return v.x * v.x + v.y * v.y;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float MagnitudeSqr(float3 v)
+    {
+        return v.x * v.x + v.y * v.y + v.z * v.z;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -273,4 +285,199 @@ public struct gmath
 
         return (int)((uint)result >> (16 + nbOctave + 1));
     }
+
+    #region Lines
+
+    /// <summary>
+    /// Two non-parallel lines which may or may not touch each other have a point on each line which are closest
+    /// to each other. This function finds those two points. If the lines are not parallel, the function 
+    /// outputs true, otherwise false.
+    /// </summary>
+    public static bool ClosestPointsOnTwoLines(float3 linePoint1, float3 lineVec1, float3 linePoint2, float3 lineVec2, out float3 closestPointLine1, out float3 closestPointLine2)
+    {
+        float a = m.dot(lineVec1, lineVec1);
+        float b = m.dot(lineVec1, lineVec2);
+        float e = m.dot(lineVec2, lineVec2);
+        float d = a * e - b * b;
+
+        if (d == 0.0f)
+        {
+            // lines are parallel
+            closestPointLine1 = float3.zero;
+            closestPointLine2 = float3.zero;
+            return false;
+        }
+
+        float3 r = linePoint1 - linePoint2;
+        float c = m.dot(lineVec1, r);
+        float f = m.dot(lineVec2, r);
+
+        float s = (b * f - c * e) / d;
+        float t = (a * f - c * b) / d;
+
+        closestPointLine1 = linePoint1 + lineVec1 * s;
+        closestPointLine2 = linePoint2 + lineVec2 * t;
+        return true;
+    }
+
+    /// <summary>
+    /// Two non-parallel lines which may or may not touch each other have a point on each line which are closest
+    /// to each other. This function finds those two points. If the lines are not parallel, the function 
+    /// outputs true, otherwise false.
+    /// </summary>
+    public static bool ClosestPointsOnTwoLines(float2 linePoint1, float2 lineVec1, float2 linePoint2, float2 lineVec2, out float2 closestPointLine1, out float2 closestPointLine2)
+    {
+        float a = m.dot(lineVec1, lineVec1);
+        float b = m.dot(lineVec1, lineVec2);
+        float e = m.dot(lineVec2, lineVec2);
+        float d = a * e - b * b;
+
+        if (d == 0.0f)
+        {
+            // lines are parallel
+            closestPointLine1 = float2.zero;
+            closestPointLine2 = float2.zero;
+            return false;
+        }
+
+        float2 r = linePoint1 - linePoint2;
+        float c = m.dot(lineVec1, r);
+        float f = m.dot(lineVec2, r);
+
+        float s = (b * f - c * e) / d;
+        float t = (a * f - c * b) / d;
+
+        closestPointLine1 = linePoint1 + lineVec1 * s;
+        closestPointLine2 = linePoint2 + lineVec2 * t;
+        return true;
+    }
+
+    /// <summary>
+    /// Finds the smallest distance between 2 lines.
+    /// </summary>
+    public static float DistanceBetweenTwoLines(float3 linePoint1, float3 lineVec1, float3 linePoint2, float3 lineVec2)
+    {
+        float a = m.dot(lineVec1, lineVec1);
+        float b = m.dot(lineVec1, lineVec2);
+        float e = m.dot(lineVec2, lineVec2);
+        float d = a * e - b * b;
+
+        if (d == 0.0f)
+        {
+            // lines are parallel
+            return Magnitude(linePoint1 - linePoint2);
+        }
+
+        float3 r = linePoint1 - linePoint2;
+        float c = m.dot(lineVec1, r);
+        float f = m.dot(lineVec2, r);
+
+        float s = (b * f - c * e) / d;
+        float t = (a * f - c * b) / d;
+
+        float3 closestPointLine1 = linePoint1 + lineVec1 * s;
+        float3 closestPointLine2 = linePoint2 + lineVec2 * t;
+        return Magnitude(closestPointLine1 - closestPointLine2);
+    }
+
+    /// <summary>
+    /// Finds the smallest distance between 2 lines.
+    /// </summary>
+    public static float DistanceBetweenTwoLines(float2 pos1, float2 vec1, float2 pos2, float2 vec2)
+    {
+        const float Epsilon = 1f;
+        float2 w = pos1 - pos2;
+        if (MagnitudeSqr(w) < 3f)
+        {
+            return 0f;
+        }
+
+        float a = m.dot(vec1, vec1);
+        float b = m.dot(vec1, vec2);
+        float c = m.dot(vec2, vec2);
+
+        float d = m.dot(vec1, w);
+        float e = m.dot(vec2, w);
+        float D = a * c - b * b;
+
+        float sc, sN, sD = D; // sc = sN / sD, default sD = D >= 0
+        float tc, tN, tD = D; // tc = tN / tD, default tD = D >= 0
+
+        // compute the line parameters of the two closest points
+        if (D < Epsilon) 
+        {
+            // the lines are almost parallel
+            sN = 0f; // force using point P0 on segment S1
+            sD = 1f; // to prevent possible division by 0.0 later
+            tN = e;
+            tD = c;
+            //Logger.Log("Parallel: ");
+        }
+        else // get the closest points on the infinite lines
+        {
+            sN = (b * e - c * d);
+            tN = (a * e - b * d);
+            if (sN < 0f) // sc < 0 => the s=0 edge is visible
+            {       
+                sN = 0f;
+                tN = e;
+                tD = c;
+            }
+            else if (sN > sD) // sc > 1 => the s=1 edge is visible
+            {  
+                sN = sD;
+                tN = e + b;
+                tD = c;
+            }
+        }
+
+        if (tN < 0f) // tc < 0 => the t=0 edge is visible
+        {           
+            tN = 0f;
+            // recompute sc for this edge
+
+            if (-d < 0f)
+            {
+                sN = 0f;
+            }
+            else if (-d > a)
+            {
+                sN = sD;
+            }
+            else
+            {
+                sN = -d;
+                sD = a;
+            }
+        }
+        else if (tN > tD) // tc > 1 => the t=1 edge is visible
+        {      
+            tN = tD;
+            // recompute sc for this edge
+
+            if ((-d + b) < 0f)
+            {
+                sN = 0;
+            }
+            else if ((-d + b) > a)
+            {
+                sN = sD;
+            }
+            else
+            {
+                sN = (-d + b);
+                sD = a;
+            }
+        }
+
+        // finally do the division to get sc and tc
+        sc = (m.abs(sN) < Epsilon ? 0f : sN / sD);
+        tc = (m.abs(tN) < Epsilon ? 0f : tN / tD);
+
+        // get the difference of the two closest points
+        float2 dP = w + (vec1 * sc) - (vec2 * tc);
+        return Magnitude(dP);
+    }
+
+    #endregion
 }

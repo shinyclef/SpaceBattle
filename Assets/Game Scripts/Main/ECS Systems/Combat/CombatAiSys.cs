@@ -20,6 +20,7 @@ public class CombatAiSys : JobComponentSystem
         {
             NearbyEnemyBufs = GetBufferFromEntity<NearbyEnemyBuf>(true),
             L2WComps = GetComponentDataFromEntity<LocalToWorld>(true),
+            PhysicsVelocityComps = GetComponentDataFromEntity<PhysicsVelocity>(true),
             UtilityScoreBufs = GetBufferFromEntity<UtilityScoreBuf>(false),
             Decisions = AiDataSys.NativeData.Decisions,
             Choices = AiDataSys.NativeData.Choices,
@@ -38,6 +39,7 @@ public class CombatAiSys : JobComponentSystem
     {
         [ReadOnly] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
         [ReadOnly] public ComponentDataFromEntity<LocalToWorld> L2WComps;
+        [ReadOnly] public ComponentDataFromEntity<PhysicsVelocity> PhysicsVelocityComps;
         [NativeDisableParallelForRestriction] public BufferFromEntity<UtilityScoreBuf> UtilityScoreBufs;
         [ReadOnly] public NativeArray<Decision> Decisions;
         [ReadOnly] public NativeArray<Choice> Choices;
@@ -73,7 +75,7 @@ public class CombatAiSys : JobComponentSystem
                 return;
             }
 
-            if (Time - ai.LastEvalTime < 0.0f && L2WComps.Exists(target.Entity)) // TODO: 0.3
+            if (Time - ai.LastEvalTime < 0.3f && L2WComps.Exists(target.Entity)) // TODO: 0.3
             {
                 target.Pos = L2WComps[target.Entity].Position.xy;
                 return;
@@ -113,6 +115,7 @@ public class CombatAiSys : JobComponentSystem
             }
 
             bool hasNext = dm.PrepareDecision(DecisionType.CombatMovement);
+            //Logger.Log("HasNext: " + hasNext);
             while (hasNext)
             {
                 FactType requiredFact = dm.NextRequiredFactType;
@@ -127,12 +130,24 @@ public class CombatAiSys : JobComponentSystem
                         
                         break;
 
+                    case FactType.DistanceFromTargetIn1SecMulti:
+                        factValues = new NativeArray<float>(enemies.Length, Allocator.Temp);
+                        for (int i = 0; i < enemies.Length; i++)
+                        {
+                            float2 vel = PhysicsVelocityComps[entity].Linear.xy;
+                            float2 targetVel = PhysicsVelocityComps[enemies[i]].Linear.xy;
+                            factValues[i] = gmath.DistanceBetweenTwoLines(l2w.Position.xy, vel, L2WComps[enemies[i]].Position.xy, targetVel);
+                        }
+
+                        break;
+
                     case FactType.AngleFromTargetMulti:
                         factValues = new NativeArray<float>(enemies.Length, Allocator.Temp);
                         for (int i = 0; i < enemies.Length; i++)
                         {
                             float2 dirToEnemy = math.normalizesafe(L2WComps[enemies[i]].Position.xy - l2w.Position.xy);
                             factValues[i] = gmath.AngleBetweenVectors(dirToEnemy, math.normalize(l2w.Up.xy));
+                            //Logger.Log($"factValues[i]: {factValues[i]}");
                         }
 
                         break;
