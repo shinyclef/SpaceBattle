@@ -75,7 +75,8 @@ public class CombatAiSys : JobComponentSystem
                 return;
             }
 
-            if (Time - ai.LastEvalTime < 0.3f && L2WComps.Exists(target.Entity)) // TODO: 0.3
+            bool isRecordedEntity = entity == RecordedEntity;
+            if (!isRecordedEntity && Time - ai.LastEvalTime < 0.3f && L2WComps.Exists(target.Entity))
             {
                 target.Pos = L2WComps[target.Entity].Position.xy;
                 return;
@@ -87,7 +88,7 @@ public class CombatAiSys : JobComponentSystem
                 nearestEnemy.UpdateRequired = true;
             }
 
-            if (entity == RecordedEntity)
+            if (isRecordedEntity)
             {
                 RecordedScores.Clear();
             }
@@ -98,7 +99,7 @@ public class CombatAiSys : JobComponentSystem
             NativeArray<NearbyEnemyBuf> enemies = NearbyEnemyBufs[nearestEnemy.BufferEntity].AsNativeArray();
 
             DecisionMaker dm = new DecisionMaker(ref Decisions, ref Choices, ref Considerations, ref utilityScores, Time,
-                ai.ActiveChoice, ref RecordedScores, DecisionType.CombatMovement, RecordedDecision, entity == RecordedEntity);
+                ai.ActiveChoice, ref RecordedScores, DecisionType.CombatMovement, RecordedDecision, isRecordedEntity);
 
             for (int i = 0; i < dm.ChoiceTargetCounts.Length; i++)
             {

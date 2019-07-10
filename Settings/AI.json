@@ -16,7 +16,7 @@
                             "XShift": -5.0,
                             "YShift": 0.30000001192092898,
                             "InputMin": 50.0,
-                            "InputMax": 300.0
+                            "InputMax": 100.0
                         },
                         {
                             "FactType": "DistanceFromTargetIn1SecMulti",

@@ -58,12 +58,14 @@ public class ThrustSys : JobComponentSystem
             float slowDownMultiplier = -1 * (normDistance - 1f) * (normDistance - 1f) + 1f; // utility = Slope * pow((input - XShift), E) + YShift
 
             // get added force and apply to velocity
-            float addedAForce = thrust.AngularAcceleration * Dt * sign * slowDownMultiplier;
+            float addedAForce = math.radians(thrust.AngularAcceleration) * Dt * sign * slowDownMultiplier;
             vel.ApplyAngularImpulse(mass, addedAForce);
-            if (math.abs(vel.Angular.z) > thrust.AngularMaxSpeed)
+
+            float angularMaxRad = math.radians(thrust.AngularMaxSpeed);
+            if (math.abs(vel.Angular.z) > angularMaxRad)
             {
-                float compensationForce = (math.abs(vel.Angular.z) - thrust.AngularMaxSpeed) * -math.sign(vel.Angular.z);
-                math.select(0f, compensationForce, math.abs(vel.Angular.z) > thrust.AngularMaxSpeed);
+                float compensationForce = (math.abs(vel.Angular.z) - angularMaxRad) * -math.sign(vel.Angular.z);
+                math.select(0f, compensationForce, math.abs(vel.Angular.z) > angularMaxRad);
                 vel.ApplyAngularImpulse(mass, compensationForce);
             }
 
