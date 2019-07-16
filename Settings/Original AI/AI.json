@@ -6,35 +6,35 @@
                 {
                     "ChoiceType": "FlyTowardsEnemyMulti",
                     "Weight": 1.0,
-                    "Momentum": 0.20000000298023225,
+                    "Momentum": 0.30000001192092898,
                     "Considerations": [
                         {
                             "FactType": "DistanceFromTargetMulti",
-                            "GraphType": "Exponential",
-                            "Slope": -0.699999988079071,
-                            "Exp": 1.0,
-                            "XShift": 0.0,
-                            "YShift": 1.0,
-                            "InputMin": 20.0,
-                            "InputMax": 5000.0
+                            "GraphType": "Sigmoid",
+                            "Slope": 10.0,
+                            "Exp": 0.699999988079071,
+                            "XShift": -5.0,
+                            "YShift": 0.30000001192092898,
+                            "InputMin": 50.0,
+                            "InputMax": 100.0
                         },
                         {
-                            "FactType": "DistanceFromTargetMulti",
-                            "GraphType": "Exponential",
-                            "Slope": -1.0,
-                            "Exp": 2.0,
-                            "XShift": 1.0,
-                            "YShift": 1.0,
+                            "FactType": "DistanceFromTargetIn1SecMulti",
+                            "GraphType": "Linear",
+                            "Slope": 1.0,
+                            "Exp": 0.8999999761581421,
+                            "XShift": 0.0,
+                            "YShift": 0.0,
                             "InputMin": 0.0,
-                            "InputMax": 20.0
+                            "InputMax": 40.0
                         },
                         {
                             "FactType": "AngleFromTargetMulti",
                             "GraphType": "Exponential",
-                            "Slope": 0.30000001192092898,
-                            "Exp": 6.0,
-                            "XShift": 1.0,
-                            "YShift": 0.75,
+                            "Slope": 0.699999988079071,
+                            "Exp": 4.0,
+                            "XShift": 1.100000023841858,
+                            "YShift": 0.30000001192092898,
                             "InputMin": 0.0,
                             "InputMax": 180.0
                         },
@@ -53,7 +53,7 @@
                 {
                     "ChoiceType": "FlyAwayFromEnemy",
                     "Weight": 1.0,
-                    "Momentum": 0.30000001192092898,
+                    "Momentum": 1.5,
                     "Considerations": [
                         {
                             "FactType": "Constant",
@@ -61,7 +61,7 @@
                             "Slope": 0.0,
                             "Exp": 0.0,
                             "XShift": 0.0,
-                            "YShift": 0.44999998807907107,
+                            "YShift": 0.10000000149011612,
                             "InputMin": 0.0,
                             "InputMax": 0.0
                         },

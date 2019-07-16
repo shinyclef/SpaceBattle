@@ -299,7 +299,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
     [BurstCompile]
     private struct ScanForEnemiesJob : IJobParallelForDefer
     {
-        private const float ScanRange = 700f;
+        private const float ScanRange = 10000f;
 
         public float Time;
         [ReadOnly] public CollisionWorld CollisionWorld;

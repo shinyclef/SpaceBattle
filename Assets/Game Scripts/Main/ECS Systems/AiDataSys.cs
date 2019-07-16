@@ -128,7 +128,7 @@ public class AiDataSys : ComponentSystem
 
     private void RevertAi()
     {
-        Data = savedData.Clone();
+        Data.CopyValuesFrom(savedData);
         GenerateNativeArraysFromDto();
         Messenger.Global.Post(Msg.AiRevertedUnsavedChanges);
     }

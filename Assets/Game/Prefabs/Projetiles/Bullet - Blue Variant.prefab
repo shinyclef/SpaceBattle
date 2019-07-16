@@ -12,40 +12,15 @@ PrefabInstance:
       propertyPath: m_Name
       value: Bullet - Blue Variant
       objectReference: {fileID: 0}
-    - target: {fileID: 9148549235998701212, guid: 80a53510078f43d45ad5d43e2115939d,
+    - target: {fileID: 5805600457344381011, guid: 80a53510078f43d45ad5d43e2115939d,
         type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9148549235998701212, guid: 80a53510078f43d45ad5d43e2115939d,
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 8197a79718099ce4abe2369f1594b759, type: 2}
+    - target: {fileID: 7262484107687296834, guid: 80a53510078f43d45ad5d43e2115939d,
         type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9148549235998701212, guid: 80a53510078f43d45ad5d43e2115939d,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9148549235998701212, guid: 80a53510078f43d45ad5d43e2115939d,
-        type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9148549235998701212, guid: 80a53510078f43d45ad5d43e2115939d,
-        type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9148549235998701212, guid: 80a53510078f43d45ad5d43e2115939d,
-        type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9148549235998701212, guid: 80a53510078f43d45ad5d43e2115939d,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
+      propertyPath: Value
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 9148549235998701212, guid: 80a53510078f43d45ad5d43e2115939d,
         type: 3}
@@ -66,16 +41,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5805600457344381011, guid: 80a53510078f43d45ad5d43e2115939d,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 8197a79718099ce4abe2369f1594b759, type: 2}
-    - target: {fileID: 7262484107687296834, guid: 80a53510078f43d45ad5d43e2115939d,
-        type: 3}
-      propertyPath: Value
-      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 80a53510078f43d45ad5d43e2115939d, type: 3}
