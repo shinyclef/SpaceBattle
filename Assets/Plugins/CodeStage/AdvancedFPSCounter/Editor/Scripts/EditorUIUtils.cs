@@ -41,8 +41,25 @@ namespace CodeStage.AdvancedFPSCounter.Editor.UI
 
 			var position = EditorGUILayout.GetControlRect(false, 1f);
 			position = EditorGUI.PrefixLabel(position, GUIContent.none);
-			var texCoordinates = new Rect(0f, 1f, 1f, 1f - 1f / line.normal.background.height);
-			GUI.DrawTextureWithTexCoords(position, line.normal.background, texCoordinates);
+
+			var bgTexture = line.normal.background;
+
+#if UNITY_2019_3_OR_NEWER
+			if (bgTexture == null)
+			{
+				var scaledBackgrounds = line.normal.scaledBackgrounds;
+				if (scaledBackgrounds != null && scaledBackgrounds.Length > 0)
+				{
+					bgTexture = line.normal.scaledBackgrounds[0];
+				}
+			}
+#endif
+
+			if (bgTexture != null)
+			{
+				var texCoordinates = new Rect(0f, 1f, 1f, 1f - 1f / bgTexture.height);
+				GUI.DrawTextureWithTexCoords(position, bgTexture, texCoordinates);
+			}
 
 			if (padding != 0) GUILayout.Space(padding);
 		}

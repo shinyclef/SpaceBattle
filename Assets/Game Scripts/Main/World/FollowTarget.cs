@@ -2,9 +2,9 @@
 
 public class FollowTarget : MonoBehaviour
 {
-    [SerializeField] private Transform target;
-    [SerializeField] private Vector3 offset;
-    [SerializeField] private bool freezeZ;
+    [SerializeField] private Transform target = default;
+    [SerializeField] private Vector3 offset = default;
+    [SerializeField] private bool freezeZ = default;
 
     private void LateUpdate()
     {

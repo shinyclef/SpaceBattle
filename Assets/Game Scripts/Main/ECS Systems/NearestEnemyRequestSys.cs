@@ -23,7 +23,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
     private NativeList<int3> keys;
 
     private BuildPhysicsWorld buildPhysicsWorldSys;
-    private StepPhysicsWorld stepPhysicsWorldSys;
+    private EndFramePhysicsSystem endFramePhysicsSys;
     private EntityQuery nearestEnemyReceiversQuery;
 
     public JobHandle FinalJobHandle { get; private set; }
@@ -41,7 +41,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
         EnsureMinimumCapacity(1024);
 
         buildPhysicsWorldSys = World.GetOrCreateSystem<BuildPhysicsWorld>();
-        stepPhysicsWorldSys = World.GetOrCreateSystem<StepPhysicsWorld>();
+        endFramePhysicsSys = World.GetOrCreateSystem<EndFramePhysicsSystem>();
         nearestEnemyReceiversQuery = GetEntityQuery(typeof(LocalToWorld), typeof(NearestEnemy));
     }
 
@@ -81,7 +81,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
         }.Schedule(inputDeps);
 
         // 3. Refresh the zones
-        inputDeps = JobHandle.CombineDependencies(inputDeps, stepPhysicsWorldSys.FinalJobHandle);
+        inputDeps = JobHandle.CombineDependencies(inputDeps, endFramePhysicsSys.FinalJobHandle);
         inputDeps = new ScanForEnemiesJob()
         {
             Time = Time.time,

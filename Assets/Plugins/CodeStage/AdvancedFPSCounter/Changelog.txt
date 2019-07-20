@@ -1,5 +1,9 @@
 Please, always remove previous Advanced FPS Counter version before updating!
 
+1.4.1
+- fix inspector null reference errors in Unity 2019.3 alpha
+- remove deprecated component from example
+
 1.4.0
 - remove ContentSizeFitter and HorizontalLayoutGroup when not used
 - improve Average FPS calculation performance

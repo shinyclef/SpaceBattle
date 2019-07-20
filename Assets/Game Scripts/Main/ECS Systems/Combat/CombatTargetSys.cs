@@ -32,7 +32,7 @@ public class CombatTargetSys : JobComponentSystem
         [ReadOnly] public ComponentDataFromEntity<LocalToWorld> L2WComps;
         [ReadOnly] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
 
-        public void Execute(Entity entity, int index, [ReadOnly] ref NearestEnemy nearestEnemy, ref CombatTarget target)
+        public void Execute(Entity entity, int index, ref NearestEnemy nearestEnemy, ref CombatTarget target)
         {
             bool targetExists = target.Entity != Entity.Null && L2WComps.Exists(target.Entity);
             bool newTargetRequired = !targetExists || Time - nearestEnemy.LastUpdatedTime > CommitToTargetTime;

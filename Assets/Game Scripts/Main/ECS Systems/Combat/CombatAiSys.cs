@@ -35,7 +35,7 @@ public class CombatAiSys : JobComponentSystem
     }
 
     [BurstCompile]
-    private struct Job : IJobForEachWithEntity<NearestEnemy, CombatTarget, LocalToWorld, CombatAi, Faction>
+    private struct Job : IJobForEachWithEntity<LocalToWorld, CombatTarget, NearestEnemy, CombatAi, Faction>
     {
         [ReadOnly] public BufferFromEntity<NearbyEnemyBuf> NearbyEnemyBufs;
         [ReadOnly] public ComponentDataFromEntity<LocalToWorld> L2WComps;
@@ -55,9 +55,9 @@ public class CombatAiSys : JobComponentSystem
         //private int eId;
 
         public void Execute(Entity entity, int index,
-            [ReadOnly] ref NearestEnemy nearestEnemy,
-            [ReadOnly] ref CombatTarget target,
             [ReadOnly] ref LocalToWorld l2w,
+            ref CombatTarget target,
+            ref NearestEnemy nearestEnemy,
             ref CombatAi ai,
             ref Faction f)
         {
