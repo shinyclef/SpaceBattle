@@ -57,14 +57,14 @@ public class NearestEnemyRequestSys : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        int queriedZonesCount = nearestEnemyReceiversQuery.CalculateLength();
+        int queriedZonesCount = nearestEnemyReceiversQuery.CalculateEntityCount();
         EnsureMinimumCapacity(queriedZonesCount);
         PrepareQueriedZonesMap(queriedZonesCount);
 
         // 1. Populate queriedZones, parallel
         inputDeps = new PopulateQueriedZonesJob()
         {
-            QueriedZones = queriedZones.ToConcurrent(),
+            QueriedZones = queriedZones.AsParallelWriter(),
         }.Schedule(this, inputDeps);
 
         // 2. Update activeZones, single thread
@@ -183,7 +183,7 @@ public class NearestEnemyRequestSys : JobComponentSystem
     [BurstCompile]
     private struct PopulateQueriedZonesJob : IJobForEach<LocalToWorld, Faction, NearestEnemy>
     {
-        public NativeHashMap<int3, byte>.Concurrent QueriedZones;
+        public NativeHashMap<int3, byte>.ParallelWriter QueriedZones;
 
         public void Execute([ReadOnly] ref LocalToWorld l2w, [ReadOnly] ref Faction faction, [ReadOnly] ref NearestEnemy nearestEnemy)
         {

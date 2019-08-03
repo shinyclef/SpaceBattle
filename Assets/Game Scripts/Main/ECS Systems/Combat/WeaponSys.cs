@@ -38,7 +38,7 @@ public class WeaponSys : JobComponentSystem
         projectiles = new NativeQueue<ProjectileSpawnData>(Allocator.TempJob);
         inputDeps = new FireWeaponJob()
         {
-            Projectiles = projectiles.ToConcurrent(),
+            Projectiles = projectiles.AsParallelWriter(),
             PhysicsVelocityData = GetComponentDataFromEntity<PhysicsVelocity>(true),
             VelocityData = GetComponentDataFromEntity<Velocity>(true),
             Time = Time.time,
@@ -59,7 +59,7 @@ public class WeaponSys : JobComponentSystem
     [BurstCompile]
     private struct FireWeaponJob : IJobForEachWithEntity<MoveDestination, LocalToWorld, CombatTarget, PhysicsVelocity, Weapon>
     {
-        public NativeQueue<ProjectileSpawnData>.Concurrent Projectiles;
+        public NativeQueue<ProjectileSpawnData>.ParallelWriter Projectiles;
         [ReadOnly] public ComponentDataFromEntity<PhysicsVelocity> PhysicsVelocityData;
         [ReadOnly] public ComponentDataFromEntity<Velocity> VelocityData;
         public float Time;

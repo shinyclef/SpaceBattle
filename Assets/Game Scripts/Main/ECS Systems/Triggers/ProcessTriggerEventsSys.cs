@@ -16,6 +16,7 @@ public class ProcessTriggerEventsSys : JobComponentSystem
     private EntityQuery triggerReceiversQuery;
     private NativeArray<int> counts;
     private NativeMultiHashMap<Entity, TriggerInfo> map;
+    private NativeHashMap<Entity, bool> uniqueKeys;
     private bool firstIterationSkipped = false;
 
     public JobHandle FinalJobHandle { get; private set; }
@@ -34,6 +35,8 @@ public class ProcessTriggerEventsSys : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
+        // TODO: Can sync points be removed?
+
         if (!firstIterationSkipped)
         {
             firstIterationSkipped = true;
@@ -43,17 +46,16 @@ public class ProcessTriggerEventsSys : JobComponentSystem
         if (map.IsCreated)
         {
             map.Dispose();
+            uniqueKeys.Dispose();
         }
 
-        stepPhysicsWorldSys.FinalJobHandle.Complete(); // expensive
-
-        var countJob = new CountJob
+        inputDeps = JobHandle.CombineDependencies(stepPhysicsWorldSys.FinalJobHandle, inputDeps);
+        inputDeps = new CountJob
         {
             Counts = counts
-        };
+        }.Schedule(stepPhysicsWorldSys.Simulation, ref buildPhysicsWorldSys.PhysicsWorld, inputDeps);
 
-        JobHandle countJH = countJob.Schedule(stepPhysicsWorldSys.Simulation, ref buildPhysicsWorldSys.PhysicsWorld, inputDeps);
-        countJH.Complete();
+        inputDeps.Complete();
 
         int count = 0;
         for (int i = 0; i < JobsUtility.MaxJobThreadCount; i++)
@@ -64,30 +66,31 @@ public class ProcessTriggerEventsSys : JobComponentSystem
 
         if (count == 0)
         {
-            return countJH;
+            return inputDeps;
         }
         
         map = new NativeMultiHashMap<Entity, TriggerInfo>(count * 2, Allocator.TempJob);
-        var populateMapJob = new PopulateTriggerMapJob
-        {
-            TriggerMap = map.ToConcurrent(),
-            HandleTriggersTagComps = GetComponentDataFromEntity<HandleTriggersTag>(true)
-        };
+        uniqueKeys = new NativeHashMap<Entity, bool>(count * 2, Allocator.TempJob);
 
-        JobHandle populateMapJH = populateMapJob.Schedule(stepPhysicsWorldSys.Simulation, ref buildPhysicsWorldSys.PhysicsWorld, countJH);
-        var addBufferDataJob = new AddBufferDataJob
+        inputDeps = new PopulateTriggerMapJob
+        {
+            TriggerMap = map.AsParallelWriter(),
+            UniqueKeys = uniqueKeys.AsParallelWriter(),
+            HandleTriggersTagComps = GetComponentDataFromEntity<HandleTriggersTag>(true)
+        }.Schedule(stepPhysicsWorldSys.Simulation, ref buildPhysicsWorldSys.PhysicsWorld, inputDeps);
+
+        inputDeps.Complete();
+        NativeArray<Entity> entities = uniqueKeys.GetKeyArray(Allocator.TempJob);
+        EntityManager.AddComponent(entities, typeof(HasTriggerInfoTag));
+
+        inputDeps = new AddBufferDataJob
         {
             TriggerMap = map
-        };
+        }.Schedule(triggerReceiversQuery, inputDeps);
 
-        populateMapJH.Complete();
-        NativeArray<Entity> entities = map.GetKeyArray(Allocator.TempJob);
-        EntityManager.AddComponent(entities, typeof(HasTriggerInfoTag)); // expensive
-
-        JobHandle addBufferDataJH = addBufferDataJob.Schedule(triggerReceiversQuery, populateMapJH);
         entities.Dispose();
-        FinalJobHandle = addBufferDataJH;
-        return addBufferDataJH;
+        FinalJobHandle = inputDeps;
+        return inputDeps;
     }
 
     protected override void OnDestroy()
@@ -95,6 +98,7 @@ public class ProcessTriggerEventsSys : JobComponentSystem
         if (map.IsCreated)
         {
             map.Dispose();
+            uniqueKeys.Dispose();
         }
 
         if (counts.IsCreated)
@@ -120,7 +124,8 @@ public class ProcessTriggerEventsSys : JobComponentSystem
     [BurstCompile]
     private struct PopulateTriggerMapJob : ITriggerEventsJob
     {
-        public NativeMultiHashMap<Entity, TriggerInfo>.Concurrent TriggerMap;
+        public NativeMultiHashMap<Entity, TriggerInfo>.ParallelWriter TriggerMap;
+        public NativeHashMap<Entity, bool>.ParallelWriter UniqueKeys;
         [ReadOnly] public ComponentDataFromEntity<HandleTriggersTag> HandleTriggersTagComps;
 
         public void Execute(TriggerEvent triggerEvent)
@@ -131,11 +136,13 @@ public class ProcessTriggerEventsSys : JobComponentSystem
             if (HandleTriggersTagComps.Exists(a))
             {
                 TriggerMap.Add(a, new TriggerInfo(b));
+                UniqueKeys.TryAdd(a, false);
             }
 
             if (HandleTriggersTagComps.Exists(b))
             {
                 TriggerMap.Add(b, new TriggerInfo(a));
+                UniqueKeys.TryAdd(b, false);
             }
         }
     }

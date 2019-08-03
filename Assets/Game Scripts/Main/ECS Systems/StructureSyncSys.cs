@@ -32,10 +32,10 @@ public class StructureSyncSys : ComponentSystem
         dependencies.Complete();
         dependencies = new JobHandle();
 
-        // 2. Remove destroyed ship system shared components
+        // Remove destroyed ship system shared components
         World.Active.EntityManager.RemoveComponent(destroyedShipsQuery, typeof(ShipSpawnerOwnerSsShC));
 
-        // 3. Remove trigger buffers
+        // Remove trigger buffers
         World.Active.EntityManager.RemoveComponent(hasTriggerInfoTagQuery, typeof(HasTriggerInfoTag));
     }
 }

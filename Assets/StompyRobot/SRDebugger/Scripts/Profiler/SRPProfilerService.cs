@@ -8,7 +8,7 @@ namespace SRDebugger.Profiler
     using SRF;
     using SRF.Service;
     using UnityEngine;
-    using UnityEngine.Experimental.Rendering;
+    using UnityEngine.Rendering;
 
     public class SRPProfilerService : SRServiceBase<IProfilerService>, IProfilerService
     {
@@ -45,7 +45,7 @@ namespace SRDebugger.Profiler
             CachedGameObject.hideFlags = HideFlags.NotEditable;
             CachedTransform.SetParent(Hierarchy.Get("SRDebugger"), true);
 
-            RenderPipeline.beginFrameRendering += RenderPipelineOnBeginFrameRendering;
+            RenderPipelineManager.beginFrameRendering += RenderPipelineOnBeginFrameRendering;
             StartCoroutine(EndOfFrameCoroutine());
         }
 
@@ -102,7 +102,7 @@ namespace SRDebugger.Profiler
             _updateDuration = _stopwatch.Elapsed.TotalSeconds;
         }
 
-        private void RenderPipelineOnBeginFrameRendering(Camera[] obj)
+        private void RenderPipelineOnBeginFrameRendering(ScriptableRenderContext context, Camera[] obj)
         {
             _renderStartTime = _stopwatch.Elapsed.TotalSeconds;
         }

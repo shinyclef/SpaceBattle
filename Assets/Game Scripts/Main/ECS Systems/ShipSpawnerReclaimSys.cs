@@ -56,7 +56,7 @@ public class ShipSpawnerReclaimSys : JobComponentSystem
         var em = World.Active.EntityManager;
 
         // 1. Loop through summing up destroyed counts
-        int totalCount = destroyedShipsQuery.CalculateLength();
+        int totalCount = destroyedShipsQuery.CalculateEntityCount();
         if (totalCount == 0)
         {
             return inputDeps;

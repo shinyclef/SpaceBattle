@@ -52,8 +52,6 @@ public class CombatAiSys : JobComponentSystem
 
         [NativeDisableParallelForRestriction] private DynamicBuffer<UtilityScoreBuf> utilityScores;
 
-        //private int eId;
-
         public void Execute(Entity entity, int index,
             [ReadOnly] ref LocalToWorld l2w,
             ref CombatTarget target,
